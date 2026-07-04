@@ -128,18 +128,35 @@ class LauncherApp:
             font=("Microsoft YaHei UI", 12, "bold"),
             anchor="w",
         ).grid(row=0, column=0, sticky="ew", padx=(14, 8), pady=(10, 8))
-        self.update_icon = tk.Label(
+        self.update_badge = tk.Frame(
             title,
+            bg=COLORS["title"],
+            cursor="hand2",
+        )
+        self.update_badge.grid(row=0, column=1, sticky="e", padx=(0, 12), pady=(3, 3))
+        self.update_icon = tk.Label(
+            self.update_badge,
             text="𝄞",
             bg=COLORS["title"],
             fg=COLORS["update"],
-            font=("Segoe UI Symbol", 19, "bold"),
+            font=("Segoe UI Symbol", 17, "bold"),
             cursor="hand2",
             width=2,
         )
-        self.update_icon.grid(row=0, column=1, sticky="e", padx=(0, 12), pady=(5, 4))
-        self.update_icon.grid_remove()
+        self.update_icon.pack(side="top")
+        self.update_label = tk.Label(
+            self.update_badge,
+            text="有更新",
+            bg=COLORS["title"],
+            fg=COLORS["update"],
+            font=("Microsoft YaHei UI", 7, "bold"),
+            cursor="hand2",
+        )
+        self.update_label.pack(side="top")
+        self.update_badge.grid_remove()
+        self.update_badge.bind("<Button-1>", self.show_update_prompt)
         self.update_icon.bind("<Button-1>", self.show_update_prompt)
+        self.update_label.bind("<Button-1>", self.show_update_prompt)
 
         status_row = tk.Frame(outer, bg=COLORS["row"])
         status_row.grid(row=1, column=0, columnspan=4, sticky="ew", padx=10, pady=(10, 8))
@@ -264,7 +281,7 @@ class LauncherApp:
         if self.update_in_progress:
             return
         self.update_info = info
-        self.update_icon.grid()
+        self.update_badge.grid()
 
     def show_update_prompt(self, _event: object | None = None) -> None:
         if self.update_in_progress or self.update_info is None:
@@ -282,7 +299,7 @@ class LauncherApp:
         if self.update_in_progress:
             return
         self.update_in_progress = True
-        self.update_icon.grid_remove()
+        self.update_badge.grid_remove()
         self.set_update_status("下载更新中，完成后会自动重启")
 
         def worker() -> None:

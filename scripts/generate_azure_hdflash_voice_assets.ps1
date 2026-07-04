@@ -78,6 +78,7 @@ $Clips = @(
     @{ Stem = "safehouse_warning"; Text = "安全屋" },
     @{ Stem = "boss_mechanic_warning"; Text = "注意机制" },
     @{ Stem = "bu3_red_orb_warning"; Text = "球要炸了" },
+    @{ Stem = "laser_warning_prefix"; Text = "激光" },
     @{ Stem = "red_orb_countdown/danger_red_orb"; Text = "危险红球" },
     @{ Stem = "red_orb_countdown/count_05"; Text = "五" },
     @{ Stem = "red_orb_countdown/count_04"; Text = "四" },

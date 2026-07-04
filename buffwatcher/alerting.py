@@ -141,6 +141,27 @@ DEFAULT_BOSS_RED_ORB_LATE_CONFIRM_OP = "0x6d66"
 DEFAULT_BOSS_RED_ORB_LATE_CONFIRM_START_SECONDS = 12.0
 DEFAULT_BOSS_RED_ORB_LATE_CONFIRM_END_SECONDS = 14.75
 DEFAULT_BOSS_RED_ORB_STALE_SECONDS = 25.0
+DEFAULT_BOSS_LASER_WARNING_NAME = "布3/布4激光预警"
+DEFAULT_BOSS_LASER_WARNING_SOUND = "assets/audio/xiaoyi/laser_warning_prefix.wav"
+DEFAULT_BOSS_LASER_WARNING_MESSAGE = "激光 四 三 二 一 零"
+DEFAULT_BOSS_LASER_BOSS_MAX_HP_VALUES = (1_967_880_100, 3_449_779_200)
+DEFAULT_BOSS_LASER_STARDUST_RACE_IDS = (
+    7604,
+    7605,
+    7606,
+    7607,
+    7608,
+    7616,
+    7617,
+    7618,
+    7619,
+    7620,
+)
+DEFAULT_BOSS_LASER_CAST_OP = "0xafe7"
+DEFAULT_BOSS_LASER_SKILL_ID = 52401
+DEFAULT_BOSS_LASER_CAST_SECONDS = 5.0
+DEFAULT_BOSS_LASER_CLUSTER_WINDOW_MS = 250
+DEFAULT_BOSS_LASER_STALE_SECONDS = 8.0
 DEFAULT_KEY_ENEMY_DEBUFF_COMPLETE_SOUND = "assets/audio/xiaoyi/debuffs_ready.wav"
 DEFAULT_KEY_ENEMY_DEBUFF_EXPIRY_SOUND = "assets/audio/xiaoyi/debuffs_renew.wav"
 DEFAULT_KEY_ENEMY_DEBUFF_COMPLETE_MESSAGE = "BUFF齐啦"
@@ -397,6 +418,24 @@ class BossRedOrbAlertSpec:
 
 
 @dataclass(frozen=True)
+class BossLaserAlertSpec:
+    name: str
+    entity_id: str = ""
+    max_hp_values: tuple[float, ...] = DEFAULT_BOSS_LASER_BOSS_MAX_HP_VALUES
+    current_hp_stat_id: int = BOSS_HP_CURRENT_STAT_ID
+    max_hp_stat_id: int = BOSS_HP_MAX_STAT_ID
+    stardust_race_ids: tuple[int, ...] = DEFAULT_BOSS_LASER_STARDUST_RACE_IDS
+    cast_op: str = DEFAULT_BOSS_LASER_CAST_OP
+    skill_id: int = DEFAULT_BOSS_LASER_SKILL_ID
+    cast_seconds: float = DEFAULT_BOSS_LASER_CAST_SECONDS
+    cluster_window_ms: int = DEFAULT_BOSS_LASER_CLUSTER_WINDOW_MS
+    stale_seconds: float = DEFAULT_BOSS_LASER_STALE_SECONDS
+    sound: str = DEFAULT_BOSS_LASER_WARNING_SOUND
+    message: str = DEFAULT_BOSS_LASER_WARNING_MESSAGE
+    audio_volume: int = 100
+
+
+@dataclass(frozen=True)
 class WatchedKeyEnemyDebuffSpec:
     name: str
     ccids: tuple[int, ...]
@@ -621,6 +660,32 @@ class BossRedOrbAlertState:
 
 
 @dataclass
+class BossLaserPendingState:
+    boss_entity_id: str
+    start_at_ms: int
+    impact_at_ms: int
+    stardust_entity_ids: set[str] = field(default_factory=set)
+    stardust_race_ids_by_entity_id: dict[str, int] = field(default_factory=dict)
+    removed_stardust_entity_ids: set[str] = field(default_factory=set)
+    canceled: bool = False
+    sound_canceled: bool = False
+
+
+@dataclass
+class BossLaserAlertState:
+    spec: BossLaserAlertSpec
+    tracked_entity_id: str | None = None
+    active: bool = False
+    last_seen_at_ms: int | None = None
+    last_current_hp: float | None = None
+    last_max_hp: float | None = None
+    stardust_entity_ids: set[str] = field(default_factory=set)
+    stardust_race_ids_by_entity_id: dict[str, int] = field(default_factory=dict)
+    stardust_removed_entity_ids: set[str] = field(default_factory=set)
+    pending_alerts: list[BossLaserPendingState] = field(default_factory=list)
+
+
+@dataclass
 class KeyEnemyDebuffRequirementState:
     active: bool = False
     end_ms: int | None = None
@@ -686,6 +751,7 @@ class LoadedSpecs:
         default_factory=list
     )
     boss_red_orb_alerts: list[BossRedOrbAlertSpec] = field(default_factory=list)
+    boss_laser_alerts: list[BossLaserAlertSpec] = field(default_factory=list)
     key_enemy_debuff_alert: KeyEnemyDebuffAlertSpec | None = None
     magic_shield_missing: MissingMagicShieldSpec | None = None
     death_clear_suppression_window_ms: int = DEFAULT_DEATH_CLEAR_SUPPRESSION_WINDOW_MS
@@ -708,6 +774,7 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
     boss_hp_alert_specs: list[BossHpAlertSpec] = []
     boss_skill_burst_alert_specs: list[BossSkillBurstAlertSpec] = []
     boss_red_orb_alert_specs: list[BossRedOrbAlertSpec] = []
+    boss_laser_alert_specs: list[BossLaserAlertSpec] = []
     key_enemy_debuff_alert_spec: KeyEnemyDebuffAlertSpec | None = None
     magic_shield_missing_spec: MissingMagicShieldSpec | None = None
     default_sbt_adjust_seconds = float(
@@ -1628,6 +1695,78 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
             )
         )
 
+    for item in data.get("boss_laser_alerts", []):
+        if not item.get("enabled", True):
+            continue
+
+        raw_max_hp_values = item.get(
+            "max_hp_values",
+            item.get("max_hp", item.get("max_hp_value", [])),
+        )
+        if isinstance(raw_max_hp_values, (int, float, str)):
+            raw_max_hp_values = [raw_max_hp_values]
+        max_hp_values = parse_max_hp_values(raw_max_hp_values)
+        if not max_hp_values:
+            max_hp_values = list(DEFAULT_BOSS_LASER_BOSS_MAX_HP_VALUES)
+
+        raw_stardust_race_ids = item.get(
+            "stardust_race_ids",
+            item.get("race_ids", list(DEFAULT_BOSS_LASER_STARDUST_RACE_IDS)),
+        )
+        if isinstance(raw_stardust_race_ids, (int, str)):
+            raw_stardust_race_ids = [raw_stardust_race_ids]
+        stardust_race_ids: list[int] = []
+        for raw_race_id in raw_stardust_race_ids or []:
+            try:
+                race_id = int(raw_race_id)
+            except (TypeError, ValueError):
+                continue
+            if race_id > 0:
+                stardust_race_ids.append(race_id)
+        if not stardust_race_ids:
+            stardust_race_ids = list(DEFAULT_BOSS_LASER_STARDUST_RACE_IDS)
+
+        entity_id = str(item.get("entity_id", item.get("id", ""))).strip()
+        if not entity_id and not max_hp_values:
+            continue
+
+        boss_laser_alert_specs.append(
+            BossLaserAlertSpec(
+                name=str(item.get("name", entity_id or DEFAULT_BOSS_LASER_WARNING_NAME)),
+                entity_id=entity_id,
+                max_hp_values=tuple(max_hp_values),
+                current_hp_stat_id=int(
+                    item.get("current_hp_stat_id", BOSS_HP_CURRENT_STAT_ID)
+                ),
+                max_hp_stat_id=int(item.get("max_hp_stat_id", BOSS_HP_MAX_STAT_ID)),
+                stardust_race_ids=tuple(stardust_race_ids),
+                cast_op=str(item.get("cast_op", DEFAULT_BOSS_LASER_CAST_OP)),
+                skill_id=int(item.get("skill_id", DEFAULT_BOSS_LASER_SKILL_ID)),
+                cast_seconds=max(
+                    0.0,
+                    float(item.get("cast_seconds", DEFAULT_BOSS_LASER_CAST_SECONDS)),
+                ),
+                cluster_window_ms=max(
+                    0,
+                    int(
+                        item.get(
+                            "cluster_window_ms",
+                            DEFAULT_BOSS_LASER_CLUSTER_WINDOW_MS,
+                        )
+                    ),
+                ),
+                stale_seconds=max(
+                    1.0,
+                    float(item.get("stale_seconds", DEFAULT_BOSS_LASER_STALE_SECONDS)),
+                ),
+                sound=sound_path(item.get("sound", DEFAULT_BOSS_LASER_WARNING_SOUND)),
+                message=str(item.get("message", DEFAULT_BOSS_LASER_WARNING_MESSAGE)),
+                audio_volume=normalize_volume(
+                    item.get("audio_volume", default_audio_volume)
+                ),
+            )
+        )
+
     key_enemy_data = data.get("key_enemy_debuff_alert")
     if isinstance(key_enemy_data, dict):
         complete_enabled = bool(
@@ -1811,6 +1950,7 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
         boss_hp_alerts=boss_hp_alert_specs,
         boss_skill_burst_alerts=boss_skill_burst_alert_specs,
         boss_red_orb_alerts=boss_red_orb_alert_specs,
+        boss_laser_alerts=boss_laser_alert_specs,
         key_enemy_debuff_alert=key_enemy_debuff_alert_spec,
         magic_shield_missing=magic_shield_missing_spec,
         death_clear_suppression_window_ms=death_clear_suppression_window_ms,
@@ -1834,6 +1974,7 @@ class AlertEngine:
         boss_hp_alert_specs: Iterable[BossHpAlertSpec] = (),
         boss_skill_burst_alert_specs: Iterable[BossSkillBurstAlertSpec] = (),
         boss_red_orb_alert_specs: Iterable[BossRedOrbAlertSpec] = (),
+        boss_laser_alert_specs: Iterable[BossLaserAlertSpec] = (),
         key_enemy_debuff_alert: KeyEnemyDebuffAlertSpec | None = None,
         magic_shield_missing: MissingMagicShieldSpec | None = None,
         tz_offset_hours: int = DEFAULT_TZ_OFFSET_HOURS,
@@ -1869,6 +2010,11 @@ class AlertEngine:
         ] = {}
         self.boss_red_orb_alert_states: dict[str, BossRedOrbAlertState] = {}
         self.boss_red_orb_alert_states_by_max_hp: dict[int, BossRedOrbAlertState] = {}
+        self.boss_laser_alert_states: dict[str, BossLaserAlertState] = {}
+        self.boss_laser_alert_states_by_max_hp: dict[int, BossLaserAlertState] = {}
+        self.boss_laser_stardust_to_state: dict[str, BossLaserAlertState] = {}
+        self.boss_laser_pending_stardust_by_owner: dict[str, set[str]] = {}
+        self.boss_laser_pending_stardust_race_by_entity_id: dict[str, int] = {}
         self.key_enemy_debuff_alert = key_enemy_debuff_alert
         self.key_enemy_debuff_entity_states: dict[str, KeyEnemyDebuffEntityState] = {}
         self.key_enemy_watched_debuffs_by_ccid: dict[
@@ -1944,6 +2090,17 @@ class AlertEngine:
                     self._boss_hp_fingerprint_key(max_hp)
                 ] = state
 
+        for spec in boss_laser_alert_specs:
+            state = BossLaserAlertState(spec=spec)
+            if spec.entity_id:
+                state.tracked_entity_id = spec.entity_id
+                state.active = True
+                self.boss_laser_alert_states[spec.entity_id] = state
+            for max_hp in spec.max_hp_values:
+                self.boss_laser_alert_states_by_max_hp[
+                    self._boss_hp_fingerprint_key(max_hp)
+                ] = state
+
         if (
             self.magic_shield_missing is not None
             and self.magic_shield_missing.ccid not in self.states
@@ -1982,6 +2139,7 @@ class AlertEngine:
             alerts.extend(self._process_boss_hp_stats(event))
             self._process_boss_skill_burst_stats(event)
             self._process_boss_red_orb_stats(event)
+            self._process_boss_laser_stats(event)
             self._process_key_enemy_debuff_stats(event)
             alerts.extend(self._process_stat_drop_effect_stats(event))
             return alerts
@@ -1989,11 +2147,13 @@ class AlertEngine:
         self._process_boss_hp_entity_lifecycle(event)
         self._process_boss_skill_burst_entity_lifecycle(event)
         self._process_boss_red_orb_entity_lifecycle(event)
+        self._process_boss_laser_entity_lifecycle(event)
         self._process_key_enemy_debuff_entity_lifecycle(event)
         self._process_stat_drop_effect_entity_lifecycle(event)
         alerts.extend(self._process_stat_drop_effect_trigger(event))
         alerts.extend(self._process_boss_skill_burst_event(event))
         alerts.extend(self._process_boss_red_orb_event(event))
+        alerts.extend(self._process_boss_laser_event(event))
         alerts.extend(self._process_key_enemy_debuff_event(event))
 
         ccid = event.get("CCId")
@@ -2144,6 +2304,41 @@ class AlertEngine:
             return any(
                 event_entity_id and event_entity_id in state.orb_entity_to_pending
                 for state in self._unique_boss_red_orb_states()
+            )
+
+        return False
+
+    def is_boss_laser_event(self, event: dict[str, Any]) -> bool:
+        if (
+            not self.boss_laser_alert_states
+            and not self.boss_laser_alert_states_by_max_hp
+        ):
+            return False
+
+        event_id = event.get("EventId")
+        event_entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if event_entity_id and event_entity_id in self.boss_laser_alert_states:
+            return True
+        if event_entity_id and event_entity_id in self.boss_laser_stardust_to_state:
+            return True
+
+        if event_id == 17:
+            current_values = _event_stat_values(event)
+            max_hp = current_values.get(BOSS_HP_MAX_STAT_ID)
+            return self._boss_laser_state_for_max_hp(max_hp) is not None
+
+        if event_id == 1:
+            owner_id = "" if event.get("OwnerId") is None else str(event.get("OwnerId"))
+            state = self.boss_laser_alert_states.get(owner_id)
+            try:
+                race_id = int(event.get("RaceId"))
+            except (TypeError, ValueError):
+                return False
+            if state is not None and state.tracked_entity_id == owner_id:
+                return race_id in set(state.spec.stardust_race_ids)
+            return any(
+                race_id in state.spec.stardust_race_ids
+                for state in self._unique_boss_laser_states()
             )
 
         return False
@@ -3182,6 +3377,7 @@ class AlertEngine:
             self._reset_all_boss_hp_states()
             self._reset_all_boss_skill_burst_states()
             self._reset_all_boss_red_orb_states()
+            self._reset_all_boss_laser_states()
             self._reset_all_key_enemy_debuff_states()
             self._resync_magic_shield_missing_schedule(at_ms)
             return
@@ -3191,6 +3387,7 @@ class AlertEngine:
         self._reset_all_boss_hp_states()
         self._reset_all_boss_skill_burst_states()
         self._reset_all_boss_red_orb_states()
+        self._reset_all_boss_laser_states()
         self._reset_all_key_enemy_debuff_states()
         self._clear_magic_shield_missing_schedule()
 
@@ -4411,6 +4608,356 @@ class AlertEngine:
         states: list[BossRedOrbAlertState] = []
         for state in list(self.boss_red_orb_alert_states.values()) + list(
             self.boss_red_orb_alert_states_by_max_hp.values()
+        ):
+            state_id = id(state)
+            if state_id in seen:
+                continue
+            seen.add(state_id)
+            states.append(state)
+        return states
+
+    def _process_boss_laser_stats(self, event: dict[str, Any]) -> None:
+        if (
+            not self.boss_laser_alert_states
+            and not self.boss_laser_alert_states_by_max_hp
+        ):
+            return
+
+        event_entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if not event_entity_id:
+            return
+
+        current_values = _event_stat_values(event)
+        state = self.boss_laser_alert_states.get(event_entity_id)
+        if state is None:
+            max_hp = current_values.get(BOSS_HP_MAX_STAT_ID)
+            state = self._boss_laser_state_for_max_hp(max_hp)
+        if state is not None:
+            current_hp = current_values.get(state.spec.current_hp_stat_id)
+            if current_hp is not None and current_hp <= 0:
+                self._reset_boss_laser_state(state)
+                return
+            at_ms = int(event.get("At", 0))
+            if event_entity_id and state.tracked_entity_id != event_entity_id:
+                self._bind_boss_laser_state_to_entity(state, event_entity_id)
+            state.active = True
+            state.last_seen_at_ms = at_ms
+            if current_hp is not None:
+                state.last_current_hp = float(current_hp)
+            max_hp = current_values.get(state.spec.max_hp_stat_id)
+            if max_hp is not None:
+                state.last_max_hp = float(max_hp)
+            return
+
+        state = self.boss_laser_stardust_to_state.get(event_entity_id)
+        if state is None:
+            return
+        current_hp = current_values.get(BOSS_HP_CURRENT_STAT_ID)
+        if current_hp is not None and current_hp <= 0:
+            self._mark_boss_laser_stardust_removed(
+                state, event_entity_id, int(event.get("At", 0))
+            )
+
+    def _process_boss_laser_entity_lifecycle(self, event: dict[str, Any]) -> None:
+        if (
+            not self.boss_laser_alert_states
+            and not self.boss_laser_alert_states_by_max_hp
+        ):
+            return
+
+        event_id = event.get("EventId")
+        event_entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if not event_entity_id:
+            return
+
+        if event_id == 1:
+            owner_id = "" if event.get("OwnerId") is None else str(event.get("OwnerId"))
+            try:
+                race_id = int(event.get("RaceId"))
+            except (TypeError, ValueError):
+                return
+            state = self.boss_laser_alert_states.get(owner_id)
+            if state is None or state.tracked_entity_id != owner_id:
+                if any(
+                    race_id in candidate.spec.stardust_race_ids
+                    for candidate in self._unique_boss_laser_states()
+                ):
+                    self.boss_laser_pending_stardust_by_owner.setdefault(
+                        owner_id, set()
+                    ).add(event_entity_id)
+                    self.boss_laser_pending_stardust_race_by_entity_id[
+                        event_entity_id
+                    ] = race_id
+                return
+            if race_id not in set(state.spec.stardust_race_ids):
+                return
+            state.stardust_entity_ids.add(event_entity_id)
+            state.stardust_race_ids_by_entity_id[event_entity_id] = race_id
+            state.stardust_removed_entity_ids.discard(event_entity_id)
+            self.boss_laser_stardust_to_state[event_entity_id] = state
+            return
+
+        if event_id not in (ENTITY_REMOVED_EVENT_ID, 15):
+            return
+        state = self.boss_laser_alert_states.get(event_entity_id)
+        if state is not None and state.tracked_entity_id == event_entity_id:
+            self._reset_boss_laser_state(state)
+            return
+        state = self.boss_laser_stardust_to_state.get(event_entity_id)
+        if state is None:
+            self.boss_laser_pending_stardust_race_by_entity_id.pop(
+                event_entity_id, None
+            )
+            return
+        self._mark_boss_laser_stardust_removed(
+            state, event_entity_id, int(event.get("At", 0))
+        )
+
+    def _process_boss_laser_event(self, event: dict[str, Any]) -> list[FiredAlert]:
+        if event.get("EventId") != 0:
+            return []
+        event_entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if not event_entity_id:
+            return []
+        state = self.boss_laser_stardust_to_state.get(event_entity_id)
+        if state is None or not state.active or not state.tracked_entity_id:
+            return []
+
+        spec = state.spec
+        if str(event.get("Op", "")).lower() != spec.cast_op.lower():
+            return []
+        messages = event.get("Msg") or []
+        if not messages or not isinstance(messages[0], dict):
+            return []
+        message_skill_id = str(messages[0].get("V"))
+        message_mode = ""
+        if len(messages) > 1 and isinstance(messages[1], dict):
+            message_mode = str(messages[1].get("V"))
+        if message_skill_id == "0" and message_mode == "1":
+            self._mark_boss_laser_stardust_removed(
+                state, event_entity_id, int(event.get("At", 0))
+            )
+            return []
+        if message_skill_id != str(spec.skill_id):
+            return []
+
+        at_ms = int(event.get("At", 0))
+        self._prune_boss_laser_pending(state, at_ms)
+        pending = self._boss_laser_recent_pending(state, at_ms)
+        race_id = state.stardust_race_ids_by_entity_id.get(event_entity_id)
+        if pending is not None:
+            pending.stardust_entity_ids.add(event_entity_id)
+            if race_id is not None:
+                pending.stardust_race_ids_by_entity_id[event_entity_id] = race_id
+            return []
+
+        impact_at_ms = at_ms + int(max(0.0, spec.cast_seconds) * 1000)
+        pending = BossLaserPendingState(
+            boss_entity_id=state.tracked_entity_id,
+            start_at_ms=at_ms,
+            impact_at_ms=impact_at_ms,
+            stardust_entity_ids={event_entity_id},
+        )
+        if race_id is not None:
+            pending.stardust_race_ids_by_entity_id[event_entity_id] = race_id
+        state.pending_alerts.append(pending)
+        return [
+            FiredAlert(
+                at_ms=at_ms,
+                kind="boss_laser",
+                name=spec.name,
+                ccid=None,
+                remaining_seconds=max(0, math.ceil((impact_at_ms - at_ms) / 1000)),
+                message=spec.message,
+                sound=self._boss_laser_countdown_sound(state, pending),
+                volume=spec.audio_volume,
+                detail={
+                    "boss_entity_id": state.tracked_entity_id,
+                    "stardust_entity_id": event_entity_id,
+                    "start_at_ms": at_ms,
+                    "impact_at_ms": impact_at_ms,
+                    "cast_seconds": spec.cast_seconds,
+                },
+            )
+        ]
+
+    def _boss_laser_recent_pending(
+        self,
+        state: BossLaserAlertState,
+        at_ms: int,
+    ) -> BossLaserPendingState | None:
+        cluster_window_ms = max(0, int(state.spec.cluster_window_ms))
+        candidates = [
+            pending
+            for pending in state.pending_alerts
+            if not pending.canceled
+            and pending.start_at_ms <= at_ms
+            and at_ms - pending.start_at_ms <= cluster_window_ms
+        ]
+        if not candidates:
+            return None
+        return max(candidates, key=lambda pending: pending.start_at_ms)
+
+    def _mark_boss_laser_stardust_removed(
+        self,
+        state: BossLaserAlertState,
+        entity_id: str,
+        at_ms: int,
+    ) -> None:
+        state.stardust_removed_entity_ids.add(entity_id)
+        for pending in list(state.pending_alerts):
+            if pending.canceled:
+                continue
+            if at_ms < pending.start_at_ms or at_ms > pending.impact_at_ms + 1000:
+                continue
+            if entity_id not in pending.stardust_entity_ids:
+                continue
+            pending.removed_stardust_entity_ids.add(entity_id)
+            if self._boss_laser_should_cancel_for_removed_stardust(pending):
+                self._cancel_boss_laser_countdown(pending)
+                pending.canceled = True
+
+    @staticmethod
+    def _boss_laser_key_stardust_entity_id(
+        pending: BossLaserPendingState,
+    ) -> str | None:
+        if not pending.stardust_entity_ids:
+            return None
+        if pending.stardust_entity_ids - set(
+            pending.stardust_race_ids_by_entity_id
+        ):
+            return None
+        return min(
+            pending.stardust_entity_ids,
+            key=lambda entity_id: (
+                pending.stardust_race_ids_by_entity_id[entity_id],
+                entity_id,
+            ),
+        )
+
+    @classmethod
+    def _boss_laser_should_cancel_for_removed_stardust(
+        cls,
+        pending: BossLaserPendingState,
+    ) -> bool:
+        key_stardust_id = cls._boss_laser_key_stardust_entity_id(pending)
+        if key_stardust_id is not None:
+            return key_stardust_id in pending.removed_stardust_entity_ids
+        return bool(pending.stardust_entity_ids) and pending.stardust_entity_ids <= (
+            pending.removed_stardust_entity_ids
+        )
+
+    @staticmethod
+    def _boss_laser_countdown_cancel_key(pending: BossLaserPendingState) -> str:
+        return f"boss_laser:{pending.boss_entity_id}:{pending.start_at_ms}"
+
+    @staticmethod
+    def _cancel_boss_laser_countdown(pending: BossLaserPendingState) -> None:
+        if pending.sound_canceled:
+            return
+        pending.sound_canceled = True
+        cancel_sound_sequence(AlertEngine._boss_laser_countdown_cancel_key(pending))
+
+    @staticmethod
+    def _boss_laser_countdown_sound(
+        state: BossLaserAlertState,
+        pending: BossLaserPendingState,
+    ) -> str:
+        def offset(seconds_before_impact: float) -> float:
+            return max(0.0, state.spec.cast_seconds - seconds_before_impact)
+
+        return make_timed_sound_sequence(
+            (0.0, state.spec.sound),
+            (offset(4.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_4_SOUND),
+            (offset(3.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_3_SOUND),
+            (offset(2.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_2_SOUND),
+            (offset(1.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_1_SOUND),
+            (offset(0.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_0_SOUND),
+            cancel_key=AlertEngine._boss_laser_countdown_cancel_key(pending),
+        )
+
+    def _prune_boss_laser_pending(
+        self,
+        state: BossLaserAlertState,
+        at_ms: int,
+    ) -> None:
+        stale_ms = int(max(1.0, state.spec.stale_seconds) * 1000)
+        state.pending_alerts = [
+            pending
+            for pending in state.pending_alerts
+            if at_ms - pending.start_at_ms <= stale_ms
+        ]
+
+    def _boss_laser_state_for_max_hp(
+        self, max_hp: float | int | None
+    ) -> BossLaserAlertState | None:
+        if max_hp is None:
+            return None
+        return self.boss_laser_alert_states_by_max_hp.get(
+            self._boss_hp_fingerprint_key(max_hp)
+        )
+
+    def _bind_boss_laser_state_to_entity(
+        self,
+        state: BossLaserAlertState,
+        entity_id: str,
+    ) -> None:
+        if state.tracked_entity_id and state.tracked_entity_id != entity_id:
+            self.boss_laser_alert_states.pop(state.tracked_entity_id, None)
+        for pending in state.pending_alerts:
+            self._cancel_boss_laser_countdown(pending)
+        for stardust_id in state.stardust_entity_ids:
+            self.boss_laser_stardust_to_state.pop(stardust_id, None)
+            self.boss_laser_pending_stardust_race_by_entity_id.pop(stardust_id, None)
+        state.tracked_entity_id = entity_id
+        state.active = True
+        state.stardust_entity_ids.clear()
+        state.stardust_race_ids_by_entity_id.clear()
+        state.stardust_removed_entity_ids.clear()
+        state.pending_alerts.clear()
+        self.boss_laser_alert_states[entity_id] = state
+        for stardust_id in self.boss_laser_pending_stardust_by_owner.pop(
+            entity_id, set()
+        ):
+            state.stardust_entity_ids.add(stardust_id)
+            race_id = self.boss_laser_pending_stardust_race_by_entity_id.pop(
+                stardust_id, None
+            )
+            if race_id is not None:
+                state.stardust_race_ids_by_entity_id[stardust_id] = race_id
+            state.stardust_removed_entity_ids.discard(stardust_id)
+            self.boss_laser_stardust_to_state[stardust_id] = state
+
+    def _reset_all_boss_laser_states(self) -> None:
+        for state in self._unique_boss_laser_states():
+            self._reset_boss_laser_state(state)
+        self.boss_laser_pending_stardust_by_owner.clear()
+        self.boss_laser_pending_stardust_race_by_entity_id.clear()
+
+    def _reset_boss_laser_state(self, state: BossLaserAlertState) -> None:
+        if state.tracked_entity_id:
+            self.boss_laser_alert_states.pop(state.tracked_entity_id, None)
+            self.boss_laser_pending_stardust_by_owner.pop(state.tracked_entity_id, None)
+        for pending in state.pending_alerts:
+            self._cancel_boss_laser_countdown(pending)
+        for stardust_id in state.stardust_entity_ids:
+            self.boss_laser_stardust_to_state.pop(stardust_id, None)
+            self.boss_laser_pending_stardust_race_by_entity_id.pop(stardust_id, None)
+        state.tracked_entity_id = None
+        state.active = False
+        state.last_seen_at_ms = None
+        state.last_current_hp = None
+        state.last_max_hp = None
+        state.stardust_entity_ids.clear()
+        state.stardust_race_ids_by_entity_id.clear()
+        state.stardust_removed_entity_ids.clear()
+        state.pending_alerts.clear()
+
+    def _unique_boss_laser_states(self) -> list[BossLaserAlertState]:
+        seen: set[int] = set()
+        states: list[BossLaserAlertState] = []
+        for state in list(self.boss_laser_alert_states.values()) + list(
+            self.boss_laser_alert_states_by_max_hp.values()
         ):
             state_id = id(state)
             if state_id in seen:
@@ -5877,6 +6424,7 @@ def cmd_replay(args: argparse.Namespace) -> int:
         boss_hp_alert_specs=loaded.boss_hp_alerts,
         boss_skill_burst_alert_specs=loaded.boss_skill_burst_alerts,
         boss_red_orb_alert_specs=loaded.boss_red_orb_alerts,
+        boss_laser_alert_specs=loaded.boss_laser_alerts,
         key_enemy_debuff_alert=loaded.key_enemy_debuff_alert,
         magic_shield_missing=loaded.magic_shield_missing,
         tz_offset_hours=args.tz_offset_hours,

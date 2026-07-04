@@ -1,7 +1,7 @@
 param(
   [string]$BackendPath = "",
   [string]$NpcapInstaller = "",
-  [string]$ReleaseName = "洛奇播报小助手-test",
+  [string]$ReleaseName = "",
   [string]$ReleaseConfigPath = "",
   [string]$LocalConfigPath = "",
   [string]$ReadmePath = ""

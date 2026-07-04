@@ -2703,5 +2703,39 @@
       "audio_volume": 100,
       "note": ""
     }
+  ],
+  "boss_laser_alerts": [
+    {
+      "name": "布3/布4激光预警",
+      "enabled": false,
+      "entity_id": "",
+      "max_hp_values": [
+        1967880100,
+        3449779200
+      ],
+      "current_hp_stat_id": 28,
+      "max_hp_stat_id": 30,
+      "stardust_race_ids": [
+        7604,
+        7605,
+        7606,
+        7607,
+        7608,
+        7616,
+        7617,
+        7618,
+        7619,
+        7620
+      ],
+      "cast_op": "0xafe7",
+      "skill_id": 52401,
+      "cast_seconds": 5.0,
+      "cluster_window_ms": 250,
+      "stale_seconds": 8.0,
+      "sound": "assets/audio/xiaoyi/laser_warning_prefix.wav",
+      "message": "激光 四 三 二 一 零",
+      "audio_volume": 100,
+      "note": "***激光预警功能，尚在测试中，可能存在BUG，请勿过度依赖***"
+    }
   ]
 }

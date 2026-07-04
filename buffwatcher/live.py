@@ -733,6 +733,7 @@ def process_event(
     )
     is_boss_hp_event = engine.is_boss_hp_event(event)
     is_boss_red_orb_event = engine.is_boss_red_orb_event(event)
+    is_boss_laser_event = engine.is_boss_laser_event(event)
     is_key_enemy_debuff_event = engine.is_key_enemy_debuff_event(event)
     is_death_signal_event = engine.is_death_signal_event(event)
     is_battle_timer_event = engine.is_battle_timer_event(event)
@@ -742,6 +743,7 @@ def process_event(
     if (
         is_boss_hp_event
         or is_boss_red_orb_event
+        or is_boss_laser_event
         or is_key_enemy_debuff_event
         or (is_stat_drop_effect_event and is_unfiltered_stat_drop_effect_event)
     ):
@@ -882,6 +884,7 @@ def make_engine(args: argparse.Namespace) -> tuple[AlertEngine, SelfFilter]:
         boss_hp_alert_specs=loaded.boss_hp_alerts,
         boss_skill_burst_alert_specs=loaded.boss_skill_burst_alerts,
         boss_red_orb_alert_specs=loaded.boss_red_orb_alerts,
+        boss_laser_alert_specs=loaded.boss_laser_alerts,
         key_enemy_debuff_alert=loaded.key_enemy_debuff_alert,
         magic_shield_missing=loaded.magic_shield_missing,
         tz_offset_hours=args.tz_offset_hours,
