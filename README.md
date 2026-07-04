@@ -77,7 +77,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_release.ps1 
 
 ## 更新清单
 
-仓库根目录的 `latest.json` 用于后续客户端联网检查更新。每次发布新版本时，需要同步更新：
+`latest.json` 用于后续客户端联网检查更新。建议将它随每个 GitHub Release 一起上传，客户端读取：
+
+```text
+https://github.com/rw594/Nogi-broadcaster/releases/latest/download/latest.json
+```
+
+仓库根目录也保留一份 `latest.json` 作为可读版本记录。每次发布新版本时，需要同步更新：
 
 - `version`
 - `versionCode`
