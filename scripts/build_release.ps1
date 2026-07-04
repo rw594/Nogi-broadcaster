@@ -25,7 +25,7 @@ if ([string]::IsNullOrWhiteSpace($ReleaseName)) {
   $ReleaseName = ($productName + " " + $ReleaseName.Trim())
 }
 
-$versionMatch = [regex]::Match($ReleaseName, '(?:^|\s)(V\d+(?:\.\d+)+)(?:\s|$)', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+$versionMatch = [regex]::Match($ReleaseName, '(?:^|\s)(V\d+(?:\.\d+)+(?:[A-Za-z])?)(?:\s|$)', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
 $versionLabel = ""
 if ($versionMatch.Success) {
   $versionLabel = $versionMatch.Groups[1].Value
@@ -40,13 +40,19 @@ if ($versionLabel) {
 $entryFileName = ($displayName + ".exe")
 $versionCode = 0
 if ($versionLabel) {
-  $versionNumberText = ($versionLabel -replace '^[Vv]', '')
-  $versionParts = $versionNumberText.Split(".")
-  if ($versionParts.Count -ge 2) {
-    $versionCode = ([int]$versionParts[0] * 100) + [int]$versionParts[1]
-    if ($versionParts.Count -ge 3) {
-      $versionCode = ($versionCode * 100) + [int]$versionParts[2]
+  $parsedVersion = [regex]::Match($versionLabel, '^[Vv](?<major>\d+)\.(?<minor>\d+)(?:\.(?<patch>\d+))?(?<suffix>[A-Za-z])?$')
+  if ($parsedVersion.Success) {
+    $major = [int]$parsedVersion.Groups["major"].Value
+    $minor = [int]$parsedVersion.Groups["minor"].Value
+    $patch = 0
+    if ($parsedVersion.Groups["patch"].Success) {
+      $patch = [int]$parsedVersion.Groups["patch"].Value
     }
+    if ($parsedVersion.Groups["suffix"].Success) {
+      $suffix = $parsedVersion.Groups["suffix"].Value.ToLowerInvariant()
+      $patch += ([int][char]$suffix[0] - [int][char]'a') + 1
+    }
+    $versionCode = ($major * 10000) + ($minor * 100) + $patch
   }
 }
 $updateMetadataUrl = "https://github.com/rw594/Nogi-broadcaster/releases/latest/download/latest.json"

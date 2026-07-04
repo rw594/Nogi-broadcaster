@@ -4351,7 +4351,7 @@ class AlertEngine:
         if pending.canceled or pending.fired:
             return []
         pending.fired = True
-        sound = self._boss_red_orb_countdown_sound(pending, at_ms) or state.spec.sound
+        sound = self._boss_red_orb_countdown_sound(state, pending, at_ms) or state.spec.sound
         contact_ticks = self._boss_red_orb_contact_tick_count(state, pending)
         return [
             FiredAlert(
@@ -4429,8 +4429,9 @@ class AlertEngine:
             )
         ]
 
-    @staticmethod
     def _boss_red_orb_countdown_sound(
+        self,
+        state: BossRedOrbAlertState,
         pending: BossRedOrbPendingState,
         at_ms: int,
     ) -> str:
@@ -4438,7 +4439,7 @@ class AlertEngine:
             return max(0.0, (pending.explosion_at_ms - at_ms) / 1000 - seconds_before_explosion)
 
         return make_timed_sound_sequence(
-            (0.0, DEFAULT_BOSS_RED_ORB_COUNTDOWN_PREFIX_SOUND),
+            (0.0, state.spec.sound),
             (offset(5.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_5_SOUND),
             (offset(4.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_4_SOUND),
             (offset(3.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_3_SOUND),

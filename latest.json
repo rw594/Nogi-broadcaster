@@ -1,13 +1,13 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.23",
-  "versionCode": 123,
-  "releaseName": "洛奇播报小助手 V1.23 布3布4激光预警测试",
+  "version": "1.23b",
+  "versionCode": 12302,
+  "releaseName": "洛奇播报小助手 V1.23b 布3布4激光预警测试",
   "publishedAt": "2026-07-05",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.23/V1.23.zip",
-  "sha256": "5fb2e7a04313d6a8cea79be0daceac58dfc4ba420b10be2aaa843e8a33d0e035",
-  "size": 64371003,
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.23b/V1.23b.zip",
+  "sha256": "905d894c6036d2a79af5d6e2702d7d2522ebd11c128c6373ffcefd6c8a213095",
+  "size": 64375989,
   "mandatory": false,
   "notes": [
     "新增布3/布4激光预警（测试中功能，需手动开启；不建议与同类IT补丁共同使用）"
