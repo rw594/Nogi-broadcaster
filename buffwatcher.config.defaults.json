@@ -405,7 +405,9 @@
       "ended_on_remove_only": true,
       "ended_grace_seconds": 0,
       "early_remove_reapply_grace_seconds": 12,
-      "suppress_ended_if_active_ccids": [],
+      "suppress_ended_if_active_ccids": [
+        1124
+      ],
       "warn_sound": "assets/audio/xiaoyi/march_song_remaining.wav",
       "suppress_remaining_if_active_ccids": [
         1124
@@ -680,7 +682,9 @@
       "ended_on_remove_only": true,
       "ended_grace_seconds": 0,
       "early_remove_reapply_grace_seconds": 12,
-      "suppress_ended_if_active_ccids": [],
+      "suppress_ended_if_active_ccids": [
+        1124
+      ],
       "warn_sound": "assets/audio/xiaoyi/war_overture_remaining.wav",
       "suppress_remaining_if_active_ccids": [
         1124
@@ -737,7 +741,9 @@
       "ended_on_remove_only": true,
       "ended_grace_seconds": 0,
       "early_remove_reapply_grace_seconds": 12,
-      "suppress_ended_if_active_ccids": [],
+      "suppress_ended_if_active_ccids": [
+        1124
+      ],
       "warn_sound": "assets/audio/xiaoyi/lively_song_remaining.wav",
       "suppress_remaining_if_active_ccids": [
         1124

@@ -57,6 +57,7 @@ DEFAULT_MAGIC_SHIELD_MISSING_SOUND = "assets/audio/xiaoyi/magic_shield_missing.w
 DEFAULT_MAGIC_SHIELD_MISSING_MESSAGE = "魔法盾忘开啦"
 DEFAULT_MAGIC_SHIELD_ENDED_MESSAGE = "\u9b54\u6cd5\u76fe\u5173\u95ed"
 MUSIC_BUFF_CCIDS = frozenset({192, 193, 680})
+TUAN_SONG_CCID = 1124
 MUSIC_APPLY_REMOVE_NOISE_WINDOW_MS = 1000
 MUSIC_REAPPLY_SUPPRESSION_GRACE_SECONDS = 1.0
 PLAYER_HP_STAT_ID = 28
@@ -188,7 +189,7 @@ KEY_ENEMY_DEBUFF_REQUIREMENTS = (
 KEY_ENEMY_DEBUFF_CCID_TO_REQUIREMENT = {
     1164: "physical_break",
     1165: "magic_break",
-    426: "damage_bonus",
+    1166: "damage_bonus",
     1094: "bernak_physical",
     1093: "bernak_magic",
     912: "cat",
@@ -2645,6 +2646,15 @@ class AlertEngine:
                 return True
         return False
 
+    def _is_ccid_active(self, ccid: int, at_ms: int | None = None) -> bool:
+        primary = self.ccid_to_primary.get(ccid, ccid)
+        state = self.states.get(primary)
+        if state is None or not state.active:
+            return False
+        if at_ms is not None and state.end_ms is not None and at_ms >= state.end_ms:
+            return False
+        return True
+
     def _fire_pending_dynamic_sbt_adjust(
         self, state: BuffState, at_ms: int
     ) -> None:
@@ -2657,7 +2667,7 @@ class AlertEngine:
         self._clear_pending_dynamic_sbt_adjust(state)
         if remove_at_ms is None or raw_end_ms is None:
             return
-        if self._should_suppress_ended_alert(state.spec):
+        if self._should_suppress_ended_alert(state.spec, at_ms=at_ms):
             return
         observed_adjust_seconds = (remove_at_ms - raw_end_ms) / 1000
         self._record_dynamic_sbt_adjust_sample(
@@ -3030,7 +3040,7 @@ class AlertEngine:
         if self._in_death_clear_suppression(alert_at_ms):
             self._suppress_ended_state(state)
             return []
-        if self._should_suppress_ended_alert(state.spec):
+        if self._should_suppress_ended_alert(state.spec, at_ms=alert_at_ms):
             state.ended_fired = True
             return []
 
@@ -3121,13 +3131,17 @@ class AlertEngine:
                 return True
         return False
 
-    def _should_suppress_ended_alert(self, spec: BuffSpec) -> bool:
+    def _should_suppress_ended_alert(
+        self, spec: BuffSpec, *, at_ms: int | None = None
+    ) -> bool:
+        if spec.ccid in MUSIC_BUFF_CCIDS and self._is_ccid_active(
+            TUAN_SONG_CCID, at_ms
+        ):
+            return True
         if not spec.suppress_ended_if_active_ccids:
             return False
         for ccid in spec.suppress_ended_if_active_ccids:
-            primary = self.ccid_to_primary.get(ccid, ccid)
-            state = self.states.get(primary)
-            if state is not None and state.active:
+            if self._is_ccid_active(ccid, at_ms):
                 return True
         return False
 

@@ -1,17 +1,17 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.21",
-  "versionCode": 121,
-  "releaseName": "洛奇播报小助手 V1.21 联机更新",
+  "version": "1.22",
+  "versionCode": 122,
+  "releaseName": "洛奇播报小助手 V1.22 破防误报修复",
   "publishedAt": "2026-07-04",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.21/V1.21.zip",
-  "sha256": "83fb98f47372cea6d9f6136b0fbd5598a29f0babc2da7174bafc5e914fa5d5fd",
-  "size": 64320294,
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.22/V1.22.zip",
+  "sha256": "897f869ab9aa28ed82695f299d18d233d744cbbe834c74557e616f848e9618fe",
+  "size": 64322881,
   "mandatory": false,
   "notes": [
-    "启动后自动检查 GitHub 更新源，有新版本时在小窗右上角显示橙色音符图标。",
-    "点击更新图标后可自动下载、校验、覆盖并重启到最新版。",
-    "任务栏和窗口图标改为凯尔布号角图标。"
+    "修复死亡锁定牵引分支被误判为增伤DEBUFF，导致破防DEBUFF续期提醒误播的问题。",
+    "乐曲结束时，如果徒安之歌已接续生效，将静默该次结束播报。",
+    "设置页乐曲类增加音乐BUFF计时精度说明。"
   ]
 }

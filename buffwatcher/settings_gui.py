@@ -38,6 +38,10 @@ BUFF_GROUPS = [
     ("其他", ["净化之浪"]),
 ]
 BUFF_ORDER = [name for _group, names in BUFF_GROUPS for name in names]
+MUSIC_BUFF_NOTICE = (
+    "音乐BUFF的提醒时间，暂时无法做到100%精确；有时可能会有10+秒的提前或延后。"
+    "这是正常现象，正在想办法修复，但暂时莓有完美的方案orz 请悉知"
+)
 
 PROGRESS_ORDER = [
     "托亚灵进度",
@@ -1598,6 +1602,7 @@ class SettingsApp:
         ]:
             section.columnconfigure(col, weight=weight)
 
+        title_columnspan = 4 if title == "乐曲类" else 10
         tk.Label(
             section,
             text=title,
@@ -1605,7 +1610,25 @@ class SettingsApp:
             fg=colors["text"],
             font=("Microsoft YaHei UI", 10, "bold"),
             anchor="w",
-        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(9, 6), columnspan=10)
+        ).grid(
+            row=0,
+            column=0,
+            sticky="ew",
+            padx=12,
+            pady=(9, 6),
+            columnspan=title_columnspan,
+        )
+        if title == "乐曲类":
+            tk.Label(
+                section,
+                text=MUSIC_BUFF_NOTICE,
+                bg=colors["row"],
+                fg=colors["muted"],
+                font=("Microsoft YaHei UI", 8),
+                anchor="e",
+                justify="right",
+                wraplength=560,
+            ).grid(row=0, column=4, columnspan=6, sticky="e", padx=12, pady=(9, 6))
 
         headers = (
             ["项目", "", "剩余进度提醒", seconds_header, "提醒音源", "", "", "", "", ""]
