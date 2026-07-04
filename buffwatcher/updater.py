@@ -55,7 +55,7 @@ def version_code_from_text(text: str) -> int:
 def current_version_code(runtime_root: Path, display_title: str = "") -> int:
     for info_path in [runtime_root / "package-info.json", runtime_root.parent / "package-info.json"]:
         try:
-            data = json.loads(info_path.read_text(encoding="utf-8"))
+            data = json.loads(info_path.read_text(encoding="utf-8-sig"))
         except (OSError, json.JSONDecodeError):
             continue
         for key in ("version_code", "versionCode"):
@@ -93,7 +93,7 @@ def fetch_latest_update(
     )
     with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
         payload = response.read(1024 * 1024)
-    data = json.loads(payload.decode("utf-8"))
+    data = json.loads(payload.decode("utf-8-sig"))
     version = str(data.get("version") or "").strip()
     release_name = str(data.get("releaseName") or data.get("release_name") or "").strip()
     download_url = str(data.get("downloadUrl") or data.get("download_url") or "").strip()

@@ -78,7 +78,7 @@ def package_title(root: Path | None = None) -> str:
     base = root or package_root()
     for info_path in [base / "package-info.json", base.parent / "package-info.json"]:
         try:
-            data = json.loads(info_path.read_text(encoding="utf-8"))
+            data = json.loads(info_path.read_text(encoding="utf-8-sig"))
         except (OSError, json.JSONDecodeError):
             continue
         display_name = str(data.get("display_name") or "").strip()

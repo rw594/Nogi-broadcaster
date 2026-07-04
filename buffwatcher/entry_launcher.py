@@ -24,7 +24,7 @@ def entry_root() -> Path:
 def package_title(root: Path | None = None) -> str:
     base = root or entry_root()
     try:
-        data = json.loads((base / "package-info.json").read_text(encoding="utf-8"))
+        data = json.loads((base / "package-info.json").read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError):
         data = {}
     display_name = str(data.get("display_name") or "").strip()

@@ -6,8 +6,8 @@
   "releaseName": "洛奇播报小助手 V1.22 破防误报修复",
   "publishedAt": "2026-07-04",
   "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.22/V1.22.zip",
-  "sha256": "897f869ab9aa28ed82695f299d18d233d744cbbe834c74557e616f848e9618fe",
-  "size": 64322881,
+  "sha256": "6cc5cacd3caaa39083685dc2e8b2ae214af8787c814b2f7b412f3aa162e4adfc",
+  "size": 64323788,
   "mandatory": false,
   "notes": [
     "修复了死亡锁定的DEBUFF提醒播报以【牵引】而非【增伤】的持续时间为判断标准的问题",
