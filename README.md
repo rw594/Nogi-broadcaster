@@ -92,6 +92,8 @@ https://github.com/rw594/Nogi-broadcaster/releases/latest/download/latest.json
 - `sha256`
 - `notes`
 
+发布新版本前，应先请项目维护者手写一段面向用户的版本更新日志；除非维护者已经主动提供，否则不要自行直接生成最终发布说明。
+
 ## License
 
 MIT License
