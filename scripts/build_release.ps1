@@ -245,7 +245,6 @@ $packageInfo = [ordered]@{
 }
 $packageInfoJson = $packageInfo | ConvertTo-Json -Depth 3
 [System.IO.File]::WriteAllText((Join-Path $runtimeRoot "package-info.json"), $packageInfoJson, [System.Text.Encoding]::UTF8)
-[System.IO.File]::WriteAllText((Join-Path $packageRoot "package-info.json"), $packageInfoJson, [System.Text.Encoding]::UTF8)
 
 Copy-Item -Path ".\dist\BuffWatcher" -Destination $runtimeRoot -Recurse -Force
 Copy-Item -Path ".\dist\BuffWatcherConsole" -Destination $runtimeRoot -Recurse -Force

@@ -6,8 +6,8 @@
   "releaseName": "洛奇播报小助手 V1.21 联机更新",
   "publishedAt": "2026-07-04",
   "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.21/V1.21.zip",
-  "sha256": "73ff3515951a0cecb463b46ae289e1c50d391eb939127dae42728fa58f2bf5a1",
-  "size": 64321707,
+  "sha256": "83fb98f47372cea6d9f6136b0fbd5598a29f0babc2da7174bafc5e914fa5d5fd",
+  "size": 64320294,
   "mandatory": false,
   "notes": [
     "启动后自动检查 GitHub 更新源，有新版本时在小窗右上角显示橙色音符图标。",
