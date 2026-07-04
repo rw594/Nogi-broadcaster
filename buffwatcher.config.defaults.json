@@ -1,0 +1,2701 @@
+{
+  "source_file": "",
+  "tz_offset_hours": 8,
+  "sbt_adjust_seconds": 16.0,
+  "sbt_ended_lead_seconds": 1,
+  "buffs": [
+    {
+      "name": "状态支援",
+      "ccid": 515,
+      "enabled": true,
+      "skill_id": 58011,
+      "linked_ccids": [
+        511,
+        512,
+        513
+      ],
+      "warn_seconds": 30,
+      "critical_seconds": 30,
+      "observed": {
+        "apply_count": 5581,
+        "remove_count": 55,
+        "min_remaining_seconds": -11.504,
+        "median_remaining_seconds": 171.373,
+        "max_remaining_seconds": 288.111,
+        "durations_ms": {
+          "300000": 5581
+        },
+        "top_extra_keys": [
+          [
+            "MCAGT",
+            "SBT",
+            "SDUR",
+            "SIPM",
+            "SRDCC",
+            "SRDMD",
+            "SRDR",
+            "SRDTC",
+            "SRMD"
+          ],
+          [
+            "MCAGT",
+            "SBT",
+            "SDUR",
+            "SIPM",
+            "SRDR",
+            "SRMD"
+          ]
+        ]
+      },
+      "alerts": [
+        {
+          "remaining_seconds": 30,
+          "sound": "assets/audio/xiaoyi/status_support_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/status_support_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/status_support_remaining.wav"
+    },
+    {
+      "name": "徒安之歌",
+      "ccid": 1124,
+      "enabled": true,
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "observed": {
+        "source_file": "20260521-154032-buffwatcher-raw.ndjson.gz",
+        "apply_time": "2026-05-21 15:54:13.386",
+        "remove_time": "2026-05-21 15:54:43.591",
+        "remaining_seconds_at_apply": 23.036,
+        "note": "行进曲结束前存在该状态；原行进曲移除后立即刷新为约三倍时长，用作三首曲剩余提醒抑制条件。"
+      },
+      "alerts": [],
+      "ended_alert": false,
+      "audio_volume": 100
+    },
+    {
+      "name": "cc_999",
+      "ccid": 999,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 2112,
+        "remove_count": 713,
+        "min_remaining_seconds": -12.464,
+        "median_remaining_seconds": 42.995,
+        "max_remaining_seconds": 48.114,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBBDDR",
+            "SBBV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_624",
+      "ccid": 624,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 1105,
+        "remove_count": 1106,
+        "min_remaining_seconds": 1799955.954,
+        "median_remaining_seconds": 1799988.015,
+        "max_remaining_seconds": 1799988.112,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MBTR",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "生命的温度",
+      "ccid": 874,
+      "enabled": true,
+      "skill_id": 30008,
+      "stack_field": "MCSTCT",
+      "max_stacks": 5,
+      "duration_seconds": 60,
+      "warn_seconds": 10,
+      "critical_seconds": 10,
+      "alerts": [
+        {
+          "remaining_seconds": 10,
+          "sound": "assets/audio/xiaoyi/life_temperature_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "observed": {
+        "apply_count": 722,
+        "remove_count": 11,
+        "min_remaining_seconds": 47.913,
+        "median_remaining_seconds": 48.029,
+        "max_remaining_seconds": 48.113,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCSTCT",
+            "SBT"
+          ]
+        ]
+      },
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/life_temperature_ended.wav",
+      "ended_message": "生命的温度，已褪尽",
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/life_temperature_remaining.wav"
+    },
+    {
+      "name": "湛蓝内伤",
+      "ccid": 1098,
+      "enabled": true,
+      "stack_field": "MCSTCT",
+      "max_stacks": 10,
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "alerts": [],
+      "warn_sound": "assets/audio/xiaoyi/azure_internal_wound_danger.wav",
+      "stack_alert": {
+        "enabled": true,
+        "stacks": 7,
+        "sound": "assets/audio/xiaoyi/azure_internal_wound_danger.wav",
+        "message": "{name} 达到危险层数"
+      },
+      "clear_after_stack_alert": true,
+      "clear_sound": "assets/audio/xiaoyi/azure_internal_wound_cleared.wav",
+      "clear_message": "{name} 已清除",
+      "clear_grace_seconds": 1.5,
+      "clear_after_stack_min_active_seconds": 28,
+      "ended_alert": false,
+      "audio_volume": 100,
+      "observed": {
+        "source_file": "20260521-231251-buffwatcher-raw.ndjson.gz",
+        "note": "玩家自身 debuff；EventId 4 / CCId 1098，ExtraData.MCSTCT 为层数，本次观测 1 到 8 层。短时间内的 EventId 5 后紧接新 EventId 4 视为叠层刷新，最终 EventId 5 视为自然清除候选。"
+      }
+    },
+    {
+      "name": "cc_1063",
+      "ccid": 1063,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 480,
+        "remove_count": 463,
+        "min_remaining_seconds": 47.928,
+        "median_remaining_seconds": 48.021,
+        "max_remaining_seconds": 48.111,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "IWHDD",
+            "IWHDDP",
+            "IWHDP",
+            "MCSTCT",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_625",
+      "ccid": 625,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 275,
+        "remove_count": 233,
+        "min_remaining_seconds": 1799952.069,
+        "median_remaining_seconds": 1799988.017,
+        "max_remaining_seconds": 1799988.112,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "AT_CT",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_1023",
+      "ccid": 1023,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 133,
+        "remove_count": 84,
+        "min_remaining_seconds": 47.967,
+        "median_remaining_seconds": 48.055,
+        "max_remaining_seconds": 108.111,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "ACCVV1",
+            "ACCVV2",
+            "ACCVV3",
+            "ACCVV4",
+            "ACCVV5",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_1165",
+      "ccid": 1165,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 118,
+        "remove_count": 24,
+        "min_remaining_seconds": 287.937,
+        "median_remaining_seconds": 288.056,
+        "max_remaining_seconds": 288.109,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCDCASI",
+            "MCDCIDTSI",
+            "MCDCPASI",
+            "MCDCTROID",
+            "MCDCTSI",
+            "MCDMDDMV",
+            "MCDMDDPV",
+            "MCDMDDTPV",
+            "MCDMDDV",
+            "MCDMDPMV",
+            "MCDMDPPV",
+            "MCDMDPTPV",
+            "MCDMDPV",
+            "MCDMDTDV",
+            "MCDMDTPV",
+            "SBT"
+          ],
+          [
+            "MCDCASI",
+            "MCDCIDTSI",
+            "MCDCTROID",
+            "MCDCTSI",
+            "MCDMDDMV",
+            "MCDMDDPV",
+            "MCDMDDTPV",
+            "MCDMDDV",
+            "MCDMDPMV",
+            "MCDMDPPV",
+            "MCDMDPTPV",
+            "MCDMDPV",
+            "MCDMDTDV",
+            "MCDMDTPV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_1138",
+      "ccid": 1138,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 114,
+        "remove_count": 112,
+        "min_remaining_seconds": 287.942,
+        "median_remaining_seconds": 288.052,
+        "max_remaining_seconds": 288.107,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCCSSC",
+            "MCCSSCR",
+            "MCCSSE",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_393",
+      "ccid": 393,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 96,
+        "remove_count": 39,
+        "min_remaining_seconds": 28.175,
+        "median_remaining_seconds": 288.011,
+        "max_remaining_seconds": 288.103,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "name": "行进曲",
+      "ccid": 193,
+      "enabled": true,
+      "warn_seconds": 15,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 74,
+        "remove_count": 71,
+        "min_remaining_seconds": 174.07,
+        "median_remaining_seconds": 451.087,
+        "max_remaining_seconds": 1484.967,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCAGT",
+            "MCMBGA",
+            "MCMHAC",
+            "SBT",
+            "SPDPC",
+            "SPDPET"
+          ],
+          [
+            "MCABTE",
+            "MCAGT",
+            "MCMBGA",
+            "MCMHAC",
+            "SBT",
+            "SPDPC",
+            "SPDPET"
+          ],
+          [
+            "MCAGT",
+            "MCMBGA",
+            "SBT",
+            "SPDPC",
+            "SPDPET"
+          ]
+        ]
+      },
+      "alerts": [
+        {
+          "remaining_seconds": 15,
+          "sound": "assets/audio/xiaoyi/march_song_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/march_song_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "ended_on_remove_only": true,
+      "ended_grace_seconds": 0,
+      "early_remove_reapply_grace_seconds": 12,
+      "suppress_ended_if_active_ccids": [],
+      "warn_sound": "assets/audio/xiaoyi/march_song_remaining.wav",
+      "suppress_remaining_if_active_ccids": [
+        1124
+      ]
+    },
+    {
+      "name": "cc_426",
+      "ccid": 426,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 72,
+        "remove_count": 24,
+        "min_remaining_seconds": 95.426,
+        "median_remaining_seconds": 292.966,
+        "max_remaining_seconds": 293.108,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "CE_ID",
+            "DAMAGE_BONUS",
+            "DAMAGE_BONUS_MOD",
+            "PROMOTION_RANK",
+            "PULL_COOLDOWN",
+            "PULL_DISTANCE",
+            "PULL_DURATION",
+            "PULL_RANGE",
+            "SBT"
+          ],
+          [
+            "DAMAGE_BONUS",
+            "DAMAGE_BONUS_MOD",
+            "PROMOTION_RANK",
+            "PULL_COOLDOWN",
+            "PULL_DISTANCE",
+            "PULL_DURATION",
+            "PULL_RANGE",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_1035",
+      "ccid": 1035,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 60,
+        "remove_count": 30,
+        "min_remaining_seconds": 47.935,
+        "median_remaining_seconds": 48.009,
+        "max_remaining_seconds": 48.101,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "活力之歌",
+      "ccid": 800,
+      "enabled": true,
+      "skill_id": 59002,
+      "linked_ccids": [
+        393
+      ],
+      "warn_seconds": 30,
+      "critical_seconds": 30,
+      "observed": {
+        "apply_count": 54,
+        "remove_count": 40,
+        "min_remaining_seconds": 1.498,
+        "median_remaining_seconds": 288.012,
+        "max_remaining_seconds": 288.103,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCBER",
+            "MCBFR",
+            "MCBIR",
+            "MCBLR",
+            "MCBLRP",
+            "MCBTR",
+            "MCVOVPR",
+            "SBT"
+          ]
+        ]
+      },
+      "alerts": [
+        {
+          "remaining_seconds": 30,
+          "sound": "assets/audio/xiaoyi/vitality_song_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/vitality_song_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "early_remove_reapply_grace_seconds": 12,
+      "suppress_ended_if_active_ccids": [
+        1124
+      ],
+      "warn_sound": "assets/audio/xiaoyi/vitality_song_remaining.wav"
+    },
+    {
+      "name": "cc_1036",
+      "ccid": 1036,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 52,
+        "remove_count": 28,
+        "min_remaining_seconds": 47.927,
+        "median_remaining_seconds": 48.048,
+        "max_remaining_seconds": 48.111,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "状态支援/组件511",
+      "ccid": 511,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 47,
+        "remove_count": 55,
+        "min_remaining_seconds": 287.96,
+        "median_remaining_seconds": 288.028,
+        "max_remaining_seconds": 288.11,
+        "durations_ms": {
+          "300000": 47
+        },
+        "top_extra_keys": [
+          [
+            "MCAGT",
+            "SBT",
+            "SDUR",
+            "SIPM",
+            "SSAD",
+            "SSCRI",
+            "SSRT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "状态支援/组件512",
+      "ccid": 512,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 47,
+        "remove_count": 55,
+        "min_remaining_seconds": 287.967,
+        "median_remaining_seconds": 288.032,
+        "max_remaining_seconds": 288.109,
+        "durations_ms": {
+          "300000": 47
+        },
+        "top_extra_keys": [
+          [
+            "MCAGT",
+            "SBT",
+            "SDUR",
+            "SIPM",
+            "SRDEF",
+            "SRPRO",
+            "SRR"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "状态支援/组件513",
+      "ccid": 513,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 47,
+        "remove_count": 55,
+        "min_remaining_seconds": 287.966,
+        "median_remaining_seconds": 288.032,
+        "max_remaining_seconds": 288.109,
+        "durations_ms": {
+          "300000": 47
+        },
+        "top_extra_keys": [
+          [
+            "MCAGT",
+            "SBT",
+            "SDUR",
+            "SIPM",
+            "SQACS",
+            "SQASUP",
+            "SQMCS",
+            "SQMSU",
+            "SQRS"
+          ],
+          [
+            "MCAGT",
+            "SBT",
+            "SDUR",
+            "SIPM",
+            "SQACS",
+            "SQASDN",
+            "SQMCS",
+            "SQMSS",
+            "SQRS"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "战争序曲",
+      "ccid": 680,
+      "enabled": true,
+      "warn_seconds": 15,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 40,
+        "remove_count": 39,
+        "min_remaining_seconds": 111.082,
+        "median_remaining_seconds": 403.0,
+        "max_remaining_seconds": 1350.095,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCAGT",
+            "MCMBAC",
+            "MCMBAMAX",
+            "MCMBAMIN",
+            "MCMBGA",
+            "SBT"
+          ],
+          [
+            "MCABTE",
+            "MCAGT",
+            "MCMBAC",
+            "MCMBAMAX",
+            "MCMBAMIN",
+            "MCMBGA",
+            "SBT"
+          ]
+        ]
+      },
+      "alerts": [
+        {
+          "remaining_seconds": 15,
+          "sound": "assets/audio/xiaoyi/war_overture_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/war_overture_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "ended_on_remove_only": true,
+      "ended_grace_seconds": 0,
+      "early_remove_reapply_grace_seconds": 12,
+      "suppress_ended_if_active_ccids": [],
+      "warn_sound": "assets/audio/xiaoyi/war_overture_remaining.wav",
+      "suppress_remaining_if_active_ccids": [
+        1124
+      ]
+    },
+    {
+      "name": "活跃曲",
+      "ccid": 192,
+      "enabled": true,
+      "warn_seconds": 15,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 40,
+        "remove_count": 34,
+        "min_remaining_seconds": 377.03,
+        "median_remaining_seconds": 393.0,
+        "max_remaining_seconds": 1236.095,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "AFCP",
+            "LSFA",
+            "LSMA",
+            "MCAGT",
+            "MCMBGA",
+            "MCMLSADR",
+            "MFCP",
+            "SBT"
+          ],
+          [
+            "AFCP",
+            "LSFA",
+            "LSMA",
+            "MCABTE",
+            "MCAGT",
+            "MCMBGA",
+            "MCMLSADR",
+            "MFCP",
+            "SBT"
+          ]
+        ]
+      },
+      "alerts": [
+        {
+          "remaining_seconds": 15,
+          "sound": "assets/audio/xiaoyi/lively_song_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/lively_song_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "ended_on_remove_only": true,
+      "ended_grace_seconds": 0,
+      "early_remove_reapply_grace_seconds": 12,
+      "suppress_ended_if_active_ccids": [],
+      "warn_sound": "assets/audio/xiaoyi/lively_song_remaining.wav",
+      "suppress_remaining_if_active_ccids": [
+        1124
+      ]
+    },
+    {
+      "name": "cc_1166",
+      "ccid": 1166,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 33,
+        "remove_count": 24,
+        "min_remaining_seconds": 188.007,
+        "median_remaining_seconds": 292.989,
+        "max_remaining_seconds": 293.108,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCDCASI",
+            "MCDCIDTSI",
+            "MCDCTROID",
+            "MCDCTSI",
+            "MCDDMBPMV",
+            "MCDDMBPV",
+            "MCDDMBTPV",
+            "SBT"
+          ],
+          [
+            "MCDCASI",
+            "MCDCIDTSI",
+            "MCDCPASI",
+            "MCDCTROID",
+            "MCDCTSI",
+            "MCDDMBPMV",
+            "MCDDMBPV",
+            "MCDDMBTPV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_353",
+      "ccid": 353,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 30,
+        "remove_count": 19,
+        "min_remaining_seconds": -9.956,
+        "median_remaining_seconds": 347.982,
+        "max_remaining_seconds": 348.111,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "ARC",
+            "DEX",
+            "DF",
+            "DIS",
+            "INT",
+            "LIFE",
+            "LIFEWOUND",
+            "LUK",
+            "MANA",
+            "MAXDAM",
+            "MINDAM",
+            "NHR",
+            "PR",
+            "SBT",
+            "STAMINA",
+            "STR",
+            "WILL"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "圣域之主",
+      "ccid": 1061,
+      "enabled": true,
+      "skill_id": 59080,
+      "warn_seconds": 10,
+      "critical_seconds": 10,
+      "alerts": [
+        {
+          "remaining_seconds": 10,
+          "sound": "assets/audio/xiaoyi/sanctuary_lord_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/sanctuary_lord_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "observed": {
+        "apply_count": 2,
+        "remove_count": 0,
+        "min_remaining_seconds": 28.58,
+        "max_remaining_seconds": 28.583,
+        "duration_with_global_adjust_seconds": 31.58,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ],
+        "source_file": "20260521-130728-buffwatcher-raw.ndjson.gz",
+        "note": "SkillId 59080. CCId 1061 is the main timed state. CCId 224 is a short activation/component marker: it also appears with SkillId 27203, arrives with already-expired SBT, and is removed after about 1-2 seconds."
+      },
+      "warn_sound": "assets/audio/xiaoyi/sanctuary_lord_remaining.wav"
+    },
+    {
+      "name": "马纽斯秘药",
+      "ccid": 835,
+      "enabled": true,
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "alerts": [],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/manus_elixir_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "observed": {
+        "apply_count": 1,
+        "remove_count": 0,
+        "min_remaining_seconds": 593.475,
+        "max_remaining_seconds": 593.475,
+        "duration_with_global_adjust_seconds": 596.475,
+        "durations_ms": {
+          "600000": 1
+        },
+        "top_extra_keys": [
+          [
+            "DURA",
+            "ITEM",
+            "MATK",
+            "PATK",
+            "SBT"
+          ]
+        ],
+        "source_file": "20260521-134127-buffwatcher-raw.ndjson.gz",
+        "note": "Hidden potion status. ExtraData: ITEM=5000138, DURA=600000, MATK=30, PATK=30, SBT present. No remove event observed because capture stopped after about 10 seconds."
+      },
+      "warn_sound": "assets/audio/xiaoyi/manus_elixir_remaining.wav"
+    },
+    {
+      "name": "净化之浪",
+      "ccid": 645,
+      "enabled": true,
+      "skill_id": 50240,
+      "duration_seconds": 180,
+      "warn_seconds": 10,
+      "critical_seconds": 10,
+      "observed": {
+        "apply_count": 26,
+        "remove_count": 26,
+        "min_remaining_seconds": 25.871,
+        "median_remaining_seconds": 167.995,
+        "max_remaining_seconds": 168.105,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCWPWD",
+            "MCWPWM",
+            "MCWPWR",
+            "MCWPWRW",
+            "SBT"
+          ]
+        ]
+      },
+      "alerts": [
+        {
+          "remaining_seconds": 10,
+          "sound": "assets/audio/xiaoyi/purification_wave_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/purification_wave_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/purification_wave_remaining.wav"
+    },
+    {
+      "name": "cc_1164",
+      "ccid": 1164,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 22,
+        "remove_count": 7,
+        "min_remaining_seconds": 287.937,
+        "median_remaining_seconds": 288.062,
+        "max_remaining_seconds": 288.105,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCDCASI",
+            "MCDCIDTSI",
+            "MCDCPASI",
+            "MCDCTROID",
+            "MCDCTSI",
+            "MCDDDMV",
+            "MCDDDPV",
+            "MCDDDTPV",
+            "MCDDDV",
+            "MCDDIPMV",
+            "MCDDPPV",
+            "MCDDPTPV",
+            "MCDDPV",
+            "MCDDTDV",
+            "MCDDTPV",
+            "SBT"
+          ],
+          [
+            "MCDCASI",
+            "MCDCIDTSI",
+            "MCDCTROID",
+            "MCDCTSI",
+            "MCDDDMV",
+            "MCDDDPV",
+            "MCDDDTPV",
+            "MCDDDV",
+            "MCDDIPMV",
+            "MCDDPPV",
+            "MCDDPTPV",
+            "MCDDPV",
+            "MCDDTDV",
+            "MCDDTPV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_471",
+      "ccid": 471,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 22,
+        "remove_count": 12,
+        "min_remaining_seconds": 657.086,
+        "median_remaining_seconds": 1380.087,
+        "max_remaining_seconds": 5471.292,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "ASPD",
+            "CDR",
+            "MBFD",
+            "SBT"
+          ],
+          [
+            "ASPD",
+            "CDR",
+            "MBFD",
+            "MBSE",
+            "SBT"
+          ],
+          [
+            "AACD",
+            "ASPD",
+            "CDR",
+            "FACD",
+            "SACD",
+            "SBT",
+            "TACD",
+            "WACD"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_392",
+      "ccid": 392,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 21,
+        "remove_count": 18,
+        "min_remaining_seconds": 587.949,
+        "median_remaining_seconds": 588.058,
+        "max_remaining_seconds": 588.104,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCODDR",
+            "MCODMDR",
+            "MCODMPR",
+            "MCODPR",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_939",
+      "ccid": 939,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 21,
+        "remove_count": 0,
+        "min_remaining_seconds": 129228.468,
+        "median_remaining_seconds": 130093.343,
+        "max_remaining_seconds": 130528.223,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "name": "cc_352",
+      "ccid": 352,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 20,
+        "remove_count": 19,
+        "min_remaining_seconds": 204.583,
+        "median_remaining_seconds": 348.02,
+        "max_remaining_seconds": 348.112,
+        "durations_ms": {
+          "360000": 20
+        },
+        "top_extra_keys": [
+          [
+            "DEX",
+            "DLEXP",
+            "DLICT",
+            "DLKCT",
+            "DURATION",
+            "EXP",
+            "INT",
+            "LIFE",
+            "LUK",
+            "MANA",
+            "SBT",
+            "STAMINA",
+            "STR",
+            "TARGET",
+            "WILL"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_1026",
+      "ccid": 1026,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 19,
+        "remove_count": 15,
+        "min_remaining_seconds": 47.967,
+        "median_remaining_seconds": 48.053,
+        "max_remaining_seconds": 108.059,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "ACCVV1",
+            "ACCVV2",
+            "ACCVV3",
+            "ACCVV4",
+            "ACCVV5",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_10048",
+      "ccid": 10048,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 15,
+        "remove_count": 16,
+        "min_remaining_seconds": 117.961,
+        "median_remaining_seconds": 118.011,
+        "max_remaining_seconds": 118.087,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCEB",
+            "MCED",
+            "MCEID",
+            "MCLV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_913",
+      "ccid": 913,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 15,
+        "remove_count": 13,
+        "min_remaining_seconds": 587.957,
+        "median_remaining_seconds": 588.017,
+        "max_remaining_seconds": 588.097,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "半神化",
+      "ccid": 78,
+      "enabled": true,
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "observed": {
+        "apply_count": 13,
+        "remove_count": 10,
+        "min_remaining_seconds": 100.523,
+        "median_remaining_seconds": 258.267,
+        "max_remaining_seconds": 338.047,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ]
+      },
+      "alerts": [],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/demigod_ended.wav",
+      "ended_message": "半神 结束",
+      "cooldown_alert": false,
+      "cooldown_delay_seconds": 15,
+      "cooldown_sound": "assets/audio/xiaoyi/demigod_cooldown.wav",
+      "cooldown_message": "半神 就绪",
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/demigod_remaining.wav"
+    },
+    {
+      "name": "第三只眼",
+      "ccid": 521,
+      "enabled": true,
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "alerts": [],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/third_eye_ended.wav",
+      "ended_message": "三眼 结束",
+      "cooldown_alert": true,
+      "cooldown_delay_seconds": 180,
+      "cooldown_sound": "assets/audio/xiaoyi/third_eye_cooldown.wav",
+      "cooldown_message": "三眼 就绪",
+      "audio_volume": 100,
+      "ended_on_remove_only": true,
+      "sbt_ended_lead_seconds": 0,
+      "use_dynamic_sbt_adjust": false,
+      "observed": {
+        "source": "20260630-181208-buffwatcher-raw.ndjson.gz",
+        "apply_time": "2026-06-30 19:09:57.978 +08:00",
+        "remove_time": "2026-06-30 19:11:58.097 +08:00",
+        "duration_seconds": 120.119,
+        "notes": "CCId 521 on self, DUR=120000, SOOS_TT=10000 periodic refresh. SBT is not a reliable end time, so end/cooldown reminders are remove-only."
+      },
+      "ended_grace_seconds": 0
+    },
+    {
+      "name": "魔攻水",
+      "ccid": 1121,
+      "enabled": true,
+      "duration_seconds": 1800,
+      "warn_seconds": 60,
+      "critical_seconds": 60,
+      "alerts": [
+        {
+          "remaining_seconds": 60,
+          "sound": "assets/audio/xiaoyi/magic_attack_potion_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/magic_attack_potion_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/magic_attack_potion_remaining.wav",
+      "observed": {
+        "apply_count": 13,
+        "remove_count": 4,
+        "min_remaining_seconds": 142.65,
+        "median_remaining_seconds": 728.21,
+        "max_remaining_seconds": 2199.051,
+        "durations_ms": {
+          "1800000": 11,
+          "7200000": 2
+        },
+        "top_extra_keys": [
+          [
+            "DATA",
+            "DURA",
+            "ITEM",
+            "SBT"
+          ]
+        ],
+        "source_file": "20260521-202038-buffwatcher-raw.ndjson.gz",
+        "note": "玩家自身 30 分钟魔攻水状态。EventId 4 / CCId 1121，ExtraData 包含 ITEM=5000083、DURA=1800000、DATA=0.2、SBT。"
+      }
+    },
+    {
+      "name": "炼金水",
+      "ccid": 1150,
+      "enabled": true,
+      "duration_seconds": 3600,
+      "warn_seconds": 60,
+      "critical_seconds": 60,
+      "alerts": [
+        {
+          "remaining_seconds": 60,
+          "sound": "assets/audio/xiaoyi/alchemy_potion_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/alchemy_potion_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/alchemy_potion_remaining.wav",
+      "observed": {
+        "apply_count": 1,
+        "remove_count": 0,
+        "min_remaining_seconds": 3591.0,
+        "max_remaining_seconds": 3591.0,
+        "durations_ms": {
+          "3600000": 1
+        },
+        "top_extra_keys": [
+          [
+            "DATA",
+            "DURA",
+            "ITEM",
+            "SBT"
+          ]
+        ],
+        "source_file": "20260521-202038-buffwatcher-raw.ndjson.gz",
+        "note": "玩家自身 60 分钟炼金水状态。EventId 4 / CCId 1150，ExtraData 包含 ITEM=5000314、DURA=3600000、DATA=0.2、SBT。"
+      }
+    },
+    {
+      "name": "cc_1054",
+      "ccid": 1054,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 11,
+        "remove_count": 7,
+        "min_remaining_seconds": -5.737,
+        "median_remaining_seconds": 377.868,
+        "max_remaining_seconds": 663.181,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "ACOG",
+            "ACOI",
+            "ACOV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_10034",
+      "ccid": 10034,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 10,
+        "remove_count": 11,
+        "min_remaining_seconds": 117.978,
+        "median_remaining_seconds": 118.019,
+        "max_remaining_seconds": 118.089,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCEB",
+            "MCED",
+            "MCEID",
+            "MCLV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_10053",
+      "ccid": 10053,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 10,
+        "remove_count": 10,
+        "min_remaining_seconds": 117.97,
+        "median_remaining_seconds": 118.007,
+        "max_remaining_seconds": 118.087,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCEB",
+            "MCED",
+            "MCEID",
+            "MCLV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "坚定意志",
+      "ccid": 479,
+      "enabled": false,
+      "warn_seconds": 30,
+      "critical_seconds": 30,
+      "observed": {
+        "apply_count": 10,
+        "remove_count": 8,
+        "min_remaining_seconds": 30.215,
+        "median_remaining_seconds": 167.98,
+        "max_remaining_seconds": 168.057,
+        "durations_ms": {
+          "180000": 1
+        },
+        "top_extra_keys": [
+          [
+            "DUR",
+            "SBT"
+          ]
+        ],
+        "source_file": "20260522-112914-buffwatcher-raw.ndjson.gz",
+        "note": "Observed self EventId 4 / CCId 479 at 11:49:20 with DUR=180000 and SBT, followed by self EventId 5 / CCId 479 at 11:52:21. User identified this buff as 坚定意志."
+      },
+      "alerts": [],
+      "warn_sound": "assets/audio/xiaoyi/steadfast_will_remaining.wav",
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/steadfast_will_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100
+    },
+    {
+      "name": "cc_912",
+      "ccid": 912,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 9,
+        "remove_count": 9,
+        "min_remaining_seconds": 587.978,
+        "median_remaining_seconds": 588.029,
+        "max_remaining_seconds": 588.096,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_10001",
+      "ccid": 10001,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 9,
+        "remove_count": 8,
+        "min_remaining_seconds": 84.71,
+        "median_remaining_seconds": 117.043,
+        "max_remaining_seconds": 118.097,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCCT",
+            "MCID",
+            "MCLV",
+            "MCT",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_10002",
+      "ccid": 10002,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 9,
+        "remove_count": 8,
+        "min_remaining_seconds": 84.71,
+        "median_remaining_seconds": 117.043,
+        "max_remaining_seconds": 118.097,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCCT",
+            "MCID",
+            "MCLV",
+            "MCT",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "逆光剑",
+      "ccid": 612,
+      "enabled": false,
+      "warn_seconds": 30,
+      "critical_seconds": 30,
+      "observed": {
+        "apply_count": 9,
+        "remove_count": 7,
+        "min_remaining_seconds": 48.699,
+        "median_remaining_seconds": 167.996,
+        "max_remaining_seconds": 168.549,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MD",
+            "MP",
+            "SBT"
+          ]
+        ],
+        "source_file": "20260522-121040-buffwatcher-raw.ndjson.gz",
+        "note": "玩家自身 12:11:11 获得 EventId 4 / CCId 612，ExtraData 包含 MD、MP、SBT；SBT 原始剩余约 168.55 秒，加全局 12 秒校准后约 180.55 秒，并于 12:14:12 收到玩家自身 EventId 5 / CCId 612。用户标记为逆光剑。"
+      },
+      "alerts": [],
+      "warn_sound": "assets/audio/xiaoyi/backlight_sword_remaining.wav",
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/backlight_sword_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100
+    },
+    {
+      "name": "致命穿透",
+      "ccid": 476,
+      "enabled": false,
+      "warn_seconds": 30,
+      "critical_seconds": 30,
+      "observed": {
+        "apply_count": 1,
+        "remove_count": 1,
+        "min_remaining_seconds": 168.451,
+        "median_remaining_seconds": 168.451,
+        "max_remaining_seconds": 168.451,
+        "durations_ms": {
+          "180000": 1
+        },
+        "top_extra_keys": [
+          [
+            "DUR",
+            "SBT",
+            "WPP",
+            "WPR"
+          ]
+        ],
+        "source_file": "20260522-122141-buffwatcher-raw.ndjson.gz",
+        "note": "玩家自身 12:22:42 获得 EventId 4 / CCId 476，AttackerId 为玩家自身，ExtraData 包含 DUR=180000、SBT、WPP、WPR；SBT 原始剩余约 168.45 秒，加全局 12 秒校准后约 180.45 秒，并于 12:25:42 收到玩家自身 EventId 5 / CCId 476。用户标记为致命穿透。"
+      },
+      "alerts": [],
+      "warn_sound": "assets/audio/xiaoyi/deadly_penetration_remaining.wav",
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/deadly_penetration_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100
+    },
+    {
+      "name": "cc_10041",
+      "ccid": 10041,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 7,
+        "remove_count": 8,
+        "min_remaining_seconds": 117.972,
+        "median_remaining_seconds": 118.025,
+        "max_remaining_seconds": 118.089,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCEB",
+            "MCED",
+            "MCEID",
+            "MCLV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_10054",
+      "ccid": 10054,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 7,
+        "remove_count": 8,
+        "min_remaining_seconds": 117.972,
+        "median_remaining_seconds": 118.05,
+        "max_remaining_seconds": 118.087,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCEB",
+            "MCED",
+            "MCEID",
+            "MCLV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "法速水",
+      "ccid": 62,
+      "enabled": true,
+      "duration_seconds": 1800,
+      "warn_seconds": 60,
+      "critical_seconds": 60,
+      "alerts": [
+        {
+          "remaining_seconds": 60,
+          "sound": "assets/audio/xiaoyi/magic_cast_speed_potion_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/magic_cast_speed_potion_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/magic_cast_speed_potion_remaining.wav",
+      "observed": {
+        "apply_count": 7,
+        "remove_count": 3,
+        "min_remaining_seconds": 143.219,
+        "median_remaining_seconds": 597.323,
+        "max_remaining_seconds": 1787.976,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ],
+        "source_file": "20260521-202038-buffwatcher-raw.ndjson.gz",
+        "note": "玩家先后服用两瓶 30 分钟药水时，后出现的 30 分钟自身状态。按服用顺序标记为法速水；EventId 4 / CCId 62，ExtraData 包含 SBT。"
+      }
+    },
+    {
+      "name": "cc_277",
+      "ccid": 277,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 6,
+        "remove_count": 6,
+        "min_remaining_seconds": 5387.973,
+        "median_remaining_seconds": 5388.032,
+        "max_remaining_seconds": 5388.11,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "物攻水",
+      "ccid": 63,
+      "enabled": true,
+      "duration_seconds": 1800,
+      "warn_seconds": 60,
+      "critical_seconds": 60,
+      "alerts": [
+        {
+          "remaining_seconds": 60,
+          "sound": "assets/audio/xiaoyi/physical_attack_potion_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/physical_attack_potion_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/physical_attack_potion_remaining.wav",
+      "observed": {
+        "apply_count": 6,
+        "remove_count": 3,
+        "min_remaining_seconds": 676.112,
+        "median_remaining_seconds": 2010.209,
+        "max_remaining_seconds": 2532.331,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ],
+        "source_file": "20260521-202038-buffwatcher-raw.ndjson.gz",
+        "note": "玩家先后服用两瓶 30 分钟药水时，先出现的 30 分钟自身状态。按服用顺序标记为物攻水；EventId 4 / CCId 63，ExtraData 包含 SBT；22:44:53.623 已确认结束事件为玩家自身 EventId 5 / CCId 63。"
+      }
+    },
+    {
+      "name": "cc_100",
+      "ccid": 100,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 6,
+        "remove_count": 0,
+        "min_remaining_seconds": 1384068.3,
+        "median_remaining_seconds": 1384522.404,
+        "max_remaining_seconds": 2154847.696,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCNCCCM",
+            "MCNCCCO",
+            "MCNCCCS",
+            "SBT"
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "name": "cc_127",
+      "ccid": 127,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 6,
+        "remove_count": 0,
+        "min_remaining_seconds": 1384068.3,
+        "median_remaining_seconds": 1384522.404,
+        "max_remaining_seconds": 2154847.696,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCNCCCM",
+            "MCNCCCO",
+            "MCNCCCS",
+            "SBT"
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "name": "cc_577",
+      "ccid": 577,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 6,
+        "remove_count": 5,
+        "min_remaining_seconds": 52.159,
+        "median_remaining_seconds": 65.975,
+        "max_remaining_seconds": 77.975,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "BF3",
+            "BF_DM",
+            "EWT",
+            "SBT",
+            "SID"
+          ],
+          [
+            "BF2",
+            "BF_DM",
+            "EWT",
+            "SBT",
+            "SID"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_395",
+      "ccid": 395,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 4,
+        "remove_count": 0,
+        "min_remaining_seconds": 5618.614,
+        "median_remaining_seconds": 5659.237,
+        "max_remaining_seconds": 6072.718,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "name": "cc_10050",
+      "ccid": 10050,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 4,
+        "remove_count": 4,
+        "min_remaining_seconds": 117.975,
+        "median_remaining_seconds": 117.989,
+        "max_remaining_seconds": 118.026,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "MCEB",
+            "MCED",
+            "MCEID",
+            "MCLV",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_406",
+      "ccid": 406,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 3,
+        "remove_count": 1,
+        "min_remaining_seconds": 15.287,
+        "median_remaining_seconds": 597.581,
+        "max_remaining_seconds": 888.059,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "BOLMSB",
+            "D_RATE",
+            "LADECADUR",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_1113",
+      "ccid": 1113,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 3,
+        "remove_count": 3,
+        "min_remaining_seconds": 47.973,
+        "median_remaining_seconds": 48.053,
+        "max_remaining_seconds": 48.063,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "APGC",
+            "MCLADX",
+            "MCLADZ",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_585",
+      "ccid": 585,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 3,
+        "remove_count": 1,
+        "min_remaining_seconds": 266.367,
+        "median_remaining_seconds": 287.976,
+        "max_remaining_seconds": 287.976,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT",
+            "ST_MSU1",
+            "ST_MSU2"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_745",
+      "ccid": 745,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 2,
+        "remove_count": 0,
+        "min_remaining_seconds": 3672765.453,
+        "median_remaining_seconds": 3672903.752,
+        "max_remaining_seconds": 3673042.051,
+        "durations_ms": {
+          "0": 2
+        },
+        "top_extra_keys": [
+          [
+            "DURA",
+            "ITEM",
+            "SBT",
+            "VAL"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_160",
+      "ccid": 160,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 2,
+        "remove_count": 0,
+        "min_remaining_seconds": 30296.889,
+        "median_remaining_seconds": 30454.4,
+        "max_remaining_seconds": 30611.911,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT",
+            "Taillteann",
+            "Tara"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "cc_407",
+      "ccid": 407,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 2,
+        "remove_count": 1,
+        "min_remaining_seconds": 593.466,
+        "median_remaining_seconds": 740.75,
+        "max_remaining_seconds": 888.033,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "AIMSPEED",
+            "DMGRATE",
+            "LADECADUR",
+            "SBT",
+            "VOLMDB"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "超越生命",
+      "ccid": 478,
+      "enabled": false,
+      "warn_seconds": 30,
+      "critical_seconds": 30,
+      "observed": {
+        "apply_count": 3,
+        "remove_count": 1,
+        "min_remaining_seconds": 98.799,
+        "median_remaining_seconds": 167.965,
+        "max_remaining_seconds": 168.441,
+        "durations_ms": {
+          "180000": 1
+        },
+        "top_extra_keys": [
+          [
+            "DUR",
+            "SBT",
+            "TLL",
+            "TLR"
+          ],
+          [
+            "DUR",
+            "SBT",
+            "TLL",
+            "TLNL",
+            "TLNML",
+            "TLR"
+          ]
+        ],
+        "source_file": "20260522-122141-buffwatcher-raw.ndjson.gz",
+        "note": "玩家自身 12:27:05 获得 EventId 4 / CCId 478，AttackerId 为玩家自身，ExtraData 包含 DUR=180000、SBT、TLL、TLR；SBT 原始剩余约 168.44 秒，加全局 12 秒校准后约 180.44 秒。用户标记为超越生命。"
+      },
+      "alerts": [],
+      "warn_sound": "assets/audio/xiaoyi/transcend_life_remaining.wav",
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/transcend_life_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100
+    },
+    {
+      "name": "负载转移",
+      "ccid": 1123,
+      "enabled": true,
+      "duration_seconds": 300,
+      "warn_seconds": 30,
+      "critical_seconds": 30,
+      "observed": {
+        "apply_count": 2,
+        "remove_count": 1,
+        "min_remaining_seconds": 287.698,
+        "median_remaining_seconds": 287.701,
+        "max_remaining_seconds": 287.703,
+        "durations_ms": {},
+        "top_extra_keys": [
+          [
+            "SBT"
+          ]
+        ],
+        "source_file": "20260522-123233-buffwatcher-raw.ndjson.gz",
+        "note": "玩家自身 16:00:26 与 16:00:45 获得 EventId 4 / CCId 1123，AttackerId 为玩家自身，ExtraData 包含 SBT；SBT 原始剩余约 287.7 秒，加全局 12 秒校准后约 299.7 秒，并于 16:05:45 收到玩家自身 EventId 5 / CCId 1123。用户标记为负载转移。"
+      },
+      "alerts": [
+        {
+          "remaining_seconds": 30,
+          "sound": "assets/audio/xiaoyi/load_transfer_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "warn_sound": "assets/audio/xiaoyi/load_transfer_remaining.wav",
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/load_transfer_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100
+    },
+    {
+      "name": "cc_435",
+      "ccid": 435,
+      "enabled": false,
+      "warn_seconds": 60,
+      "critical_seconds": 15,
+      "observed": {
+        "apply_count": 1,
+        "remove_count": 2,
+        "min_remaining_seconds": 1787.995,
+        "median_remaining_seconds": 1787.995,
+        "max_remaining_seconds": 1787.995,
+        "durations_ms": {
+          "1800000": 1
+        },
+        "top_extra_keys": [
+          [
+            "DURA",
+            "ITEM",
+            "SBT"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "魔法盾",
+      "ccid": 59,
+      "enabled": true,
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "alerts": [],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/magic_shield_ended.wav",
+      "ended_message": "魔法盾关闭",
+      "audio_volume": 100,
+      "observed": {
+        "apply_count": 2,
+        "remove_count": 2,
+        "durations_ms": {},
+        "top_extra_keys": [
+          []
+        ],
+        "source_file": "20260521-123300-buffwatcher-raw.ndjson.gz",
+        "note": "Manual toggle state; no SBT. Two self apply/remove pairs observed for CCId 59."
+      },
+      "ended_grace_seconds": 0.0,
+      "missing_shield_alert": {
+        "enabled": false,
+        "delay_seconds": 5.0,
+        "repeat_seconds": 5.0,
+        "sound": "assets/audio/xiaoyi/magic_shield_missing.wav",
+        "message": "魔法盾忘开啦"
+      },
+      "warn_sound": "assets/audio/warn.wav"
+    },
+    {
+      "name": "魔法阵",
+      "ccid": 10133,
+      "enabled": true,
+      "skill_id": 10103,
+      "linked_ccids": [
+        10138,
+        10137
+      ],
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "observed": {
+        "apply_count": 1,
+        "remove_count": 0,
+        "min_remaining_seconds": 127.049,
+        "median_remaining_seconds": 127.049,
+        "max_remaining_seconds": 127.049,
+        "durations_ms": {
+          "130000": 1
+        },
+        "top_extra_keys": [
+          [
+            "MCEB",
+            "MCED",
+            "MCEID",
+            "MCLV",
+            "SBT"
+          ]
+        ],
+        "components": [
+          {
+            "ccid": 10133,
+            "mceid": 0
+          },
+          {
+            "ccid": 10138,
+            "mceid": 1
+          },
+          {
+            "ccid": 10137,
+            "mceid": 2
+          }
+        ]
+      },
+      "alerts": [],
+      "ended_alert": false,
+      "ended_sound": "assets/audio/xiaoyi/self_buff_magic_circle_ended.wav",
+      "ended_message": "魔法阵 结束",
+      "cooldown_alert": true,
+      "cooldown_delay_seconds": 15,
+      "cooldown_sound": "assets/audio/xiaoyi/self_buff_magic_circle_cooldown.wav",
+      "cooldown_message": "魔法阵 就绪",
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/self_buff_magic_circle_remaining.wav"
+    },
+    {
+      "name": "星辰交汇-物理",
+      "ccid": 1016,
+      "enabled": false,
+      "alerts": [],
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "warn_sound": "assets/audio/xiaoyi/astrology.wav",
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/astrology.wav",
+      "ended_message": "占星",
+      "ended_on_remove_only": true,
+      "ended_grace_seconds": 0,
+      "sbt_ended_lead_seconds": 0,
+      "use_dynamic_sbt_adjust": false,
+      "audio_volume": 100
+    },
+    {
+      "name": "星辰交汇-魔法",
+      "ccid": 1045,
+      "enabled": false,
+      "alerts": [],
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "warn_sound": "assets/audio/xiaoyi/astrology.wav",
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/astrology.wav",
+      "ended_message": "占星",
+      "ended_on_remove_only": true,
+      "ended_grace_seconds": 0,
+      "sbt_ended_lead_seconds": 0,
+      "use_dynamic_sbt_adjust": false,
+      "audio_volume": 100
+    },
+    {
+      "name": "星辰交汇-炼金",
+      "ccid": 1046,
+      "enabled": false,
+      "alerts": [],
+      "warn_seconds": 0,
+      "critical_seconds": 0,
+      "warn_sound": "assets/audio/xiaoyi/astrology.wav",
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/astrology.wav",
+      "ended_message": "占星",
+      "ended_on_remove_only": true,
+      "ended_grace_seconds": 0,
+      "sbt_ended_lead_seconds": 0,
+      "use_dynamic_sbt_adjust": false,
+      "audio_volume": 100
+    }
+  ],
+  "audio_volume": 100,
+  "progresses": [
+    {
+      "name": "托亚灵进度",
+      "enabled": true,
+      "stat_id": 198,
+      "max_value": 100,
+      "warn_sound": "assets/audio/xiaoyi/toah_spirit_progress_remaining.wav",
+      "alerts": [
+        {
+          "remaining_progress": 5,
+          "sound": "assets/audio/xiaoyi/toah_spirit_progress_remaining.wav",
+          "message": "托亚灵震爆 即将发生"
+        }
+      ],
+      "audio_volume": 100,
+      "observed": {
+        "source_file": "20260521-135628-buffwatcher-raw.ndjson.gz",
+        "event_id": 17,
+        "stat_id": 198,
+        "min_value": 0,
+        "max_value": 5.088184,
+        "last_value": 5.088184,
+        "note": "EventId 17 self Stats StatId 198 matched the in-game Toearg progress bar, growing from 0 to about 5.09 during the capture."
+      },
+      "ended_alert": false
+    }
+  ],
+  "boss_entities": [
+    {
+      "id": "4767482429251739",
+      "name": "枯木之佩塔克",
+      "short_name": "布本1王",
+      "max_hp_values": [
+        698517000,
+        850368600
+      ]
+    },
+    {
+      "id": "4767482429265858",
+      "name": "布隆塔纳斯",
+      "short_name": "布本2王",
+      "max_hp_values": [
+        1143352700
+      ]
+    },
+    {
+      "id": "4767482429308981",
+      "name": "雷内恩的米耶尔",
+      "short_name": "布本3王",
+      "max_hp_values": [
+        1967880100
+      ]
+    },
+    {
+      "id": "",
+      "name": "凯莱赫-1阶段",
+      "short_name": "雪女1阶段",
+      "max_hp_values": [
+        80032160
+      ]
+    },
+    {
+      "id": "",
+      "name": "凯莱赫-2阶段",
+      "short_name": "雪女2阶段",
+      "max_hp_values": [
+        104041810
+      ]
+    }
+  ],
+  "boss_hp_alerts": [
+    {
+      "name": "枯木之佩塔克",
+      "short_name": "布本1王",
+      "entity_id": "4767482429251739",
+      "max_hp_values": [
+        698517000,
+        850368600
+      ],
+      "enabled": true,
+      "current_hp_stat_id": 28,
+      "max_hp_stat_id": 30,
+      "warn_sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+      "alerts": [
+        {
+          "threshold_percent": 88.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 73.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 58.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 38.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 28.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 18.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        }
+      ],
+      "audio_volume": 100
+    },
+    {
+      "name": "布隆塔纳斯",
+      "short_name": "布本2王",
+      "entity_id": "4767482429265858",
+      "max_hp_values": [
+        1143352700
+      ],
+      "enabled": true,
+      "current_hp_stat_id": 28,
+      "max_hp_stat_id": 30,
+      "warn_sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+      "alerts": [
+        {
+          "threshold_percent": 93.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 78.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 63.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 53.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 43.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 23.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        }
+      ],
+      "audio_volume": 100
+    },
+    {
+      "name": "雷内恩的米耶尔",
+      "short_name": "布本3王",
+      "entity_id": "4767482429308981",
+      "max_hp_values": [
+        1967880100
+      ],
+      "enabled": true,
+      "current_hp_stat_id": 28,
+      "max_hp_stat_id": 30,
+      "warn_sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+      "alerts": [
+        {
+          "threshold_percent": 83.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 63.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 43.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 33.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 15.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        }
+      ],
+      "audio_volume": 100
+    },
+    {
+      "name": "布本四王",
+      "short_name": "布本4王",
+      "entity_id": "",
+      "max_hp_values": [
+        3449779200
+      ],
+      "enabled": true,
+      "current_hp_stat_id": 28,
+      "max_hp_stat_id": 30,
+      "warn_sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+      "alerts": [
+        {
+          "threshold_percent": 83.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 68.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 53.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        },
+        {
+          "threshold_percent": 38.0,
+          "sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+          "message": "注意机制"
+        }
+      ],
+      "audio_volume": 100,
+      "safehouse_countdown_enabled": true,
+      "safehouse_countdown_effect_name": "布四安全屋",
+      "safehouse_countdown_sound_dir": "assets/audio/xiaoyi/safehouse_countdown",
+      "safehouse_countdown_message_template": "{message}，安全屋{seconds}秒",
+      "safehouse_countdown_min_seconds": 0,
+      "safehouse_countdown_max_seconds": 70
+    },
+    {
+      "name": "凯莱赫-1阶段",
+      "short_name": "雪女1阶段",
+      "entity_id": "",
+      "max_hp_values": [
+        80032160
+      ],
+      "enabled": true,
+      "current_hp_stat_id": 28,
+      "max_hp_stat_id": 30,
+      "warn_sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+      "alerts": [],
+      "audio_volume": 100,
+      "hidden": true,
+      "track_only": true
+    },
+    {
+      "name": "凯莱赫-2阶段",
+      "short_name": "雪女2阶段",
+      "entity_id": "",
+      "max_hp_values": [
+        104041810
+      ],
+      "enabled": true,
+      "current_hp_stat_id": 28,
+      "max_hp_stat_id": 30,
+      "warn_sound": "assets/audio/xiaoyi/boss_mechanic_warning.wav",
+      "alerts": [],
+      "audio_volume": 100,
+      "hidden": true,
+      "track_only": true
+    }
+  ],
+  "stat_drop_effects": [
+    {
+      "name": "布四安全屋",
+      "enabled": true,
+      "trigger": {
+        "event_id": -1
+      },
+      "start_stat_matches": [
+        {
+          "stat_id": 28,
+          "value": 3449779200
+        },
+        {
+          "stat_id": 30,
+          "value": 3449779200
+        }
+      ],
+      "stop_stat_matches": [
+        {
+          "stat_id": 28,
+          "max_value": 0
+        }
+      ],
+      "start_offset_seconds": 70,
+      "timer_sync_stat_matches": [
+        {
+          "stat_id": 11,
+          "value": 3
+        },
+        {
+          "stat_id": 28,
+          "value": 69906070
+        },
+        {
+          "stat_id": 30,
+          "value": 69906070
+        }
+      ],
+      "timer_sync_event_id": 17,
+      "timer_sync_initial_min_delay_seconds": 4,
+      "timer_sync_initial_max_delay_seconds": 12,
+      "timer_sync_expected_tolerance_seconds": 2,
+      "timer_sync_min_interval_seconds": 61,
+      "timer_sync_max_interval_seconds": 64,
+      "trigger_dedupe_seconds": 10,
+      "ignore_trigger_while_active": false,
+      "trigger_rearm_tolerance_seconds": 0,
+      "repeat_timer": true,
+      "self_filter": false,
+      "drop_rules": [],
+      "min_drop_count": 1,
+      "allow_unseen_drop": false,
+      "timer_enabled": true,
+      "duration_seconds": 63,
+      "alerts": [
+        {
+          "remaining_seconds": 7,
+          "sound": "assets/audio/xiaoyi/safehouse_warning.wav",
+          "message": "安全屋"
+        }
+      ],
+      "warn_sound": "assets/audio/xiaoyi/safehouse_warning.wav",
+      "ended_alert": false,
+      "ended_sound": "assets/audio/ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "observed": {
+        "source_file": "20260524-003416-buffwatcher-raw.ndjson.gz",
+        "note": "Boss entities with StatId 28 and StatId 30 both equal to 3449779200 mark the fight start. Safehouse timing is resynced only by full safehouse entities within the expected 61-64 second cadence window, excluding HP-mechanic entities."
+      }
+    },
+    {
+      "name": "庆典料理",
+      "enabled": true,
+      "trigger": {
+        "event_id": 0,
+        "op": "0xae04",
+        "message_matches": [
+          {
+            "index": 0,
+            "type": "int",
+            "value": "5038"
+          }
+        ]
+      },
+      "drop_rules": [
+        {
+          "stat_id": 48,
+          "min_drop": 20,
+          "max_drop": 40
+        },
+        {
+          "stat_id": 50,
+          "min_drop": 10,
+          "max_drop": 30
+        },
+        {
+          "stat_id": 52,
+          "min_drop": 10,
+          "max_drop": 30
+        },
+        {
+          "stat_id": 54,
+          "min_drop": 10,
+          "max_drop": 30
+        },
+        {
+          "stat_id": 56,
+          "min_drop": 10,
+          "max_drop": 30
+        },
+        {
+          "stat_id": 86,
+          "min_drop": 8,
+          "max_drop": 25
+        },
+        {
+          "stat_id": 87,
+          "min_drop": 8,
+          "max_drop": 20
+        },
+        {
+          "stat_id": 88,
+          "min_drop": 30,
+          "max_drop": 50
+        },
+        {
+          "stat_id": 94,
+          "min_drop": 8,
+          "max_drop": 20
+        }
+      ],
+      "min_drop_count": 6,
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/festival_food_ended.wav",
+      "ended_message": "{name} 结束",
+      "audio_volume": 100,
+      "observed": {
+        "source_file": "20260521-154032-buffwatcher-raw.ndjson.gz",
+        "trigger_op": "0xae04/5038",
+        "end_time": "2026-05-21 16:00:48.812",
+        "end_signature": "StatId 88 dropped 234->195 (-39), with 48/50/52/54/56/86/87/94 dropping at the same packet."
+      },
+      "allow_unseen_drop": true,
+      "timer_enabled": false,
+      "duration_seconds": 0,
+      "alerts": [],
+      "warn_sound": "assets/audio/xiaoyi/festival_food_remaining.wav"
+    }
+  ],
+  "key_enemy_debuff_alert": {
+    "name": "关键敌人DEBUFF提醒",
+    "complete_enabled": false,
+    "expiry_enabled": true,
+    "expiry_seconds": 30,
+    "complete_sound": "assets/audio/xiaoyi/debuffs_ready.wav",
+    "complete_message": "BUFF齐啦",
+    "expiry_sound": "assets/audio/xiaoyi/debuffs_renew.wav",
+    "expiry_message": "破防该续啦",
+    "physical_break_min": 30,
+    "magic_break_min": 41,
+    "damage_bonus_min": 61,
+    "rabbit_stacks_min": 4,
+    "max_hp_values": [
+      698517000,
+      850368600,
+      1143352700,
+      1967880100,
+      3449779200,
+      80032160,
+      104041810
+    ],
+    "current_hp_stat_id": 28,
+    "max_hp_stat_id": 30,
+    "audio_volume": 100,
+    "watched_debuffs": [
+      {
+        "name": "枪手之眼",
+        "ccids": [
+          1122
+        ],
+        "enabled": false,
+        "remaining_enabled": false,
+        "remaining_seconds": 5,
+        "remaining_sound": "assets/audio/xiaoyi/gunner_eye_remaining.wav",
+        "remaining_message": "枪手之眼",
+        "ended_enabled": false,
+        "ended_sound": "assets/audio/xiaoyi/gunner_eye_ended.wav",
+        "ended_message": "枪手之眼 结束"
+      }
+    ]
+  },
+  "ended_grace_seconds": 1.5,
+  "death_clear_suppression_window_ms": 500,
+  "death_clear_suppression_min_buffs": 5,
+  "death_signal_event_ids": [
+    15
+  ],
+  "death_signal_suppression_window_ms": 1500,
+  "boss_red_orb_alerts": [
+    {
+      "name": "布三红球危险倒数",
+      "enabled": true,
+      "entity_id": "",
+      "max_hp_values": [
+        1967880100
+      ],
+      "orb_race_ids": [
+        7604,
+        7605,
+        7606,
+        7607
+      ],
+      "countdown_op": "0x6d62",
+      "countdown_marker": "280",
+      "start_step": "4",
+      "confirm_step": "5",
+      "pair_window_ms": 250,
+      "explosion_delay_seconds": 15.0,
+      "high_hp_explosion_delay_seconds": 15.0,
+      "low_hp_explosion_delay_seconds": 20.0,
+      "lead_seconds": 3.0,
+      "contact_check_seconds": 12.0,
+      "safe_min_contact_ticks": 8,
+      "safe_last_contact_before_seconds": 12.0,
+      "contact_group_ms": 120,
+      "hp_split_percent": 60.0,
+      "high_hp_required_contact_ticks": 8,
+      "high_hp_early_check_seconds": 5.0,
+      "high_hp_early_max_contact_ticks": 2,
+      "high_hp_final_check_seconds": 8.0,
+      "low_hp_required_contact_ticks": 10,
+      "low_hp_early_check_seconds": 10.0,
+      "low_hp_early_max_contact_ticks": 5,
+      "low_hp_final_check_seconds": 11.0,
+      "late_confirm_op": "0x6d66",
+      "late_confirm_start_seconds": 12.0,
+      "late_confirm_end_seconds": 14.75,
+      "stale_seconds": 25.0,
+      "sound": "assets/audio/xiaoyi/red_orb_countdown/danger_red_orb.wav",
+      "safe_sound": "assets/audio/xiaoyi/red_orb_countdown/safe_complete.wav",
+      "message": "危险红球，5，4，3，2，1，0",
+      "audio_volume": 100,
+      "note": ""
+    }
+  ]
+}

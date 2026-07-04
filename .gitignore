@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.python-version
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build artifacts
+build/
+dist/
+release/
+*.spec
+
+# Runtime/generated state
+logs/
+scratch/
+*.lock
+launcher-status.json
+*.ndjson
+*.ndjson.gz
+*.log
+
+# Local/user configuration
+buffwatcher.config.local.json
+*.local.json
+
+# Third-party or bundled binaries/installers
+vendor/*.exe
+vendor/*.dll
+*.msi
+
+# Archives
+*.zip
+*.7z
+*.rar
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
