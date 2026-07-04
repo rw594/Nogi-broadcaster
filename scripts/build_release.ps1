@@ -38,6 +38,18 @@ if ($versionLabel) {
   $displayName = ($productName + " " + $versionLabel)
 }
 $entryFileName = ($displayName + ".exe")
+$versionCode = 0
+if ($versionLabel) {
+  $versionNumberText = ($versionLabel -replace '^[Vv]', '')
+  $versionParts = $versionNumberText.Split(".")
+  if ($versionParts.Count -ge 2) {
+    $versionCode = ([int]$versionParts[0] * 100) + [int]$versionParts[1]
+    if ($versionParts.Count -ge 3) {
+      $versionCode = ($versionCode * 100) + [int]$versionParts[2]
+    }
+  }
+}
+$updateMetadataUrl = "https://github.com/rw594/Nogi-broadcaster/releases/latest/download/latest.json"
 
 function Assert-UnderRoot([string]$PathToCheck) {
   $full = [System.IO.Path]::GetFullPath($PathToCheck)
@@ -226,11 +238,14 @@ New-Item -ItemType Directory -Force -Path $runtimeRoot | Out-Null
 $packageInfo = [ordered]@{
   product_name = $productName
   version_label = $versionLabel
+  version_code = $versionCode
   display_name = $displayName
   release_name = $ReleaseName
+  update_url = $updateMetadataUrl
 }
 $packageInfoJson = $packageInfo | ConvertTo-Json -Depth 3
 [System.IO.File]::WriteAllText((Join-Path $runtimeRoot "package-info.json"), $packageInfoJson, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText((Join-Path $packageRoot "package-info.json"), $packageInfoJson, [System.Text.Encoding]::UTF8)
 
 Copy-Item -Path ".\dist\BuffWatcher" -Destination $runtimeRoot -Recurse -Force
 Copy-Item -Path ".\dist\BuffWatcherConsole" -Destination $runtimeRoot -Recurse -Force

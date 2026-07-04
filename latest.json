@@ -1,17 +1,17 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.20",
-  "versionCode": 120,
-  "releaseName": "洛奇播报小助手 V1.20 乐曲重接静默",
+  "version": "1.21",
+  "versionCode": 121,
+  "releaseName": "洛奇播报小助手 V1.21 联机更新",
   "publishedAt": "2026-07-04",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.20/V1.20.zip",
-  "sha256": "c9415204c80faf78a73a1cd9e322347f3154a358769454fccdb94b853056e5a5",
-  "size": 64355589,
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.21/V1.21.zip",
+  "sha256": "73ff3515951a0cecb463b46ae289e1c50d391eb939127dae42728fa58f2bf5a1",
+  "size": 64321707,
   "mandatory": false,
   "notes": [
-    "修复行进曲续接为三倍时长时误播结束的问题。",
-    "保留不同乐曲覆盖时的结束播报，方便发现错误覆盖。",
-    "覆盖和续接样本不会污染动态 SBT 校准。"
+    "启动后自动检查 GitHub 更新源，有新版本时在小窗右上角显示橙色音符图标。",
+    "点击更新图标后可自动下载、校验、覆盖并重启到最新版。",
+    "任务栏和窗口图标改为凯尔布号角图标。"
   ]
 }

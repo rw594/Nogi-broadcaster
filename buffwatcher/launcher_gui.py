@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import threading
 import time
 import tkinter as tk
 from tkinter import messagebox
@@ -26,6 +27,13 @@ from .console_launcher import (
     watcher_exe,
     write_launcher_status,
 )
+from .updater import (
+    PreparedUpdate,
+    UpdateInfo,
+    fetch_latest_update,
+    prepare_update,
+    start_update,
+)
 
 
 COLORS = {
@@ -40,6 +48,7 @@ COLORS = {
     "ok": "#2f8c4d",
     "pending": "#c8872f",
     "bad": "#b0443e",
+    "update": "#d1841f",
 }
 
 
@@ -65,6 +74,9 @@ class LauncherApp:
         self.ready = False
         self.last_status_text = ""
         self.micopunch_order_warning_shown = False
+        self.update_info: UpdateInfo | None = None
+        self.update_check_started = False
+        self.update_in_progress = False
 
         self.root_window.title(self.display_title)
         self.root_window.configure(bg=COLORS["bg"])
@@ -73,6 +85,7 @@ class LauncherApp:
         self._set_icon()
         self._build()
         self.start_core()
+        self.root_window.after(1500, self.check_for_updates_async)
         self.root_window.after(300, self.poll_status)
 
     def _set_icon(self) -> None:
@@ -106,6 +119,7 @@ class LauncherApp:
 
         title = tk.Frame(outer, bg=COLORS["title"])
         title.grid(row=0, column=0, columnspan=4, sticky="ew")
+        title.columnconfigure(0, weight=1)
         tk.Label(
             title,
             text=self.display_title,
@@ -113,7 +127,19 @@ class LauncherApp:
             fg=COLORS["text"],
             font=("Microsoft YaHei UI", 12, "bold"),
             anchor="w",
-        ).pack(fill="x", padx=14, pady=(10, 8))
+        ).grid(row=0, column=0, sticky="ew", padx=(14, 8), pady=(10, 8))
+        self.update_icon = tk.Label(
+            title,
+            text="𝄞",
+            bg=COLORS["title"],
+            fg=COLORS["update"],
+            font=("Segoe UI Symbol", 19, "bold"),
+            cursor="hand2",
+            width=2,
+        )
+        self.update_icon.grid(row=0, column=1, sticky="e", padx=(0, 12), pady=(5, 4))
+        self.update_icon.grid_remove()
+        self.update_icon.bind("<Button-1>", self.show_update_prompt)
 
         status_row = tk.Frame(outer, bg=COLORS["row"])
         status_row.grid(row=1, column=0, columnspan=4, sticky="ew", padx=10, pady=(10, 8))
@@ -219,6 +245,87 @@ class LauncherApp:
                 self.log_stream = None
             self.set_status(False, f"后台启动失败: {exc}")
 
+    def check_for_updates_async(self) -> None:
+        if self.update_check_started:
+            return
+        self.update_check_started = True
+
+        def worker() -> None:
+            try:
+                info = fetch_latest_update(self.root, self.display_title)
+            except Exception:
+                info = None
+            if info is not None:
+                self.root_window.after(0, lambda: self.show_update_available(info))
+
+        threading.Thread(target=worker, name="update-check", daemon=True).start()
+
+    def show_update_available(self, info: UpdateInfo) -> None:
+        if self.update_in_progress:
+            return
+        self.update_info = info
+        self.update_icon.grid()
+
+    def show_update_prompt(self, _event: object | None = None) -> None:
+        if self.update_in_progress or self.update_info is None:
+            return
+        notes = "\n".join(f"· {note}" for note in self.update_info.notes[:5])
+        detail = f"发现新版本：{self.update_info.release_name}"
+        if notes:
+            detail += f"\n\n{notes}"
+        detail += "\n\n是否现在更新？更新完成后会自动重启。"
+        if not messagebox.askyesno("发现新版本", detail):
+            return
+        self.begin_update(self.update_info)
+
+    def begin_update(self, info: UpdateInfo) -> None:
+        if self.update_in_progress:
+            return
+        self.update_in_progress = True
+        self.update_icon.grid_remove()
+        self.set_update_status("下载更新中，完成后会自动重启")
+
+        def worker() -> None:
+            try:
+                prepared = prepare_update(self.root, info)
+            except Exception as exc:
+                self.root_window.after(0, lambda: self.update_failed(str(exc)))
+                return
+            self.root_window.after(0, lambda: self.apply_prepared_update(prepared))
+
+        threading.Thread(target=worker, name="update-download", daemon=True).start()
+
+    def apply_prepared_update(self, prepared: PreparedUpdate) -> None:
+        self.set_update_status("更新中，完成后会自动重启")
+        core_pid = self.process.pid if self.process is not None else 0
+        try:
+            start_update(
+                prepared,
+                self.root,
+                launcher_pid=os.getpid(),
+                core_pid=core_pid,
+            )
+        except Exception as exc:
+            self.update_failed(str(exc))
+            return
+        self.root_window.after(700, self.close)
+
+    def update_failed(self, message: str) -> None:
+        self.update_in_progress = False
+        self.last_status_text = ""
+        if self.ready:
+            self.set_status(True, "播报已启用")
+        elif self.connected:
+            self.set_pending_status("请开关魔法盾")
+        else:
+            self.set_status(False, "正在连接")
+        messagebox.showerror("更新失败", f"{message}\n\n请稍后重试，或手动下载最新版。")
+
+    def set_update_status(self, text: str) -> None:
+        self.last_status_text = text
+        self.status_icon.configure(text="𝄞", fg=COLORS["update"])
+        self.status_text.configure(text=text)
+
     def poll_status(self) -> None:
         if self.log_path is not None:
             self.log_offset, text = read_new_log_text(
@@ -226,12 +333,14 @@ class LauncherApp:
                 self.log_offset,
                 self.decoder,
             )
-            if text:
+            if text and not self.update_in_progress:
                 self.update_status_from_log(text)
 
         if self.process is not None:
             code = self.process.poll()
             if code is not None:
+                if self.update_in_progress:
+                    return
                 if code == 3:
                     self.show_micopunch_order_warning()
                 else:
