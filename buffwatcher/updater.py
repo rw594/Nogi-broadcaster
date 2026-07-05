@@ -320,9 +320,15 @@ try {
     Copy-Item -LiteralPath (Join-Path $preserve "assets\custom") -Destination (Join-Path $newWatcher "assets\custom") -Recurse -Force
   }
 
-  $entry = Get-ChildItem -LiteralPath $Target -Filter "洛奇播报小助手*.exe" -File |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 1
+  $productName = [string][char]0x6D1B + [string][char]0x5947 + [string][char]0x64AD + [string][char]0x62A5 + [string][char]0x5C0F + [string][char]0x52A9 + [string][char]0x624B
+  $fixedEntry = Join-Path $Target ($productName + ".exe")
+  if (Test-Path -LiteralPath $fixedEntry) {
+    $entry = Get-Item -LiteralPath $fixedEntry
+  } else {
+    $entry = Get-ChildItem -LiteralPath $Target -Filter ($productName + "*.exe") -File |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -First 1
+  }
   if (-not $entry) {
     throw "更新完成，但找不到启动程序。"
   }

@@ -37,7 +37,7 @@ $displayName = $productName
 if ($versionLabel) {
   $displayName = ($productName + " " + $versionLabel)
 }
-$entryFileName = ($displayName + ".exe")
+$entryFileName = ($productName + ".exe")
 $versionCode = 0
 if ($versionLabel) {
   $parsedVersion = [regex]::Match($versionLabel, '^[Vv](?<major>\d+)\.(?<minor>\d+)(?:\.(?<patch>\d+))?(?<suffix>[A-Za-z])?$')
