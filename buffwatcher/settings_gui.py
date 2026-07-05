@@ -16,6 +16,7 @@ from .alerting import (
     play_sound,
 )
 from .backend import app_root
+from .config_migration import migrate_config_file
 from .console_launcher import package_title
 
 
@@ -506,7 +507,7 @@ class SpecialEndOnlyRow:
 
 
 def load_config(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8-sig"))
+    return migrate_config_file(path)
 
 
 def save_config(path: Path, data: dict) -> None:

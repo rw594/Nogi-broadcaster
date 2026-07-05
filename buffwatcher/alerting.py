@@ -17,6 +17,7 @@ import uuid
 import wave
 from typing import Any, Iterable
 
+from .config_migration import migrate_config_file
 from .events import (
     DEFAULT_TZ_OFFSET_HOURS,
     event_remaining_seconds,
@@ -767,7 +768,7 @@ class LoadedSpecs:
 def load_all_specs(config_path: str | Path) -> LoadedSpecs:
     config_file = Path(config_path)
     config_dir = config_file.resolve().parent
-    data = json.loads(config_file.read_text(encoding="utf-8-sig"))
+    data = migrate_config_file(config_file)
     buff_specs: list[BuffSpec] = []
     progress_specs: list[ProgressSpec] = []
     stat_drop_effect_specs: list[StatDropEffectSpec] = []

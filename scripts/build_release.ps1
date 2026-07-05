@@ -258,6 +258,9 @@ Copy-Item -Path ".\dist\BuffWatcherLauncher" -Destination $runtimeRoot -Recurse 
 Copy-Item -Path ".\dist\BuffWatcherSettings" -Destination $runtimeRoot -Recurse -Force
 Copy-Item -LiteralPath ".\dist\BuffWatcherStart.exe" -Destination (Join-Path $packageRoot $entryFileName) -Force
 Copy-Item -LiteralPath $ReleaseConfigPath -Destination (Join-Path $appRoot "buffwatcher.config.local.json") -Force
+$defaultConfigDir = Join-Path $appRoot "config"
+New-Item -ItemType Directory -Force -Path $defaultConfigDir | Out-Null
+Copy-Item -LiteralPath (Join-Path $root "buffwatcher.config.defaults.json") -Destination (Join-Path $defaultConfigDir "buffwatcher.config.defaults.json") -Force
 Copy-Item -Path ".\assets" -Destination $appRoot -Recurse -Force
 Copy-Item -Path ".\vendor" -Destination $appRoot -Recurse -Force
 

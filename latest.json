@@ -1,15 +1,15 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.23b",
-  "versionCode": 12302,
-  "releaseName": "洛奇播报小助手 V1.23b 布3布4激光预警测试",
+  "version": "1.23c",
+  "versionCode": 12303,
+  "releaseName": "洛奇播报小助手 V1.23c 配置迁移修复",
   "publishedAt": "2026-07-05",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.23b/V1.23b.zip",
-  "sha256": "905d894c6036d2a79af5d6e2702d7d2522ebd11c128c6373ffcefd6c8a213095",
-  "size": 64375989,
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.23c/V1.23c.zip",
+  "sha256": "df0445e1089918720526dddafd4611c2d246d98f475d377f330c43e3f0a917c6",
+  "size": 64390593,
   "mandatory": false,
   "notes": [
-    "新增布3/布4激光预警（测试中功能，需手动开启；不建议与同类IT补丁共同使用）"
+    "修复联网更新后新增设置项不会自动补入旧配置的问题"
   ]
 }
