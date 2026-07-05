@@ -475,6 +475,8 @@ class BuffSpec:
     name: str
     ccid: int
     skill_id: int | None = None
+    self_filter: bool = True
+    required_extra: dict[str, Any] = field(default_factory=dict)
     duration_seconds: float | None = None
     sbt_adjust_seconds: float = 0
     use_dynamic_sbt_adjust: bool = True
@@ -955,6 +957,8 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                 name=item.get("name", f"cc_{item['ccid']}"),
                 ccid=int(item["ccid"]),
                 skill_id=int(item["skill_id"]) if item.get("skill_id") else None,
+                self_filter=bool(item.get("self_filter", True)),
+                required_extra=dict(item.get("required_extra") or {}),
                 duration_seconds=(
                     float(item["duration_seconds"])
                     if item.get("duration_seconds") is not None
@@ -2119,10 +2123,17 @@ class AlertEngine:
         normalized = None if self_id is None else str(self_id)
         if self.self_entity_id == normalized:
             return
+        self._reset_self_filtered_buff_states()
         self.self_entity_id = normalized
         self.self_player_dead = False
         self.last_self_hp = None
         self._clear_magic_shield_missing_schedule()
+
+    def _reset_self_filtered_buff_states(self) -> None:
+        for primary, state in list(self.states.items()):
+            if not state.spec.self_filter:
+                continue
+            self.states[primary] = BuffState(spec=state.spec)
 
     def process_event(self, event: dict[str, Any]) -> list[FiredAlert]:
         alerts: list[FiredAlert] = []
@@ -2168,6 +2179,9 @@ class AlertEngine:
         state = self.states[primary]
         event_id = event.get("EventId")
         at_ms = int(event.get("At", 0))
+
+        if not self._event_allowed_for_buff_spec(state.spec, event):
+            return alerts
 
         if event_id == 4:
             alerts.extend(self._apply_or_refresh(state, event, at_ms))
@@ -3415,6 +3429,21 @@ class AlertEngine:
             if value is not None and str(value) == self.self_entity_id:
                 return True
         return False
+
+    def _event_allowed_for_buff_spec(
+        self, spec: BuffSpec, event: dict[str, Any]
+    ) -> bool:
+        if (
+            spec.self_filter
+            and self.self_entity_id is not None
+            and not self._event_targets_self(event)
+        ):
+            return False
+        if event.get("EventId") == 4 and spec.required_extra:
+            return _extra_matches_required(
+                event.get("ExtraData") or {}, spec.required_extra
+            )
+        return True
 
     def _process_self_stats(self, event: dict[str, Any]) -> None:
         if not self._event_targets_self(event):
@@ -6047,6 +6076,26 @@ def _numeric_extra(extra: dict[str, Any], key: str) -> float:
 def _max_numeric_extra(extra: dict[str, Any], keys: Iterable[str]) -> float:
     values = [_numeric_extra(extra, key) for key in keys]
     return max(values) if values else float("-inf")
+
+
+def _extra_matches_required(
+    extra: dict[str, Any], required: dict[str, Any]
+) -> bool:
+    for key, expected in required.items():
+        if key not in extra:
+            return False
+        if not _extra_value_matches(extra.get(key), expected):
+            return False
+    return True
+
+
+def _extra_value_matches(actual: Any, expected: Any) -> bool:
+    if isinstance(expected, list):
+        return any(_extra_value_matches(actual, value) for value in expected)
+    try:
+        return abs(float(actual) - float(expected)) < 0.000001
+    except (TypeError, ValueError):
+        return str(actual) == str(expected)
 
 
 def _explicit_duration_ms(extra: dict[str, Any]) -> int | None:

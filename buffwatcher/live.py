@@ -17,6 +17,7 @@ from typing import Any, Iterable
 from .alerting import (
     AlertEngine,
     FiredAlert,
+    MAGIC_SHIELD_CCID,
     load_all_specs,
     play_sound,
     print_alert,
@@ -496,6 +497,8 @@ class SelfFilter:
             return None
         if attacker_text and attacker_text != target_id:
             self._notice_waiting(event, target_id=target_id, attacker_id=attacker_text)
+            return None
+        if not attacker_text and primary != MAGIC_SHIELD_CCID:
             return None
         spec = self.engine.states[primary].spec
         reason = f"buff {spec.name}"

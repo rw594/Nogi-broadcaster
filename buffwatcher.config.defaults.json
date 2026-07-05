@@ -1278,6 +1278,10 @@
       "name": "炼金水",
       "ccid": 1150,
       "enabled": true,
+      "required_extra": {
+        "ITEM": 5000314,
+        "DURA": 3600000
+      },
       "duration_seconds": 3600,
       "warn_seconds": 60,
       "critical_seconds": 60,
