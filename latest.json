@@ -1,16 +1,16 @@
 {
-  "app": "???????",
+  "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
   "version": "1.23d",
   "versionCode": 12304,
-  "releaseName": "??????? V1.23d ?????????",
+  "releaseName": "洛奇播报小助手 V1.23d 乐曲与半神计时修复",
   "publishedAt": "2026-07-05",
   "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.23d/V1.23d.zip",
   "sha256": "60a69cf3de3348262b3cc24624b8cd3c51e5890b6a097324d7014db1b13e285d",
   "size": 64390620,
   "mandatory": false,
   "notes": [
-    "????????????????????????",
-    "???????/??????"
+    "修复同一乐曲重新覆盖自身时，播报该乐曲结束的问题",
+    "优化半神化结束/冷却提醒计时"
   ]
 }
