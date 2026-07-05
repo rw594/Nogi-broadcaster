@@ -1,15 +1,16 @@
 {
-  "app": "洛奇播报小助手",
+  "app": "???????",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.23c",
-  "versionCode": 12303,
-  "releaseName": "洛奇播报小助手 V1.23c 配置迁移修复",
+  "version": "1.23d",
+  "versionCode": 12304,
+  "releaseName": "??????? V1.23d ?????????",
   "publishedAt": "2026-07-05",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.23c/V1.23c.zip",
-  "sha256": "df0445e1089918720526dddafd4611c2d246d98f475d377f330c43e3f0a917c6",
-  "size": 64390593,
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.23d/V1.23d.zip",
+  "sha256": "60a69cf3de3348262b3cc24624b8cd3c51e5890b6a097324d7014db1b13e285d",
+  "size": 64390620,
   "mandatory": false,
   "notes": [
-    "修复联网更新后新增设置项不会自动补入旧配置的问题"
+    "????????????????????????",
+    "???????/??????"
   ]
 }

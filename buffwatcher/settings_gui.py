@@ -280,6 +280,10 @@ SPECIAL_END_ONLY_DEFAULTS = {
         "ended_sound": "assets/audio/xiaoyi/demigod_ended.wav",
         "ended_message": "半神 结束",
         "cooldown_message": "半神 就绪",
+        "ended_on_remove_only": True,
+        "ended_grace_seconds": 0,
+        "sbt_ended_lead_seconds": 0,
+        "use_dynamic_sbt_adjust": False,
     },
     THIRD_EYE_NAME: {
         "cooldown_seconds": 180,

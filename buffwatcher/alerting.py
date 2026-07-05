@@ -2796,12 +2796,6 @@ class AlertEngine:
         self, state: BuffState, ended_at_ms: int | None
     ) -> float:
         grace_seconds = state.spec.ended_grace_seconds
-        if (
-            ended_at_ms is not None
-            and state.spec.ccid in MUSIC_BUFF_CCIDS
-            and self._has_active_other_music_buff(state.spec.ccid)
-        ):
-            return 0.0
         if ended_at_ms is not None and state.spec.ccid in MUSIC_BUFF_CCIDS:
             grace_seconds = max(
                 grace_seconds, MUSIC_REAPPLY_SUPPRESSION_GRACE_SECONDS
