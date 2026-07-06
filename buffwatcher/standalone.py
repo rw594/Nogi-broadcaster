@@ -69,6 +69,19 @@ def micopunch_is_running() -> bool:
     return "MicoPunch.exe" in result.stdout
 
 
+def is_transient_backend_traffic_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return any(
+        marker in text
+        for marker in (
+            "could not detect game traffic",
+            "newgameserverpacketreader failed",
+            "the source string must not be empty",
+            "backend did not report listen_port",
+        )
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run 洛奇播报小助手 with its own local packet backend."
@@ -142,10 +155,27 @@ def main() -> int:
         nonlocal backend
         if backend_path is None:
             raise RuntimeError("backend path is not available")
-        backend = MabicatBackend(backend_path, requested_port=args.backend_port)
-        port = backend.start()
-        print(f"[standalone] backend port: {port}")
-        return port
+        attempt = 0
+        while True:
+            attempt += 1
+            backend = MabicatBackend(backend_path, requested_port=args.backend_port)
+            try:
+                port = backend.start()
+            except Exception as exc:
+                if backend is not None:
+                    backend.stop()
+                    backend = None
+                if not is_transient_backend_traffic_error(exc):
+                    raise
+                print(
+                    "[standalone] packet backend did not detect game traffic; "
+                    f"retrying in 5s (attempt {attempt}). "
+                    "Keep Mabinogi connected and move or refresh one BUFF once."
+                )
+                time.sleep(5)
+                continue
+            print(f"[standalone] backend port: {port}")
+            return port
 
     def restart_backend() -> int:
         nonlocal backend

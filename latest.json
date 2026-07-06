@@ -1,19 +1,17 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.24",
-  "versionCode": 12400,
-  "releaseName": "洛奇播报小助手 V1.24 乐曲强提醒与机制语音包",
-  "publishedAt": "2026-07-06",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24/V1.24.zip",
-  "sha256": "a065dd5ccfafbe558f79e3af8f82985c77b1cc4a8314346bd0fbe1d60c687dd7",
-  "size": 64410098,
+  "version": "1.24a",
+  "versionCode": 12401,
+  "releaseName": "洛奇播报小助手 V1.24a 后端启动重试修复",
+  "publishedAt": "2026-07-07",
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24a/V1.24a.zip",
+  "sha256": "0c5a6cac8ee40523773d0fdc2f97afb8f8214528b5229a07603681e2cafbb5b7",
+  "size": 64413368,
   "mandatory": false,
   "notes": [
-    "新增【乐曲强提醒模式】：开启后，战争序曲 / 活跃曲 / 行进曲的剩余提醒前会追加高频提示音；若提醒过后5秒，玩家仍未上徒安，将重复提醒，直到玩家上好徒安，或者乐曲结束。",
-    "乐曲类 BUFF 的默认剩余提醒时间由 15 秒调整为 20 秒。",
-    "修复部分情况下状态支援剩余提醒不触发的问题。",
-    "修复部分情况下乐曲BUFF剩余提醒不触发的问题。",
-    "布里列赫红球预警与激光预警现在支持自定义语音包，可在设置页自行替换播报音源。"
+    "修复启动时短时间未抓到游戏流量会导致后台已停止的问题。",
+    "优化更新检查稳定性，增加多次重试和元数据兜底来源。",
+    "更新检查结果会写入启动器日志，方便后续排查无法提示新版本的问题。"
   ]
 }

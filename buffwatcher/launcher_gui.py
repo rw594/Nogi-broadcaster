@@ -30,6 +30,7 @@ from .console_launcher import (
 from .updater import (
     PreparedUpdate,
     UpdateInfo,
+    current_version_code,
     fetch_latest_update,
     prepare_update,
     start_update,
@@ -76,6 +77,7 @@ class LauncherApp:
         self.micopunch_order_warning_shown = False
         self.update_info: UpdateInfo | None = None
         self.update_check_started = False
+        self.update_check_running = False
         self.update_in_progress = False
 
         self.root_window.title(self.display_title)
@@ -86,6 +88,10 @@ class LauncherApp:
         self._build()
         self.start_core()
         self.root_window.after(1500, self.check_for_updates_async)
+        self.root_window.after(
+            15000,
+            lambda: self.check_for_updates_async(force=True, reason="startup-retry"),
+        )
         self.root_window.after(300, self.poll_status)
 
     def _set_icon(self) -> None:
@@ -262,18 +268,92 @@ class LauncherApp:
                 self.log_stream = None
             self.set_status(False, f"后台启动失败: {exc}")
 
-    def check_for_updates_async(self) -> None:
-        if self.update_check_started:
+    def append_launcher_log(self, message: str) -> None:
+        try:
+            self.logs.mkdir(parents=True, exist_ok=True)
+            path = self.log_path or (self.logs / "launcher-update.log")
+            line = f"[launcher] {time.strftime('%Y-%m-%d %H:%M:%S')} {message}\n"
+            with path.open("ab") as stream:
+                stream.write(line.encode("utf-8", "replace"))
+        except OSError:
+            pass
+
+    def check_for_updates_async(
+        self,
+        *,
+        force: bool = False,
+        reason: str = "startup",
+    ) -> None:
+        if self.update_in_progress or self.update_info is not None:
+            return
+        if self.update_check_running:
+            return
+        if self.update_check_started and not force:
             return
         self.update_check_started = True
+        self.update_check_running = True
+        self.append_launcher_log(f"update check start reason={reason}")
 
         def worker() -> None:
+            info = None
+            error = None
+            current_code = 0
             try:
-                info = fetch_latest_update(self.root, self.display_title)
-            except Exception:
-                info = None
+                current_code = current_version_code(self.root, self.display_title)
+            except Exception as exc:
+                error = exc
+            if error is None:
+                for attempt in range(1, 4):
+                    try:
+                        info = fetch_latest_update(
+                            self.root,
+                            self.display_title,
+                            timeout_seconds=12.0,
+                        )
+                        error = None
+                        break
+                    except Exception as exc:
+                        error = exc
+                        self.append_launcher_log(
+                            "update check attempt failed "
+                            f"reason={reason} attempt={attempt} "
+                            f"error={type(exc).__name__}: {exc}"
+                        )
+                        time.sleep(1.5 * attempt)
+            if error is not None:
+                self.append_launcher_log(
+                    f"update check failed reason={reason} error={type(error).__name__}: {error}"
+                )
+            elif info is None:
+                self.append_launcher_log(
+                    f"update check ok reason={reason} current_code={current_code} available=0"
+                )
+            else:
+                self.append_launcher_log(
+                    "update check ok "
+                    f"reason={reason} current_code={current_code} "
+                    f"available=1 latest_code={info.version_code} latest={info.version}"
+                )
+
+            def finish() -> None:
+                self.update_check_running = False
+                if info is not None:
+                    self.show_update_available(info)
+
             if info is not None:
-                self.root_window.after(0, lambda: self.show_update_available(info))
+                try:
+                    self.root_window.after(0, finish)
+                except RuntimeError as exc:
+                    self.update_check_running = False
+                    self.append_launcher_log(f"update badge failed: {exc}")
+            else:
+                try:
+                    self.root_window.after(
+                        0,
+                        lambda: setattr(self, "update_check_running", False),
+                    )
+                except RuntimeError:
+                    self.update_check_running = False
 
         threading.Thread(target=worker, name="update-check", daemon=True).start()
 
@@ -371,6 +451,13 @@ class LauncherApp:
                     except OSError:
                         pass
                     self.log_stream = None
+                self.root_window.after(
+                    200,
+                    lambda exit_code=code: self.check_for_updates_async(
+                        force=True,
+                        reason=f"backend-exit-{exit_code}",
+                    ),
+                )
                 return
 
         self.root_window.after(500, self.poll_status)

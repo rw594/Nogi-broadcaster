@@ -15,7 +15,11 @@ import zipfile
 UPDATE_METADATA_URL = (
     "https://github.com/rw594/Nogi-broadcaster/releases/latest/download/latest.json"
 )
-VERSION_RE = re.compile(r"v?(\d+(?:\.\d+)+)", re.IGNORECASE)
+UPDATE_API_URL = "https://api.github.com/repos/rw594/Nogi-broadcaster/releases/latest"
+FALLBACK_UPDATE_METADATA_URLS = (
+    "https://cdn.jsdelivr.net/gh/rw594/Nogi-broadcaster@main/latest.json",
+)
+VERSION_RE = re.compile(r"v?(\d+(?:\.\d+){1,2})([a-z])?", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -42,14 +46,13 @@ def version_code_from_text(text: str) -> int:
     if not match:
         return 0
     parts = [int(part) for part in match.group(1).split(".")]
-    if not parts:
+    if len(parts) < 2:
         return 0
-    code = parts[0] * 100
-    if len(parts) >= 2:
-        code += parts[1]
-    if len(parts) >= 3:
-        code = code * 100 + parts[2]
-    return code
+    patch = parts[2] if len(parts) >= 3 else 0
+    suffix = match.group(2)
+    if suffix and len(parts) == 2:
+        patch = ord(suffix.lower()) - ord("a") + 1
+    return parts[0] * 10000 + parts[1] * 100 + patch
 
 
 def current_version_code(runtime_root: Path, display_title: str = "") -> int:
@@ -83,6 +86,46 @@ def fetch_latest_update(
     *,
     metadata_url: str = UPDATE_METADATA_URL,
     timeout_seconds: float = 8.0,
+) -> UpdateInfo | None:
+    last_error: Exception | None = None
+    try:
+        return _fetch_latest_update_from_url(
+            runtime_root,
+            display_title,
+            metadata_url=metadata_url,
+            timeout_seconds=timeout_seconds,
+        )
+    except Exception as exc:
+        last_error = exc
+    try:
+        return _fetch_latest_update_from_github_api(
+            runtime_root,
+            display_title,
+            timeout_seconds=timeout_seconds,
+        )
+    except Exception as exc:
+        last_error = exc
+    for candidate_url in FALLBACK_UPDATE_METADATA_URLS:
+        try:
+            return _fetch_latest_update_from_url(
+                runtime_root,
+                display_title,
+                metadata_url=candidate_url,
+                timeout_seconds=timeout_seconds,
+            )
+        except Exception as exc:
+            last_error = exc
+    if last_error is not None:
+        raise last_error
+    return None
+
+
+def _fetch_latest_update_from_url(
+    runtime_root: Path,
+    display_title: str = "",
+    *,
+    metadata_url: str,
+    timeout_seconds: float,
 ) -> UpdateInfo | None:
     request = urllib.request.Request(
         metadata_url,
@@ -118,6 +161,61 @@ def fetch_latest_update(
         sha256=sha256,
         size=size,
         mandatory=bool(data.get("mandatory") or False),
+        notes=notes,
+    )
+    if not info.download_url or info.version_code <= 0:
+        return None
+    if info.version_code <= current_version_code(runtime_root, display_title):
+        return None
+    return info
+
+
+def _fetch_latest_update_from_github_api(
+    runtime_root: Path,
+    display_title: str = "",
+    *,
+    timeout_seconds: float,
+) -> UpdateInfo | None:
+    request = urllib.request.Request(
+        UPDATE_API_URL,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "Nogi-broadcaster-updater",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+        payload = response.read(1024 * 1024)
+    data = json.loads(payload.decode("utf-8-sig"))
+    version = str(data.get("tag_name") or "").strip().lstrip("vV")
+    release_name = str(data.get("name") or "").strip()
+    zip_asset = None
+    for asset in data.get("assets") or ():
+        name = str(asset.get("name") or "")
+        if name.lower().endswith(".zip"):
+            zip_asset = asset
+            break
+    if not zip_asset:
+        return None
+    download_url = str(zip_asset.get("browser_download_url") or "").strip()
+    try:
+        size = int(zip_asset.get("size") or 0)
+    except (TypeError, ValueError):
+        size = 0
+    digest = str(zip_asset.get("digest") or "").strip().lower()
+    sha256 = digest.removeprefix("sha256:") if digest.startswith("sha256:") else ""
+    notes = tuple(
+        line.strip()
+        for line in str(data.get("body") or "").splitlines()
+        if line.strip()
+    )
+    info = UpdateInfo(
+        version=version,
+        version_code=version_code_from_text(version or release_name),
+        release_name=release_name or (f"V{version}" if version else "新版本"),
+        download_url=download_url,
+        sha256=sha256,
+        size=size,
+        mandatory=False,
         notes=notes,
     )
     if not info.download_url or info.version_code <= 0:
