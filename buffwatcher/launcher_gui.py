@@ -432,6 +432,8 @@ class LauncherApp:
             )
             if text and not self.update_in_progress:
                 self.update_status_from_log(text)
+            if not self.update_in_progress:
+                self.sync_status_from_log_markers()
 
         if self.process is not None:
             code = self.process.poll()
@@ -491,6 +493,45 @@ class LauncherApp:
             self.set_status(False, "已有一个提醒器正在运行")
         if "MicoPunch is already running" in line:
             self.show_micopunch_order_warning()
+
+    def sync_status_from_log_markers(self) -> None:
+        if self.log_path is None:
+            return
+        try:
+            with self.log_path.open("rb") as stream:
+                stream.seek(0, os.SEEK_END)
+                size = stream.tell()
+                stream.seek(max(0, size - 262144))
+                data = stream.read()
+        except OSError:
+            return
+
+        learned_at = max(
+            data.rfind(b"[live] learned self id:"),
+            data.rfind(b"[live] updated self id:"),
+        )
+        reset_at = data.rfind(b"[live] reset self id:")
+        connected_at = data.rfind(b"[live] websocket connected")
+        disconnected_at = data.rfind(b"[live] websocket disconnected")
+
+        if connected_at > disconnected_at:
+            self.connected = True
+        elif disconnected_at > connected_at:
+            self.connected = False
+
+        if reset_at > learned_at:
+            if self.ready:
+                self.ready = False
+                if self.connected:
+                    self.set_pending_status("请开关魔法盾")
+                else:
+                    self.set_status(False, "正在连接")
+            return
+
+        if learned_at >= 0:
+            self.ready = True
+            if self.connected:
+                self.set_status(True, "播报已启用")
 
     def show_micopunch_order_warning(self) -> None:
         self.connected = False

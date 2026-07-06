@@ -1,17 +1,15 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.24a",
-  "versionCode": 12401,
-  "releaseName": "洛奇播报小助手 V1.24a 后端启动重试修复",
+  "version": "1.24b",
+  "versionCode": 12402,
+  "releaseName": "洛奇播报小助手 V1.24b 小窗识别状态修复",
   "publishedAt": "2026-07-07",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24a/V1.24a.zip",
-  "sha256": "0c5a6cac8ee40523773d0fdc2f97afb8f8214528b5229a07603681e2cafbb5b7",
-  "size": 64413368,
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24b/V1.24b.zip",
+  "sha256": "7a8753de78e467195ee3084b3a6f619ba766bada82b34a1cec9d307420499576",
+  "size": 64415532,
   "mandatory": false,
   "notes": [
-    "修复启动时短时间未抓到游戏流量会导致后台已停止的问题。",
-    "优化更新检查稳定性，增加多次重试和元数据兜底来源。",
-    "更新检查结果会写入启动器日志，方便后续排查无法提示新版本的问题。"
+    "修复已经识别角色并能正常播报后，小窗口仍停留在【请开关魔法盾】的问题。"
   ]
 }
