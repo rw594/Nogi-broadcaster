@@ -1,15 +1,15 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.23f",
-  "versionCode": 12306,
-  "releaseName": "洛奇播报小助手 V1.23f 队友状态串入修复",
-  "publishedAt": "2026-07-05",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.23f/V1.23f.zip",
-  "sha256": "8ec3dbe0ee89602ee37b287f44b70c016724d02d26e49d84f9b90c2702e0af10",
-  "size": 64391040,
+  "version": "1.23g",
+  "versionCode": 12307,
+  "releaseName": "洛奇播报小助手 V1.23g 更新器稳定性修复",
+  "publishedAt": "2026-07-06",
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.23g/V1.23g.zip",
+  "sha256": "8a8652d6437c5e4f52b43a47e58fca00c97c075a487a64b8f2a4436325a5ff6b",
+  "size": 64394886,
   "mandatory": false,
   "notes": [
-    "修复队友药水/BUFF 状态串入自身提醒的问题"
+    "修复部分用户联机更新时，旧进程占用 DLL 导致更新失败的问题"
   ]
 }

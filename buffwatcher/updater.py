@@ -261,6 +261,75 @@ function Wait-ForProcessExit([int]$PidValue) {
   }
 }
 
+function Get-PackageProcesses([string]$TargetPath) {
+  $targetFull = [System.IO.Path]::GetFullPath($TargetPath)
+  $separator = [System.IO.Path]::DirectorySeparatorChar.ToString()
+  if (-not $targetFull.EndsWith($separator)) {
+    $targetFull = $targetFull + $separator
+  }
+  $matches = @()
+  foreach ($process in Get-Process -ErrorAction SilentlyContinue) {
+    if ($process.Id -eq $PID) { continue }
+    $processPath = $null
+    try {
+      $processPath = $process.MainModule.FileName
+    } catch {
+      continue
+    }
+    if (-not $processPath) { continue }
+    try {
+      $processFullPath = [System.IO.Path]::GetFullPath($processPath)
+    } catch {
+      continue
+    }
+    if ($processFullPath.StartsWith($targetFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+      $matches += $process
+    }
+  }
+  return $matches
+}
+
+function Stop-PackageProcesses([string]$TargetPath) {
+  $processes = @(Get-PackageProcesses $TargetPath)
+  foreach ($process in $processes) {
+    try {
+      Write-UpdateLog ("close process " + $process.Id + " " + $process.ProcessName)
+      $process.CloseMainWindow() | Out-Null
+    } catch {
+    }
+  }
+  if ($processes.Count -gt 0) {
+    Start-Sleep -Milliseconds 1200
+  }
+  $processes = @(Get-PackageProcesses $TargetPath)
+  foreach ($process in $processes) {
+    try {
+      Write-UpdateLog ("kill process " + $process.Id + " " + $process.ProcessName)
+      Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+    } catch {
+    }
+  }
+  if ($processes.Count -gt 0) {
+    Start-Sleep -Milliseconds 800
+  }
+}
+
+function Invoke-WithRetry([scriptblock]$Action, [string]$Description, [int]$Attempts = 10) {
+  for ($attempt = 1; $attempt -le $Attempts; $attempt++) {
+    try {
+      & $Action
+      return
+    } catch {
+      Write-UpdateLog ($Description + " attempt " + $attempt + " failed: " + $_.Exception.Message)
+      if ($attempt -ge $Attempts) {
+        throw
+      }
+      Stop-PackageProcesses $Target
+      Start-Sleep -Milliseconds (300 * $attempt)
+    }
+  }
+}
+
 function Show-UpdateError([string]$Message) {
   try {
     Add-Type -AssemblyName PresentationFramework
@@ -284,7 +353,8 @@ try {
 
   Wait-ForProcessExit $CorePid
   Wait-ForProcessExit $LauncherPid
-  Start-Sleep -Milliseconds 800
+  Stop-PackageProcesses $Target
+  Start-Sleep -Milliseconds 1200
 
   $preserve = Join-Path $env:TEMP ("nogi-broadcaster-preserve-" + [guid]::NewGuid().ToString("N"))
   New-Item -ItemType Directory -Force -Path $preserve | Out-Null
@@ -302,11 +372,15 @@ try {
     Copy-Item -LiteralPath $customPath -Destination (Join-Path $preserve "assets\custom") -Recurse -Force
   }
 
-  Get-ChildItem -LiteralPath $Target -Force | Remove-Item -Recurse -Force
+  Invoke-WithRetry {
+    Get-ChildItem -LiteralPath $Target -Force | Remove-Item -Recurse -Force
+  } "remove target contents"
   New-Item -ItemType Directory -Force -Path $Target | Out-Null
-  Get-ChildItem -LiteralPath $Source -Force | ForEach-Object {
-    Copy-Item -LiteralPath $_.FullName -Destination $Target -Recurse -Force
-  }
+  Invoke-WithRetry {
+    Get-ChildItem -LiteralPath $Source -Force | ForEach-Object {
+      Copy-Item -LiteralPath $_.FullName -Destination $Target -Recurse -Force
+    }
+  } "copy update payload"
 
   $newWatcher = Join-Path (Join-Path $Target $RuntimeDirName) "BuffWatcher"
   if (Test-Path -LiteralPath (Join-Path $preserve "buffwatcher.config.local.json")) {
