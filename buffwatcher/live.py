@@ -895,6 +895,9 @@ def make_engine(args: argparse.Namespace) -> tuple[AlertEngine, SelfFilter]:
         death_clear_suppression_min_buffs=loaded.death_clear_suppression_min_buffs,
         death_signal_event_ids=loaded.death_signal_event_ids,
         death_signal_suppression_window_ms=loaded.death_signal_suppression_window_ms,
+        music_strong_reminder_enabled=loaded.music_strong_reminder_enabled,
+        music_strong_reminder_repeat_seconds=loaded.music_strong_reminder_repeat_seconds,
+        music_strong_reminder_prefix_sound=loaded.music_strong_reminder_prefix_sound,
     )
     self_filter = SelfFilter(
         engine,

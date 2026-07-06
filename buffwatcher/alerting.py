@@ -61,6 +61,11 @@ MUSIC_BUFF_CCIDS = frozenset({192, 193, 680})
 TUAN_SONG_CCID = 1124
 MUSIC_APPLY_REMOVE_NOISE_WINDOW_MS = 1000
 MUSIC_REAPPLY_SUPPRESSION_GRACE_SECONDS = 1.0
+MUSIC_TUAN_EXTENSION_MIN_REMAINING_SECONDS = 700
+MUSIC_TUAN_EXTENSION_RECENT_WINDOW_MS = 15_000
+DEFAULT_MUSIC_STRONG_REMINDER_ENABLED = False
+DEFAULT_MUSIC_STRONG_REMINDER_REPEAT_SECONDS = 5.0
+DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND = "assets/audio/xiaoyi/music_strong_beep.wav"
 PLAYER_HP_STAT_ID = 28
 BOSS_HP_CURRENT_STAT_ID = 28
 BOSS_HP_MAX_STAT_ID = 30
@@ -110,6 +115,14 @@ DEFAULT_BOSS_RED_ORB_COUNTDOWN_1_SOUND = (
 DEFAULT_BOSS_RED_ORB_COUNTDOWN_0_SOUND = (
     "assets/audio/xiaoyi/red_orb_countdown/count_00.wav"
 )
+DEFAULT_BOSS_RED_ORB_COUNTDOWN_SOUNDS = {
+    5: DEFAULT_BOSS_RED_ORB_COUNTDOWN_5_SOUND,
+    4: DEFAULT_BOSS_RED_ORB_COUNTDOWN_4_SOUND,
+    3: DEFAULT_BOSS_RED_ORB_COUNTDOWN_3_SOUND,
+    2: DEFAULT_BOSS_RED_ORB_COUNTDOWN_2_SOUND,
+    1: DEFAULT_BOSS_RED_ORB_COUNTDOWN_1_SOUND,
+    0: DEFAULT_BOSS_RED_ORB_COUNTDOWN_0_SOUND,
+}
 DEFAULT_BOSS_RED_ORB_BOSS_MAX_HP_VALUES = (1_967_880_100,)
 DEFAULT_BOSS_RED_ORB_RACE_IDS = (7604, 7605, 7606, 7607)
 DEFAULT_BOSS_RED_ORB_COUNTDOWN_OP = "0x6d62"
@@ -163,6 +176,13 @@ DEFAULT_BOSS_LASER_SKILL_ID = 52401
 DEFAULT_BOSS_LASER_CAST_SECONDS = 5.0
 DEFAULT_BOSS_LASER_CLUSTER_WINDOW_MS = 250
 DEFAULT_BOSS_LASER_STALE_SECONDS = 8.0
+DEFAULT_BOSS_LASER_COUNTDOWN_SOUNDS = {
+    4: DEFAULT_BOSS_RED_ORB_COUNTDOWN_4_SOUND,
+    3: DEFAULT_BOSS_RED_ORB_COUNTDOWN_3_SOUND,
+    2: DEFAULT_BOSS_RED_ORB_COUNTDOWN_2_SOUND,
+    1: DEFAULT_BOSS_RED_ORB_COUNTDOWN_1_SOUND,
+    0: DEFAULT_BOSS_RED_ORB_COUNTDOWN_0_SOUND,
+}
 DEFAULT_KEY_ENEMY_DEBUFF_COMPLETE_SOUND = "assets/audio/xiaoyi/debuffs_ready.wav"
 DEFAULT_KEY_ENEMY_DEBUFF_EXPIRY_SOUND = "assets/audio/xiaoyi/debuffs_renew.wav"
 DEFAULT_KEY_ENEMY_DEBUFF_COMPLETE_MESSAGE = "BUFF齐啦"
@@ -415,6 +435,7 @@ class BossRedOrbAlertSpec:
     sound: str = DEFAULT_BOSS_RED_ORB_SOUND
     message: str = DEFAULT_BOSS_RED_ORB_MESSAGE
     safe_sound: str = DEFAULT_BOSS_RED_ORB_SAFE_SOUND
+    countdown_sounds: dict[int, str] = field(default_factory=dict)
     audio_volume: int = 100
 
 
@@ -433,6 +454,7 @@ class BossLaserAlertSpec:
     stale_seconds: float = DEFAULT_BOSS_LASER_STALE_SECONDS
     sound: str = DEFAULT_BOSS_LASER_WARNING_SOUND
     message: str = DEFAULT_BOSS_LASER_WARNING_MESSAGE
+    countdown_sounds: dict[int, str] = field(default_factory=dict)
     audio_volume: int = 100
 
 
@@ -504,6 +526,7 @@ class BuffSpec:
     clear_after_stack_min_active_seconds: float = 0
     suppress_remaining_if_active_ccids: set[int] = field(default_factory=set)
     suppress_ended_if_active_ccids: set[int] = field(default_factory=set)
+    prefer_sbt_when_duration_present: bool = False
 
 
 @dataclass
@@ -575,6 +598,12 @@ class BuffState:
     pending_dynamic_sbt_learn_at_ms: int | None = None
     pending_dynamic_sbt_remove_at_ms: int | None = None
     pending_dynamic_sbt_raw_end_ms: int | None = None
+    music_strong_reminder_next_at_ms: int | None = None
+    music_strong_reminder_rule_seconds: int | None = None
+    music_strong_reminder_sound: str | None = None
+    music_toan_extended: bool = False
+    music_toan_extended_at_ms: int | None = None
+    music_toan_extension_source: str | None = None
 
 
 @dataclass
@@ -765,6 +794,11 @@ class LoadedSpecs:
     death_signal_suppression_window_ms: int = (
         DEFAULT_DEATH_SIGNAL_SUPPRESSION_WINDOW_MS
     )
+    music_strong_reminder_enabled: bool = DEFAULT_MUSIC_STRONG_REMINDER_ENABLED
+    music_strong_reminder_repeat_seconds: float = (
+        DEFAULT_MUSIC_STRONG_REMINDER_REPEAT_SECONDS
+    )
+    music_strong_reminder_prefix_sound: str = DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND
 
 
 def load_all_specs(config_path: str | Path) -> LoadedSpecs:
@@ -841,6 +875,18 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
             return str(path)
         return str(config_dir / path)
 
+    def countdown_sound_paths(
+        value: Any,
+        defaults: dict[int, str],
+    ) -> dict[int, str]:
+        if not isinstance(value, dict):
+            value = {}
+        result: dict[int, str] = {}
+        for number, default_sound in defaults.items():
+            raw_sound = value.get(str(number), value.get(number, default_sound))
+            result[number] = sound_path(str(raw_sound or default_sound))
+        return result
+
     def parse_max_hp_values(raw_values: Any) -> list[float]:
         if isinstance(raw_values, (int, float, str)):
             raw_values = [raw_values]
@@ -853,6 +899,33 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
             if max_hp > 0:
                 max_hp_values.append(max_hp)
         return max_hp_values
+
+    music_strong_data = data.get("music_strong_reminder") or {}
+    if not isinstance(music_strong_data, dict):
+        music_strong_data = {}
+    music_strong_reminder_enabled = bool(
+        music_strong_data.get(
+            "enabled",
+            DEFAULT_MUSIC_STRONG_REMINDER_ENABLED,
+        )
+    )
+    music_strong_reminder_repeat_seconds = max(
+        0.5,
+        float(
+            music_strong_data.get(
+                "repeat_seconds",
+                DEFAULT_MUSIC_STRONG_REMINDER_REPEAT_SECONDS,
+            )
+        ),
+    )
+    music_strong_reminder_prefix_sound = sound_path(
+        str(
+            music_strong_data.get(
+                "prefix_sound",
+                DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND,
+            )
+        )
+    )
 
     for item in data.get("buffs", []):
         try:
@@ -1045,6 +1118,9 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                     int(ccid)
                     for ccid in item.get("suppress_ended_if_active_ccids", [])
                 },
+                prefer_sbt_when_duration_present=bool(
+                    item.get("prefer_sbt_when_duration_present", False)
+                ),
             )
         )
 
@@ -1477,6 +1553,10 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
         red_orb_safe_sound = str(
             item.get("safe_sound", DEFAULT_BOSS_RED_ORB_SAFE_SOUND)
         )
+        red_orb_countdown_sounds = countdown_sound_paths(
+            item.get("countdown_sounds"),
+            DEFAULT_BOSS_RED_ORB_COUNTDOWN_SOUNDS,
+        )
 
         boss_red_orb_alert_specs.append(
             BossRedOrbAlertSpec(
@@ -1694,6 +1774,7 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                 sound=sound_path(red_orb_sound),
                 message=red_orb_message,
                 safe_sound=sound_path(red_orb_safe_sound),
+                countdown_sounds=red_orb_countdown_sounds,
                 audio_volume=normalize_volume(
                     item.get("audio_volume", default_audio_volume)
                 ),
@@ -1766,6 +1847,10 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                 ),
                 sound=sound_path(item.get("sound", DEFAULT_BOSS_LASER_WARNING_SOUND)),
                 message=str(item.get("message", DEFAULT_BOSS_LASER_WARNING_MESSAGE)),
+                countdown_sounds=countdown_sound_paths(
+                    item.get("countdown_sounds"),
+                    DEFAULT_BOSS_LASER_COUNTDOWN_SOUNDS,
+                ),
                 audio_volume=normalize_volume(
                     item.get("audio_volume", default_audio_volume)
                 ),
@@ -1962,6 +2047,9 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
         death_clear_suppression_min_buffs=death_clear_suppression_min_buffs,
         death_signal_event_ids=death_signal_event_ids,
         death_signal_suppression_window_ms=death_signal_suppression_window_ms,
+        music_strong_reminder_enabled=music_strong_reminder_enabled,
+        music_strong_reminder_repeat_seconds=music_strong_reminder_repeat_seconds,
+        music_strong_reminder_prefix_sound=music_strong_reminder_prefix_sound,
     )
 
 
@@ -1987,6 +2075,11 @@ class AlertEngine:
         death_clear_suppression_min_buffs: int = DEFAULT_DEATH_CLEAR_SUPPRESSION_MIN_BUFFS,
         death_signal_event_ids: Iterable[int] = DEFAULT_DEATH_SIGNAL_EVENT_IDS,
         death_signal_suppression_window_ms: int = DEFAULT_DEATH_SIGNAL_SUPPRESSION_WINDOW_MS,
+        music_strong_reminder_enabled: bool = DEFAULT_MUSIC_STRONG_REMINDER_ENABLED,
+        music_strong_reminder_repeat_seconds: float = (
+            DEFAULT_MUSIC_STRONG_REMINDER_REPEAT_SECONDS
+        ),
+        music_strong_reminder_prefix_sound: str = DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND,
     ) -> None:
         self.tz_offset_hours = tz_offset_hours
         self.death_clear_suppression_window_ms = max(
@@ -1999,6 +2092,15 @@ class AlertEngine:
         self.death_signal_suppression_window_ms = max(
             0, int(death_signal_suppression_window_ms)
         )
+        self.music_strong_reminder_enabled = bool(music_strong_reminder_enabled)
+        self.music_strong_reminder_repeat_seconds = max(
+            0.5, float(music_strong_reminder_repeat_seconds)
+        )
+        self.music_strong_reminder_prefix_sound = str(
+            music_strong_reminder_prefix_sound
+            or DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND
+        )
+        self.recent_music_remove_with_tuan_at_ms: dict[int, int] = {}
         self.dynamic_sbt_adjust_seconds: float | None = None
         self._dynamic_sbt_adjust_samples: list[float] = []
         self._dynamic_sbt_adjust_sample_keys: list[tuple[int, int]] = []
@@ -2431,6 +2533,8 @@ class AlertEngine:
             ):
                 alerts.extend(self._fire_cooldown_alert(state))
 
+            alerts.extend(self._advance_music_strong_reminder(state, at_ms))
+
             if not state.active or state.end_ms is None:
                 continue
             if state.spec.ended_on_remove_only and at_ms >= state.end_ms:
@@ -2448,6 +2552,10 @@ class AlertEngine:
                     state.fired_thresholds.add(rule.remaining_seconds)
                     if self._should_suppress_remaining_alert(state, at_ms, remaining):
                         continue
+                    sound = rule.sound
+                    if self._music_strong_reminder_should_apply(state, at_ms):
+                        sound = self._music_strong_reminder_sound(rule.sound)
+                        self._schedule_music_strong_reminder(state, rule, at_ms)
                     alerts.append(
                         FiredAlert(
                             at_ms=at_ms,
@@ -2461,7 +2569,7 @@ class AlertEngine:
                                 remaining=max(0, remaining),
                                 stacks=state.stacks,
                             ),
-                            sound=rule.sound,
+                            sound=sound,
                             volume=state.spec.audio_volume,
                         )
                     )
@@ -2503,6 +2611,8 @@ class AlertEngine:
                 pending_times.add(state.cooldown_pending_at_ms)
             if state.ended_pending_at_ms is not None:
                 pending_times.add(state.ended_pending_at_ms)
+            if state.music_strong_reminder_next_at_ms is not None:
+                pending_times.add(state.music_strong_reminder_next_at_ms)
             if not state.active or state.end_ms is None:
                 continue
             for rule in state.spec.alerts:
@@ -2588,12 +2698,42 @@ class AlertEngine:
             else:
                 self._clear_pending_dynamic_sbt_adjust(state)
 
-        if state.spec.duration_seconds is not None and (
-            "SBT" in extra
-            or (
-                state.spec.stack_field is not None
-                and state.spec.stack_field in extra
-            )
+        if state.spec.duration_seconds is not None and "SBT" in extra:
+            raw_end_ms = sbt_to_unix_ms(extra["SBT"], self.tz_offset_hours)
+            sbt_adjust_seconds = self.effective_sbt_adjust_seconds(state.spec)
+            adjusted_end_ms = raw_end_ms + int(sbt_adjust_seconds * 1000)
+            adjusted_remaining_seconds = (adjusted_end_ms - at_ms) / 1000
+            if state.spec.prefer_sbt_when_duration_present:
+                state.last_timing_source = "sbt_duration_preferred"
+                state.last_computed_end_ms = adjusted_end_ms
+                state.last_raw_sbt_end_ms = raw_end_ms
+                state.last_sbt_adjust_seconds = sbt_adjust_seconds
+                state.last_sbt_adjust_source = (
+                    "dynamic"
+                    if state.spec.use_dynamic_sbt_adjust
+                    and self.dynamic_sbt_adjust_seconds is not None
+                    else "config"
+                )
+                state.last_raw_sbt_remaining_seconds = (raw_end_ms - at_ms) / 1000
+                state.last_adjusted_remaining_seconds = adjusted_remaining_seconds
+                if adjusted_remaining_seconds <= 0:
+                    state.last_event_at_ms = at_ms
+                    if state.active:
+                        alerts.extend(self.advance_time(at_ms))
+                    return alerts
+                next_end_ms = adjusted_end_ms
+            else:
+                next_end_ms = at_ms + int(state.spec.duration_seconds * 1000)
+                state.last_timing_source = "duration_seconds"
+                state.last_computed_end_ms = next_end_ms
+                state.last_raw_sbt_end_ms = None
+                state.last_sbt_adjust_seconds = None
+                state.last_sbt_adjust_source = None
+                state.last_raw_sbt_remaining_seconds = None
+                state.last_adjusted_remaining_seconds = state.spec.duration_seconds
+        elif state.spec.duration_seconds is not None and (
+            state.spec.stack_field is not None
+            and state.spec.stack_field in extra
         ):
             next_end_ms = at_ms + int(state.spec.duration_seconds * 1000)
             state.last_timing_source = "duration_seconds"
@@ -2604,23 +2744,53 @@ class AlertEngine:
             state.last_raw_sbt_remaining_seconds = None
             state.last_adjusted_remaining_seconds = state.spec.duration_seconds
         elif (duration_ms := _explicit_duration_ms(extra)) is not None:
-            next_end_ms = at_ms + duration_ms
             raw_sbt_end_ms = (
                 sbt_to_unix_ms(extra["SBT"], self.tz_offset_hours)
                 if "SBT" in extra
                 else None
             )
-            state.last_timing_source = "event_duration"
+            if state.spec.prefer_sbt_when_duration_present and raw_sbt_end_ms is not None:
+                sbt_adjust_seconds = self.effective_sbt_adjust_seconds(state.spec)
+                next_end_ms = raw_sbt_end_ms + int(sbt_adjust_seconds * 1000)
+                state.last_timing_source = "sbt_event_duration_preferred"
+                state.last_sbt_adjust_seconds = sbt_adjust_seconds
+                state.last_sbt_adjust_source = (
+                    "dynamic"
+                    if state.spec.use_dynamic_sbt_adjust
+                    and self.dynamic_sbt_adjust_seconds is not None
+                    else "config"
+                )
+                if next_end_ms <= at_ms:
+                    state.last_computed_end_ms = next_end_ms
+                    state.last_raw_sbt_end_ms = raw_sbt_end_ms
+                    state.last_raw_sbt_remaining_seconds = (
+                        (raw_sbt_end_ms - at_ms) / 1000
+                    )
+                    state.last_adjusted_remaining_seconds = (
+                        (next_end_ms - at_ms) / 1000
+                    )
+                    state.last_event_at_ms = at_ms
+                    if state.active:
+                        alerts.extend(self.advance_time(at_ms))
+                    return alerts
+            else:
+                next_end_ms = at_ms + duration_ms
+                state.last_timing_source = "event_duration"
+                state.last_sbt_adjust_seconds = None
+                state.last_sbt_adjust_source = None
             state.last_computed_end_ms = next_end_ms
             state.last_raw_sbt_end_ms = raw_sbt_end_ms
-            state.last_sbt_adjust_seconds = None
-            state.last_sbt_adjust_source = None
             state.last_raw_sbt_remaining_seconds = (
                 (raw_sbt_end_ms - at_ms) / 1000
                 if raw_sbt_end_ms is not None
                 else None
             )
-            state.last_adjusted_remaining_seconds = duration_ms / 1000
+            state.last_adjusted_remaining_seconds = (
+                (next_end_ms - at_ms) / 1000
+                if state.spec.prefer_sbt_when_duration_present
+                and raw_sbt_end_ms is not None
+                else duration_ms / 1000
+            )
         elif "SBT" in extra:
             raw_end_ms = sbt_to_unix_ms(extra["SBT"], self.tz_offset_hours)
             self._learn_dynamic_sbt_adjust(
@@ -2647,6 +2817,10 @@ class AlertEngine:
             state.last_adjusted_remaining_seconds = (next_end_ms - at_ms) / 1000
             if next_end_ms <= at_ms:
                 state.last_event_at_ms = at_ms
+                if state.spec.ccid in MUSIC_BUFF_CCIDS:
+                    if state.active:
+                        alerts.extend(self.advance_time(at_ms))
+                    return alerts
                 if state.spec.ended_on_remove_only:
                     state.fired_thresholds.clear()
                     state.ended_fired = False
@@ -2738,6 +2912,13 @@ class AlertEngine:
             and self._event_targets_self(event)
         ):
             self.self_player_dead = False
+        if state.spec.ccid == TUAN_SONG_CCID:
+            self._clear_music_strong_reminders_for_tuan()
+            for music_state in self.states.values():
+                if music_state.active and music_state.spec.ccid in MUSIC_BUFF_CCIDS:
+                    self._update_music_toan_extension_on_apply(music_state, at_ms)
+        else:
+            self._update_music_toan_extension_on_apply(state, at_ms)
         self._sync_magic_shield_missing_after_buff_change(state, at_ms)
         alerts.extend(self._flush_pending_music_cover_ended_alerts(state, at_ms))
         alerts.extend(self._apply_stack_alert(state, at_ms))
@@ -2849,6 +3030,139 @@ class AlertEngine:
             if state.active:
                 return True
         return False
+
+    def _is_tuan_song_active(self, at_ms: int | None = None) -> bool:
+        return self._is_ccid_active(TUAN_SONG_CCID, at_ms)
+
+    def _clear_music_strong_reminder(self, state: BuffState) -> None:
+        state.music_strong_reminder_next_at_ms = None
+        state.music_strong_reminder_rule_seconds = None
+        state.music_strong_reminder_sound = None
+
+    def _clear_music_strong_reminders_for_tuan(self) -> None:
+        for state in self.states.values():
+            if state.spec.ccid in MUSIC_BUFF_CCIDS:
+                self._clear_music_strong_reminder(state)
+
+    def _music_strong_reminder_should_apply(
+        self, state: BuffState, at_ms: int | None = None
+    ) -> bool:
+        return (
+            self.music_strong_reminder_enabled
+            and state.spec.ccid in MUSIC_BUFF_CCIDS
+            and not state.music_toan_extended
+            and not self._is_tuan_song_active(at_ms)
+        )
+
+    def _music_strong_reminder_sound(self, base_sound: str) -> str:
+        return make_timed_sound_sequence(
+            (0.0, self.music_strong_reminder_prefix_sound),
+            (0.35, base_sound),
+        )
+
+    def _schedule_music_strong_reminder(
+        self, state: BuffState, rule: AlertRule, at_ms: int
+    ) -> None:
+        if not self._music_strong_reminder_should_apply(state, at_ms):
+            self._clear_music_strong_reminder(state)
+            return
+        state.music_strong_reminder_next_at_ms = at_ms + int(
+            self.music_strong_reminder_repeat_seconds * 1000
+        )
+        state.music_strong_reminder_rule_seconds = rule.remaining_seconds
+        state.music_strong_reminder_sound = rule.sound
+
+    def _advance_music_strong_reminder(
+        self, state: BuffState, at_ms: int
+    ) -> list[FiredAlert]:
+        if state.music_strong_reminder_next_at_ms is None:
+            return []
+        if (
+            not state.active
+            or state.end_ms is None
+            or state.spec.ccid not in MUSIC_BUFF_CCIDS
+        ):
+            self._clear_music_strong_reminder(state)
+            return []
+        if self._is_tuan_song_active(at_ms) or state.music_toan_extended:
+            self._clear_music_strong_reminder(state)
+            return []
+        if at_ms < state.music_strong_reminder_next_at_ms:
+            return []
+        if at_ms >= state.end_ms:
+            self._clear_music_strong_reminder(state)
+            return []
+
+        remaining = max(0, math.ceil((state.end_ms - at_ms) / 1000))
+        state.music_strong_reminder_next_at_ms = at_ms + int(
+            self.music_strong_reminder_repeat_seconds * 1000
+        )
+        base_sound = state.music_strong_reminder_sound
+        if not base_sound:
+            base_sound = (
+                state.spec.alerts[0].sound
+                if state.spec.alerts
+                else DEFAULT_WARN_SOUND
+            )
+        return [
+            FiredAlert(
+                at_ms=at_ms,
+                kind="music_strong_threshold",
+                name=state.spec.name,
+                ccid=state.spec.ccid,
+                remaining_seconds=remaining,
+                message=format_message(
+                    "{name}",
+                    state.spec,
+                    remaining=remaining,
+                    stacks=state.stacks,
+                ),
+                sound=self._music_strong_reminder_sound(base_sound),
+                volume=state.spec.audio_volume,
+                detail={
+                    "repeat_seconds": self.music_strong_reminder_repeat_seconds,
+                    "threshold_seconds": state.music_strong_reminder_rule_seconds,
+                },
+            )
+        ]
+
+    def _mark_music_toan_extension(
+        self, state: BuffState, at_ms: int, source: str
+    ) -> None:
+        state.music_toan_extended = True
+        state.music_toan_extended_at_ms = at_ms
+        state.music_toan_extension_source = source
+        self._clear_music_strong_reminder(state)
+
+    def _update_music_toan_extension_on_apply(
+        self, state: BuffState, at_ms: int
+    ) -> None:
+        if state.spec.ccid not in MUSIC_BUFF_CCIDS or state.end_ms is None:
+            return
+        remaining_seconds = (state.end_ms - at_ms) / 1000
+        recent_remove_at_ms = self.recent_music_remove_with_tuan_at_ms.get(
+            state.spec.ccid
+        )
+        recent_remove_with_tuan = (
+            recent_remove_at_ms is not None
+            and 0 <= at_ms - recent_remove_at_ms <= MUSIC_TUAN_EXTENSION_RECENT_WINDOW_MS
+        )
+        if (
+            remaining_seconds >= MUSIC_TUAN_EXTENSION_MIN_REMAINING_SECONDS
+            and self._is_tuan_song_active(at_ms)
+        ):
+            self._mark_music_toan_extension(state, at_ms, "tuan_active_long_duration")
+            return
+        if (
+            remaining_seconds >= MUSIC_TUAN_EXTENSION_MIN_REMAINING_SECONDS
+            and recent_remove_with_tuan
+        ):
+            self._mark_music_toan_extension(state, at_ms, "reapply_after_tuan_remove")
+            return
+        if remaining_seconds < MUSIC_TUAN_EXTENSION_MIN_REMAINING_SECONDS:
+            state.music_toan_extended = False
+            state.music_toan_extended_at_ms = None
+            state.music_toan_extension_source = None
 
     def _is_ccid_active(self, ccid: int, at_ms: int | None = None) -> bool:
         primary = self.ccid_to_primary.get(ccid, ccid)
@@ -3032,6 +3346,13 @@ class AlertEngine:
             and 0 <= at_ms - state.last_apply_at_ms <= MUSIC_APPLY_REMOVE_NOISE_WINDOW_MS
         ):
             return []
+        if event_ccid == state.spec.ccid and state.spec.ccid in MUSIC_BUFF_CCIDS:
+            if self._is_tuan_song_active(at_ms):
+                self.recent_music_remove_with_tuan_at_ms[state.spec.ccid] = at_ms
+            self._clear_music_strong_reminder(state)
+            state.music_toan_extended = False
+            state.music_toan_extended_at_ms = None
+            state.music_toan_extension_source = None
         if not state.active and event_ccid == state.spec.ccid:
             state.fired_thresholds.clear()
             if self._in_death_clear_suppression(at_ms):
@@ -4462,14 +4783,18 @@ class AlertEngine:
         def offset(seconds_before_explosion: float) -> float:
             return max(0.0, (pending.explosion_at_ms - at_ms) / 1000 - seconds_before_explosion)
 
+        count_sounds = {
+            **DEFAULT_BOSS_RED_ORB_COUNTDOWN_SOUNDS,
+            **state.spec.countdown_sounds,
+        }
         return make_timed_sound_sequence(
             (0.0, state.spec.sound),
-            (offset(5.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_5_SOUND),
-            (offset(4.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_4_SOUND),
-            (offset(3.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_3_SOUND),
-            (offset(2.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_2_SOUND),
-            (offset(1.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_1_SOUND),
-            (offset(0.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_0_SOUND),
+            (offset(5.0), count_sounds[5]),
+            (offset(4.0), count_sounds[4]),
+            (offset(3.0), count_sounds[3]),
+            (offset(2.0), count_sounds[2]),
+            (offset(1.0), count_sounds[1]),
+            (offset(0.0), count_sounds[0]),
             cancel_key=AlertEngine._boss_red_orb_countdown_cancel_key(pending),
         )
 
@@ -4891,13 +5216,17 @@ class AlertEngine:
         def offset(seconds_before_impact: float) -> float:
             return max(0.0, state.spec.cast_seconds - seconds_before_impact)
 
+        count_sounds = {
+            **DEFAULT_BOSS_LASER_COUNTDOWN_SOUNDS,
+            **state.spec.countdown_sounds,
+        }
         return make_timed_sound_sequence(
             (0.0, state.spec.sound),
-            (offset(4.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_4_SOUND),
-            (offset(3.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_3_SOUND),
-            (offset(2.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_2_SOUND),
-            (offset(1.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_1_SOUND),
-            (offset(0.0), DEFAULT_BOSS_RED_ORB_COUNTDOWN_0_SOUND),
+            (offset(4.0), count_sounds[4]),
+            (offset(3.0), count_sounds[3]),
+            (offset(2.0), count_sounds[2]),
+            (offset(1.0), count_sounds[1]),
+            (offset(0.0), count_sounds[0]),
             cancel_key=AlertEngine._boss_laser_countdown_cancel_key(pending),
         )
 
@@ -6477,6 +6806,9 @@ def cmd_replay(args: argparse.Namespace) -> int:
         death_clear_suppression_min_buffs=loaded.death_clear_suppression_min_buffs,
         death_signal_event_ids=loaded.death_signal_event_ids,
         death_signal_suppression_window_ms=loaded.death_signal_suppression_window_ms,
+        music_strong_reminder_enabled=loaded.music_strong_reminder_enabled,
+        music_strong_reminder_repeat_seconds=loaded.music_strong_reminder_repeat_seconds,
+        music_strong_reminder_prefix_sound=loaded.music_strong_reminder_prefix_sound,
     )
 
     previous_at: int | None = None

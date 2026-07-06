@@ -58,7 +58,8 @@
       "ended_sound": "assets/audio/xiaoyi/status_support_ended.wav",
       "ended_message": "{name} 结束",
       "audio_volume": 100,
-      "warn_sound": "assets/audio/xiaoyi/status_support_remaining.wav"
+      "warn_sound": "assets/audio/xiaoyi/status_support_remaining.wav",
+      "prefer_sbt_when_duration_present": true
     },
     {
       "name": "徒安之歌",
@@ -355,8 +356,8 @@
       "name": "行进曲",
       "ccid": 193,
       "enabled": true,
-      "warn_seconds": 15,
-      "critical_seconds": 15,
+      "warn_seconds": 20,
+      "critical_seconds": 20,
       "observed": {
         "apply_count": 74,
         "remove_count": 71,
@@ -393,7 +394,7 @@
       },
       "alerts": [
         {
-          "remaining_seconds": 15,
+          "remaining_seconds": 20,
           "sound": "assets/audio/xiaoyi/march_song_remaining.wav",
           "message": "{name}"
         }
@@ -639,8 +640,8 @@
       "name": "战争序曲",
       "ccid": 680,
       "enabled": true,
-      "warn_seconds": 15,
-      "critical_seconds": 15,
+      "warn_seconds": 20,
+      "critical_seconds": 20,
       "observed": {
         "apply_count": 40,
         "remove_count": 39,
@@ -670,7 +671,7 @@
       },
       "alerts": [
         {
-          "remaining_seconds": 15,
+          "remaining_seconds": 20,
           "sound": "assets/audio/xiaoyi/war_overture_remaining.wav",
           "message": "{name}"
         }
@@ -694,8 +695,8 @@
       "name": "活跃曲",
       "ccid": 192,
       "enabled": true,
-      "warn_seconds": 15,
-      "critical_seconds": 15,
+      "warn_seconds": 20,
+      "critical_seconds": 20,
       "observed": {
         "apply_count": 40,
         "remove_count": 34,
@@ -729,7 +730,7 @@
       },
       "alerts": [
         {
-          "remaining_seconds": 15,
+          "remaining_seconds": 20,
           "sound": "assets/audio/xiaoyi/lively_song_remaining.wav",
           "message": "{name}"
         }
@@ -2709,7 +2710,15 @@
       "safe_sound": "assets/audio/xiaoyi/red_orb_countdown/safe_complete.wav",
       "message": "危险红球，5，4，3，2，1，0",
       "audio_volume": 100,
-      "note": ""
+      "note": "",
+      "countdown_sounds": {
+        "5": "assets/audio/xiaoyi/red_orb_countdown/count_05.wav",
+        "4": "assets/audio/xiaoyi/red_orb_countdown/count_04.wav",
+        "3": "assets/audio/xiaoyi/red_orb_countdown/count_03.wav",
+        "2": "assets/audio/xiaoyi/red_orb_countdown/count_02.wav",
+        "1": "assets/audio/xiaoyi/red_orb_countdown/count_01.wav",
+        "0": "assets/audio/xiaoyi/red_orb_countdown/count_00.wav"
+      }
     }
   ],
   "boss_laser_alerts": [
@@ -2743,7 +2752,19 @@
       "sound": "assets/audio/xiaoyi/laser_warning_prefix.wav",
       "message": "激光 四 三 二 一 零",
       "audio_volume": 100,
-      "note": "***激光预警功能，尚在测试中，可能存在BUG，请勿过度依赖***"
+      "note": "***激光预警功能，尚在测试中，可能存在BUG，请勿过度依赖***",
+      "countdown_sounds": {
+        "4": "assets/audio/xiaoyi/red_orb_countdown/count_04.wav",
+        "3": "assets/audio/xiaoyi/red_orb_countdown/count_03.wav",
+        "2": "assets/audio/xiaoyi/red_orb_countdown/count_02.wav",
+        "1": "assets/audio/xiaoyi/red_orb_countdown/count_01.wav",
+        "0": "assets/audio/xiaoyi/red_orb_countdown/count_00.wav"
+      }
     }
-  ]
+  ],
+  "music_strong_reminder": {
+    "enabled": false,
+    "repeat_seconds": 5.0,
+    "prefix_sound": "assets/audio/xiaoyi/music_strong_beep.wav"
+  }
 }

@@ -44,6 +44,9 @@ MUSIC_BUFF_NOTICE = (
     "音乐BUFF的提醒时间，暂时无法做到100%精确；有时可能会有10+秒的提前或延后。"
     "这是正常现象，正在想办法修复，但暂时莓有完美的方案orz 请悉知"
 )
+MUSIC_STRONG_REMINDER_ENABLED = False
+MUSIC_STRONG_REMINDER_REPEAT_SECONDS = 5.0
+MUSIC_STRONG_REMINDER_PREFIX_SOUND = "assets/audio/xiaoyi/music_strong_beep.wav"
 
 PROGRESS_ORDER = [
     "托亚灵进度",
@@ -320,9 +323,9 @@ FOOD_DROP_RULES = [
 ]
 
 DEFAULT_RULES = {
-    "战争序曲": {"remaining_enabled": True, "seconds": 15},
-    "活跃曲": {"remaining_enabled": True, "seconds": 15},
-    "行进曲": {"remaining_enabled": True, "seconds": 15},
+    "战争序曲": {"remaining_enabled": True, "seconds": 20},
+    "活跃曲": {"remaining_enabled": True, "seconds": 20},
+    "行进曲": {"remaining_enabled": True, "seconds": 20},
     "坚定意志": {"enabled": False, "remaining_enabled": False, "seconds": 30},
     "逆光剑": {"enabled": False, "remaining_enabled": False, "seconds": 30},
     "致命穿透": {"enabled": False, "remaining_enabled": False, "seconds": 30},
@@ -410,6 +413,7 @@ class BossRedOrbRow:
     sound_entry: tk.Entry
     choose: tk.Button
     test: tk.Button
+    voice_pack: tk.Button
 
 
 @dataclass
@@ -421,6 +425,7 @@ class BossLaserAlertRow:
     sound_entry: tk.Entry
     choose: tk.Button
     test: tk.Button
+    voice_pack: tk.Button
 
 
 @dataclass
@@ -847,6 +852,14 @@ def boss_red_orb_defaults() -> dict:
         "stale_seconds": BOSS_RED_ORB_STALE_SECONDS,
         "sound": BOSS_RED_ORB_SOUND,
         "safe_sound": BOSS_RED_ORB_SAFE_SOUND,
+        "countdown_sounds": {
+            "5": BOSS_RED_ORB_COUNTDOWN_5_SOUND,
+            "4": BOSS_RED_ORB_COUNTDOWN_4_SOUND,
+            "3": BOSS_RED_ORB_COUNTDOWN_3_SOUND,
+            "2": BOSS_RED_ORB_COUNTDOWN_2_SOUND,
+            "1": BOSS_RED_ORB_COUNTDOWN_1_SOUND,
+            "0": BOSS_RED_ORB_COUNTDOWN_0_SOUND,
+        },
         "message": BOSS_RED_ORB_MESSAGE,
         "audio_volume": 100,
         "note": "",
@@ -907,7 +920,8 @@ def find_or_create_boss_red_orb_alert(data: dict) -> dict:
     item["late_confirm_end_seconds"] = defaults["late_confirm_end_seconds"]
     item["stale_seconds"] = defaults["stale_seconds"]
     item.setdefault("sound", defaults["sound"])
-    item["safe_sound"] = defaults["safe_sound"]
+    item.setdefault("safe_sound", defaults["safe_sound"])
+    item.setdefault("countdown_sounds", defaults["countdown_sounds"])
     item["message"] = defaults["message"]
     item.setdefault("audio_volume", 100)
     item["note"] = defaults["note"]
@@ -929,6 +943,13 @@ def boss_laser_alert_defaults() -> dict:
         "cluster_window_ms": BOSS_LASER_CLUSTER_WINDOW_MS,
         "stale_seconds": BOSS_LASER_STALE_SECONDS,
         "sound": BOSS_LASER_ALERT_SOUND,
+        "countdown_sounds": {
+            "4": BOSS_LASER_COUNTDOWN_4_SOUND,
+            "3": BOSS_LASER_COUNTDOWN_3_SOUND,
+            "2": BOSS_LASER_COUNTDOWN_2_SOUND,
+            "1": BOSS_LASER_COUNTDOWN_1_SOUND,
+            "0": BOSS_LASER_COUNTDOWN_0_SOUND,
+        },
         "message": BOSS_LASER_ALERT_MESSAGE,
         "audio_volume": 100,
         "note": BOSS_LASER_ALERT_NOTICE,
@@ -958,9 +979,30 @@ def find_or_create_boss_laser_alert(data: dict) -> dict:
     item["cluster_window_ms"] = defaults["cluster_window_ms"]
     item["stale_seconds"] = defaults["stale_seconds"]
     item.setdefault("sound", defaults["sound"])
+    item.setdefault("countdown_sounds", defaults["countdown_sounds"])
     item["message"] = defaults["message"]
     item.setdefault("audio_volume", 100)
     item["note"] = defaults["note"]
+    return item
+
+
+def music_strong_reminder_defaults() -> dict:
+    return {
+        "enabled": MUSIC_STRONG_REMINDER_ENABLED,
+        "repeat_seconds": MUSIC_STRONG_REMINDER_REPEAT_SECONDS,
+        "prefix_sound": MUSIC_STRONG_REMINDER_PREFIX_SOUND,
+    }
+
+
+def find_or_create_music_strong_reminder(data: dict) -> dict:
+    item = data.get("music_strong_reminder")
+    if not isinstance(item, dict):
+        item = {}
+        data["music_strong_reminder"] = item
+    defaults = music_strong_reminder_defaults()
+    item.setdefault("enabled", defaults["enabled"])
+    item["repeat_seconds"] = defaults["repeat_seconds"]
+    item.setdefault("prefix_sound", defaults["prefix_sound"])
     return item
 
 
@@ -1473,6 +1515,7 @@ class SettingsApp:
         self.boss_hp_rows: list[BossHpAlertRow] = []
         self.key_enemy_debuff: KeyEnemyDebuffRow | None = None
         self.gunner_eye_row: BuffRow | None = None
+        self.music_strong_enabled: BooleanVar | None = None
         self.boss_red_orb: BossRedOrbRow | None = None
         self.boss_laser: BossLaserAlertRow | None = None
         self.magic_shield_delay: MagicShieldDelayRow | None = None
@@ -1727,6 +1770,10 @@ class SettingsApp:
             columnspan=title_columnspan,
         )
         if is_music_group:
+            music_strong = find_or_create_music_strong_reminder(self.data)
+            self.music_strong_enabled = BooleanVar(
+                value=bool(music_strong.get("enabled", False))
+            )
             tk.Label(
                 section,
                 text=MUSIC_BUFF_NOTICE,
@@ -1735,8 +1782,20 @@ class SettingsApp:
                 font=("Microsoft YaHei UI", 9, "bold"),
                 anchor="w",
                 justify="left",
-                wraplength=560,
-            ).grid(row=0, column=1, columnspan=9, sticky="ew", padx=(0, 12), pady=(9, 6))
+                wraplength=460,
+            ).grid(row=0, column=1, columnspan=7, sticky="ew", padx=(0, 8), pady=(9, 6))
+            tk.Checkbutton(
+                section,
+                variable=self.music_strong_enabled,
+                text="\u5f3a\u63d0\u9192\u6a21\u5f0f",
+                bg=colors["row"],
+                fg=colors["text"],
+                selectcolor=colors["accent"],
+                activebackground=colors["row"],
+                bd=0,
+                highlightthickness=0,
+                font=("Microsoft YaHei UI", 9, "bold"),
+            ).grid(row=0, column=8, columnspan=2, sticky="e", padx=(0, 12), pady=(9, 6))
 
         headers = (
             ["项目", "", "剩余进度提醒", seconds_header, "提醒音源", "", "", "", "", ""]
@@ -2711,7 +2770,7 @@ class SettingsApp:
         item = find_or_create_boss_red_orb_alert(self.data)
         section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
         section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 4))
-        for col, weight in [(0, 0), (1, 0), (2, 1), (3, 0), (4, 0)]:
+        for col, weight in [(0, 0), (1, 0), (2, 1), (3, 0), (4, 0), (5, 0)]:
             section.columnconfigure(col, weight=weight)
 
         tk.Label(
@@ -2721,7 +2780,7 @@ class SettingsApp:
             fg=colors["text"],
             font=("Microsoft YaHei UI", 10, "bold"),
             anchor="w",
-        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(9, 6), columnspan=5)
+        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(9, 6), columnspan=6)
 
         enabled = BooleanVar(value=bool(item.get("enabled", True)))
         sound = StringVar(value=item.get("sound", BOSS_RED_ORB_SOUND))
@@ -2757,7 +2816,11 @@ class SettingsApp:
         choose = self._button(section, "选择", self.choose_boss_red_orb_sound)
         choose.grid(row=1, column=3, padx=5, pady=(3, 9))
         test = self._button(section, "试听", self.test_boss_red_orb_sound)
-        test.grid(row=1, column=4, padx=(5, 12), pady=(3, 9))
+        test.grid(row=1, column=4, padx=5, pady=(3, 9))
+        voice_pack = self._button(
+            section, "\u8bed\u97f3\u5305", self.choose_boss_red_orb_voice_pack
+        )
+        voice_pack.grid(row=1, column=5, padx=(5, 12), pady=(3, 9))
         self.boss_red_orb = BossRedOrbRow(
             item=item,
             enabled=enabled,
@@ -2766,6 +2829,7 @@ class SettingsApp:
             sound_entry=sound_entry,
             choose=choose,
             test=test,
+            voice_pack=voice_pack,
         )
         enabled.trace_add("write", lambda *_args: self._sync_boss_red_orb_state())
         self._sync_boss_red_orb_state()
@@ -2775,7 +2839,7 @@ class SettingsApp:
         item = find_or_create_boss_laser_alert(self.data)
         section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
         section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 4))
-        for col, weight in [(0, 0), (1, 0), (2, 1), (3, 0), (4, 0)]:
+        for col, weight in [(0, 0), (1, 0), (2, 1), (3, 0), (4, 0), (5, 0)]:
             section.columnconfigure(col, weight=weight)
 
         tk.Label(
@@ -2793,7 +2857,7 @@ class SettingsApp:
             fg=colors["accent_dark"],
             font=("Microsoft YaHei UI", 9, "bold"),
             anchor="w",
-        ).grid(row=0, column=1, sticky="ew", padx=(0, 12), pady=(9, 6), columnspan=4)
+        ).grid(row=0, column=1, sticky="ew", padx=(0, 12), pady=(9, 6), columnspan=5)
 
         enabled = BooleanVar(value=bool(item.get("enabled", False)))
         sound = StringVar(value=item.get("sound", BOSS_LASER_ALERT_SOUND))
@@ -2829,7 +2893,11 @@ class SettingsApp:
         choose = self._button(section, "选择", self.choose_boss_laser_sound)
         choose.grid(row=1, column=3, padx=5, pady=(3, 9))
         test = self._button(section, "试听", self.test_boss_laser_sound)
-        test.grid(row=1, column=4, padx=(5, 12), pady=(3, 9))
+        test.grid(row=1, column=4, padx=5, pady=(3, 9))
+        voice_pack = self._button(
+            section, "\u8bed\u97f3\u5305", self.choose_boss_laser_voice_pack
+        )
+        voice_pack.grid(row=1, column=5, padx=(5, 12), pady=(3, 9))
         self.boss_laser = BossLaserAlertRow(
             item=item,
             enabled=enabled,
@@ -2838,6 +2906,7 @@ class SettingsApp:
             sound_entry=sound_entry,
             choose=choose,
             test=test,
+            voice_pack=voice_pack,
         )
         enabled.trace_add("write", lambda *_args: self._sync_boss_laser_state())
         self._sync_boss_laser_state()
@@ -3285,6 +3354,7 @@ class SettingsApp:
         self.boss_red_orb.sound_entry.configure(state="normal")
         self.boss_red_orb.choose.configure(state="normal")
         self.boss_red_orb.test.configure(state="normal")
+        self.boss_red_orb.voice_pack.configure(state="normal")
 
     def _sync_boss_laser_state(self) -> None:
         if self.boss_laser is None:
@@ -3292,6 +3362,7 @@ class SettingsApp:
         self.boss_laser.sound_entry.configure(state="normal")
         self.boss_laser.choose.configure(state="normal")
         self.boss_laser.test.configure(state="normal")
+        self.boss_laser.voice_pack.configure(state="normal")
 
     def _sync_key_enemy_debuff_state(self) -> None:
         if self.key_enemy_debuff is None:
@@ -3537,6 +3608,123 @@ class SettingsApp:
         value = self._import_sound(Path(selected), "boss_laser", "warning")
         self.boss_laser.sound.set(value)
 
+    @staticmethod
+    def _voice_pack_file(folder: Path, *names: str) -> Path | None:
+        extensions = (".wav", ".mp3", ".m4a", ".wma", ".aac")
+        for name in names:
+            path = folder / name
+            if path.is_file():
+                return path
+            stem = Path(name).stem
+            for extension in extensions:
+                candidate = folder / f"{stem}{extension}"
+                if candidate.is_file():
+                    return candidate
+        return None
+
+    def _import_voice_pack_file(
+        self,
+        folder: Path,
+        identifier: object,
+        kind: str,
+        *names: str,
+    ) -> str | None:
+        path = self._voice_pack_file(folder, *names)
+        if path is None:
+            return None
+        return self._import_sound(path, identifier, kind)
+
+    def _import_voice_pack_countdown(
+        self,
+        folder: Path,
+        identifier: object,
+        numbers: list[int],
+        existing: dict | None,
+    ) -> dict[str, str]:
+        result = {str(key): str(value) for key, value in (existing or {}).items()}
+        for number in numbers:
+            names = (
+                f"count_{number:02d}.wav",
+                f"count_{number}.wav",
+                f"{number}.wav",
+                f"{number:02d}.wav",
+            )
+            value = self._import_voice_pack_file(
+                folder, identifier, f"count_{number}", *names
+            )
+            if value:
+                result[str(number)] = value
+        return result
+
+    def choose_boss_red_orb_voice_pack(self) -> None:
+        if self.boss_red_orb is None:
+            return
+        selected = filedialog.askdirectory(title="\u9009\u62e9\u7ea2\u7403\u64ad\u62a5\u8bed\u97f3\u5305\u76ee\u5f55")
+        if not selected:
+            return
+        folder = Path(selected)
+        prefix = self._import_voice_pack_file(
+            folder,
+            "boss_red_orb",
+            "warning",
+            "danger_red_orb.wav",
+            "warning.wav",
+            "prefix.wav",
+            "red_orb.wav",
+        )
+        if prefix:
+            self.boss_red_orb.sound.set(prefix)
+        safe = self._import_voice_pack_file(
+            folder,
+            "boss_red_orb",
+            "safe",
+            "safe_complete.wav",
+            "safe.wav",
+            "complete.wav",
+            "success.wav",
+        )
+        if safe:
+            self.boss_red_orb.item["safe_sound"] = safe
+        self.boss_red_orb.item["countdown_sounds"] = self._import_voice_pack_countdown(
+            folder,
+            "boss_red_orb",
+            [5, 4, 3, 2, 1, 0],
+            self.boss_red_orb.item.get("countdown_sounds"),
+        )
+        messagebox.showinfo(
+            "\u8bed\u97f3\u5305",
+            "\u7ea2\u7403\u64ad\u62a5\u8bed\u97f3\u5305\u5df2\u5bfc\u5165\u3002",
+        )
+
+    def choose_boss_laser_voice_pack(self) -> None:
+        if self.boss_laser is None:
+            return
+        selected = filedialog.askdirectory(title="\u9009\u62e9\u6fc0\u5149\u9884\u8b66\u8bed\u97f3\u5305\u76ee\u5f55")
+        if not selected:
+            return
+        folder = Path(selected)
+        prefix = self._import_voice_pack_file(
+            folder,
+            "boss_laser",
+            "warning",
+            "laser_warning_prefix.wav",
+            "warning.wav",
+            "prefix.wav",
+            "laser.wav",
+        )
+        if prefix:
+            self.boss_laser.sound.set(prefix)
+        self.boss_laser.item["countdown_sounds"] = self._import_voice_pack_countdown(
+            folder,
+            "boss_laser",
+            [4, 3, 2, 1, 0],
+            self.boss_laser.item.get("countdown_sounds"),
+        )
+        messagebox.showinfo(
+            "\u8bed\u97f3\u5305",
+            "\u6fc0\u5149\u9884\u8b66\u8bed\u97f3\u5305\u5df2\u5bfc\u5165\u3002",
+        )
+
     def choose_key_enemy_debuff_sound(self, kind: str) -> None:
         if self.key_enemy_debuff is None:
             return
@@ -3673,14 +3861,23 @@ class SettingsApp:
                 sound_path = self.config_dir / sound_path
             return sound_path
 
+        countdown_sounds = {
+            "5": BOSS_RED_ORB_COUNTDOWN_5_SOUND,
+            "4": BOSS_RED_ORB_COUNTDOWN_4_SOUND,
+            "3": BOSS_RED_ORB_COUNTDOWN_3_SOUND,
+            "2": BOSS_RED_ORB_COUNTDOWN_2_SOUND,
+            "1": BOSS_RED_ORB_COUNTDOWN_1_SOUND,
+            "0": BOSS_RED_ORB_COUNTDOWN_0_SOUND,
+            **(self.boss_red_orb.item.get("countdown_sounds") or {}),
+        }
         sound = make_timed_sound_sequence(
             (0.0, resolve(self.boss_red_orb.sound.get() or BOSS_RED_ORB_SOUND)),
-            (1.0, resolve(BOSS_RED_ORB_COUNTDOWN_5_SOUND)),
-            (2.0, resolve(BOSS_RED_ORB_COUNTDOWN_4_SOUND)),
-            (3.0, resolve(BOSS_RED_ORB_COUNTDOWN_3_SOUND)),
-            (4.0, resolve(BOSS_RED_ORB_COUNTDOWN_2_SOUND)),
-            (5.0, resolve(BOSS_RED_ORB_COUNTDOWN_1_SOUND)),
-            (6.0, resolve(BOSS_RED_ORB_COUNTDOWN_0_SOUND)),
+            (1.0, resolve(countdown_sounds["5"])),
+            (2.0, resolve(countdown_sounds["4"])),
+            (3.0, resolve(countdown_sounds["3"])),
+            (4.0, resolve(countdown_sounds["2"])),
+            (5.0, resolve(countdown_sounds["1"])),
+            (6.0, resolve(countdown_sounds["0"])),
         )
         play_sound(sound, async_play=True, volume=self.volume.get())
 
@@ -3694,13 +3891,21 @@ class SettingsApp:
                 sound_path = self.config_dir / sound_path
             return sound_path
 
+        countdown_sounds = {
+            "4": BOSS_LASER_COUNTDOWN_4_SOUND,
+            "3": BOSS_LASER_COUNTDOWN_3_SOUND,
+            "2": BOSS_LASER_COUNTDOWN_2_SOUND,
+            "1": BOSS_LASER_COUNTDOWN_1_SOUND,
+            "0": BOSS_LASER_COUNTDOWN_0_SOUND,
+            **(self.boss_laser.item.get("countdown_sounds") or {}),
+        }
         sound = make_timed_sound_sequence(
             (0.0, resolve(self.boss_laser.sound.get() or BOSS_LASER_ALERT_SOUND)),
-            (1.0, resolve(BOSS_LASER_COUNTDOWN_4_SOUND)),
-            (2.0, resolve(BOSS_LASER_COUNTDOWN_3_SOUND)),
-            (3.0, resolve(BOSS_LASER_COUNTDOWN_2_SOUND)),
-            (4.0, resolve(BOSS_LASER_COUNTDOWN_1_SOUND)),
-            (5.0, resolve(BOSS_LASER_COUNTDOWN_0_SOUND)),
+            (1.0, resolve(countdown_sounds["4"])),
+            (2.0, resolve(countdown_sounds["3"])),
+            (3.0, resolve(countdown_sounds["2"])),
+            (4.0, resolve(countdown_sounds["1"])),
+            (5.0, resolve(countdown_sounds["0"])),
         )
         play_sound(sound, async_play=True, volume=self.volume.get())
 
@@ -3820,13 +4025,22 @@ class SettingsApp:
             self.gunner_eye_row.remaining_sound.set(KEY_ENEMY_GUNNER_EYE_REMAINING_SOUND)
             self.gunner_eye_row.ended_sound.set(KEY_ENEMY_GUNNER_EYE_ENDED_SOUND)
             self._sync_seconds_state(self.gunner_eye_row)
+        if self.music_strong_enabled is not None:
+            self.music_strong_enabled.set(MUSIC_STRONG_REMINDER_ENABLED)
         if self.boss_red_orb is not None:
             self.boss_red_orb.enabled.set(True)
             self.boss_red_orb.sound.set(BOSS_RED_ORB_SOUND)
+            self.boss_red_orb.item["safe_sound"] = BOSS_RED_ORB_SAFE_SOUND
+            self.boss_red_orb.item["countdown_sounds"] = boss_red_orb_defaults()[
+                "countdown_sounds"
+            ]
             self._sync_boss_red_orb_state()
         if self.boss_laser is not None:
             self.boss_laser.enabled.set(False)
             self.boss_laser.sound.set(BOSS_LASER_ALERT_SOUND)
+            self.boss_laser.item["countdown_sounds"] = boss_laser_alert_defaults()[
+                "countdown_sounds"
+            ]
             self._sync_boss_laser_state()
         for row in self.special_end_only_rows:
             rules = SPECIAL_END_ONLY_DEFAULTS[row.item["name"]]
@@ -3840,6 +4054,10 @@ class SettingsApp:
 
     def apply_to_data(self) -> None:
         self.data["audio_volume"] = normalize_volume(self.volume.get())
+        music_strong = find_or_create_music_strong_reminder(self.data)
+        if self.music_strong_enabled is not None:
+            music_strong["enabled"] = bool(self.music_strong_enabled.get())
+        self.data["music_strong_reminder"] = music_strong
         for row in self.rows:
             item = row.item
             name = item["name"]
@@ -3880,6 +4098,8 @@ class SettingsApp:
                 item["ended_grace_seconds"] = 0
                 item["sbt_ended_lead_seconds"] = 0
                 item["use_dynamic_sbt_adjust"] = False
+            if name == "状态支援":
+                item["prefer_sbt_when_duration_present"] = True
             item["warn_sound"] = remaining_sound or DEFAULT_WARN_SOUND
             if name == MAGIC_SHIELD_NAME and self.magic_shield_delay is not None:
                 try:
@@ -4207,9 +4427,13 @@ class SettingsApp:
         row = self.boss_red_orb
         item = row.item
         defaults = boss_red_orb_defaults()
+        countdown_sounds = dict(item.get("countdown_sounds") or {})
+        safe_sound = item.get("safe_sound", defaults["safe_sound"])
         item.update(defaults)
         item["enabled"] = bool(row.enabled.get())
         item["sound"] = row.sound.get().strip() or BOSS_RED_ORB_SOUND
+        item["safe_sound"] = safe_sound or defaults["safe_sound"]
+        item["countdown_sounds"] = countdown_sounds or defaults["countdown_sounds"]
         item["audio_volume"] = self.data["audio_volume"]
 
         items = [
@@ -4227,9 +4451,11 @@ class SettingsApp:
         row = self.boss_laser
         item = row.item
         defaults = boss_laser_alert_defaults()
+        countdown_sounds = dict(item.get("countdown_sounds") or {})
         item.update(defaults)
         item["enabled"] = bool(row.enabled.get())
         item["sound"] = row.sound.get().strip() or BOSS_LASER_ALERT_SOUND
+        item["countdown_sounds"] = countdown_sounds or defaults["countdown_sounds"]
         item["audio_volume"] = self.data["audio_volume"]
 
         items = [
