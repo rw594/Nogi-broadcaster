@@ -1,15 +1,16 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.24b",
-  "versionCode": 12402,
-  "releaseName": "洛奇播报小助手 V1.24b 小窗识别状态修复",
-  "publishedAt": "2026-07-07",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24b/V1.24b.zip",
-  "sha256": "7a8753de78e467195ee3084b3a6f619ba766bada82b34a1cec9d307420499576",
-  "size": 64415532,
+  "version": "1.24c",
+  "versionCode": 12403,
+  "releaseName": "洛奇播报小助手 V1.24c 状态支援与机制倒计时修复",
+  "publishedAt": "2026-07-08",
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24c/V1.24c.zip",
+  "sha256": "6454444ebb262675b9322e235287c1839b0087552b47d6715622cc00d41a331d",
+  "size": 64422564,
   "mandatory": false,
   "notes": [
-    "修复已经识别角色并能正常播报后，小窗口仍停留在【请开关魔法盾】的问题。"
+    "修复【状态支援】计时不准确的问题。",
+    "修复【红球预警】和【激光预警】同时触发的特殊情况下，会导致播报时间轴错乱的问题。"
   ]
 }

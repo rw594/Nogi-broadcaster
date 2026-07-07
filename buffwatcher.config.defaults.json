@@ -59,7 +59,7 @@
       "ended_message": "{name} 结束",
       "audio_volume": 100,
       "warn_sound": "assets/audio/xiaoyi/status_support_remaining.wav",
-      "prefer_sbt_when_duration_present": true
+      "prefer_sbt_when_duration_present": false
     },
     {
       "name": "徒安之歌",

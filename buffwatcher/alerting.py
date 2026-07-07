@@ -2749,6 +2749,13 @@ class AlertEngine:
                 if "SBT" in extra
                 else None
             )
+            stale_sbt_duration_snapshot = (
+                raw_sbt_end_ms is not None
+                and previous_raw_sbt_end_ms is not None
+                and raw_sbt_end_ms
+                < previous_raw_sbt_end_ms
+                + int(DYNAMIC_SBT_NEW_END_MARGIN_SECONDS * 1000)
+            )
             if state.spec.prefer_sbt_when_duration_present and raw_sbt_end_ms is not None:
                 sbt_adjust_seconds = self.effective_sbt_adjust_seconds(state.spec)
                 next_end_ms = raw_sbt_end_ms + int(sbt_adjust_seconds * 1000)
@@ -2773,24 +2780,45 @@ class AlertEngine:
                     if state.active:
                         alerts.extend(self.advance_time(at_ms))
                     return alerts
+            elif stale_sbt_duration_snapshot:
+                state.last_timing_source = "event_duration_stale_sbt_snapshot"
+                state.last_computed_end_ms = previous_end
+                state.last_raw_sbt_end_ms = previous_raw_sbt_end_ms
+                state.last_sbt_adjust_seconds = None
+                state.last_sbt_adjust_source = None
+                state.last_raw_sbt_remaining_seconds = (
+                    (raw_sbt_end_ms - at_ms) / 1000
+                    if raw_sbt_end_ms is not None
+                    else None
+                )
+                state.last_adjusted_remaining_seconds = (
+                    (previous_end - at_ms) / 1000
+                    if previous_end is not None
+                    else None
+                )
+                state.last_event_at_ms = at_ms
+                if not was_active:
+                    return alerts
+                next_end_ms = previous_end
             else:
                 next_end_ms = at_ms + duration_ms
                 state.last_timing_source = "event_duration"
                 state.last_sbt_adjust_seconds = None
                 state.last_sbt_adjust_source = None
-            state.last_computed_end_ms = next_end_ms
-            state.last_raw_sbt_end_ms = raw_sbt_end_ms
-            state.last_raw_sbt_remaining_seconds = (
-                (raw_sbt_end_ms - at_ms) / 1000
-                if raw_sbt_end_ms is not None
-                else None
-            )
-            state.last_adjusted_remaining_seconds = (
-                (next_end_ms - at_ms) / 1000
-                if state.spec.prefer_sbt_when_duration_present
-                and raw_sbt_end_ms is not None
-                else duration_ms / 1000
-            )
+            if not stale_sbt_duration_snapshot:
+                state.last_computed_end_ms = next_end_ms
+                state.last_raw_sbt_end_ms = raw_sbt_end_ms
+                state.last_raw_sbt_remaining_seconds = (
+                    (raw_sbt_end_ms - at_ms) / 1000
+                    if raw_sbt_end_ms is not None
+                    else None
+                )
+                state.last_adjusted_remaining_seconds = (
+                    (next_end_ms - at_ms) / 1000
+                    if state.spec.prefer_sbt_when_duration_present
+                    and raw_sbt_end_ms is not None
+                    else duration_ms / 1000
+                )
         elif "SBT" in extra:
             raw_end_ms = sbt_to_unix_ms(extra["SBT"], self.tz_offset_hours)
             self._learn_dynamic_sbt_adjust(
@@ -6565,12 +6593,55 @@ def _sleep_until_sound_offset(
         time.sleep(min(wait_seconds, 0.05))
 
 
+def resolve_sound_path(path: str | Path) -> Path:
+    sound_path = Path(path)
+    if sound_path.is_absolute():
+        return sound_path
+    candidates = [Path.cwd() / sound_path]
+    if getattr(sys, "frozen", False):
+        candidates.append(Path(sys.executable).resolve().parent / sound_path)
+    candidates.append(Path(__file__).resolve().parent.parent / sound_path)
+    return next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
+
+
+def _play_timed_sequence_clip(
+    clip_path: str,
+    *,
+    volume: int,
+    cancel_key: str | None,
+    cancel_generation: int,
+) -> bool:
+    if _sound_sequence_canceled(cancel_key, cancel_generation):
+        return False
+    sound_path = resolve_sound_path(clip_path)
+    if os.name == "nt":
+        try:
+            play_sound_mci(sound_path, async_play=False, volume=volume)
+            return not _sound_sequence_canceled(cancel_key, cancel_generation)
+        except RuntimeError as exc:
+            print(f"[audio timed sequence mci error] {sound_path}: {exc}")
+    with _ASYNC_AUDIO_LOCK:
+        if _sound_sequence_canceled(cancel_key, cancel_generation):
+            return False
+        play_sound(sound_path, async_play=False, volume=volume)
+    return not _sound_sequence_canceled(cancel_key, cancel_generation)
+
+
 def play_sound(path: str | Path, *, async_play: bool = False, volume: int = 100) -> None:
     volume = normalize_volume(volume)
     if volume <= 0:
         return
 
+    sound_value = str(path)
     if async_play:
+        if sound_value.startswith(SOUND_TIMED_SEQUENCE_PREFIX):
+            thread = threading.Thread(
+                target=_play_timed_sound_sequence_async_worker,
+                kwargs={"path": path, "volume": volume},
+                daemon=True,
+            )
+            thread.start()
+            return
         thread = threading.Thread(
             target=_play_sound_async_worker,
             kwargs={"path": path, "volume": volume},
@@ -6579,7 +6650,6 @@ def play_sound(path: str | Path, *, async_play: bool = False, volume: int = 100)
         thread.start()
         return
 
-    sound_value = str(path)
     if sound_value.startswith(SOUND_SEQUENCE_PREFIX):
         sequence_value = sound_value[len(SOUND_SEQUENCE_PREFIX) :]
         parts = [
@@ -6626,16 +6696,16 @@ def play_sound(path: str | Path, *, async_play: bool = False, volume: int = 100)
                 return
             if _sound_sequence_canceled(cancel_key, cancel_generation):
                 return
-            play_sound(clip_path, async_play=False, volume=volume)
+            if not _play_timed_sequence_clip(
+                clip_path,
+                volume=volume,
+                cancel_key=cancel_key,
+                cancel_generation=cancel_generation,
+            ):
+                return
         return
 
-    sound_path = Path(path)
-    if not sound_path.is_absolute():
-        candidates = [Path.cwd() / sound_path]
-        if getattr(sys, "frozen", False):
-            candidates.append(Path(sys.executable).resolve().parent / sound_path)
-        candidates.append(Path(__file__).resolve().parent.parent / sound_path)
-        sound_path = next((candidate for candidate in candidates if candidate.is_file()), candidates[0])
+    sound_path = resolve_sound_path(path)
 
     if os.name == "nt" and sound_path.suffix.lower() == ".wav":
         try:
@@ -6672,6 +6742,13 @@ def _play_sound_async_worker(path: str | Path, *, volume: int) -> None:
             play_sound(path, async_play=False, volume=volume)
         except Exception as exc:
             print(f"[audio async error] {path}: {exc}")
+
+
+def _play_timed_sound_sequence_async_worker(path: str | Path, *, volume: int) -> None:
+    try:
+        play_sound(path, async_play=False, volume=volume)
+    except Exception as exc:
+        print(f"[audio timed sequence async error] {path}: {exc}")
 
 
 def play_wav_with_volume(path: str | Path, *, async_play: bool, volume: int) -> None:

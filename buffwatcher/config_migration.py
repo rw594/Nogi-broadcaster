@@ -90,6 +90,19 @@ def _write_json_atomic(path: Path, data: dict[str, Any]) -> None:
     temp_path.replace(path)
 
 
+def _apply_policy_migrations(data: dict[str, Any]) -> bool:
+    changed = False
+    for item in data.get("buffs", []):
+        if not isinstance(item, dict):
+            continue
+        if item.get("name") == "状态支援" and item.get(
+            "prefer_sbt_when_duration_present"
+        ):
+            item["prefer_sbt_when_duration_present"] = False
+            changed = True
+    return changed
+
+
 def migrate_config_file(config_path: str | Path) -> dict[str, Any]:
     config_file = Path(config_path)
     if not config_file.exists():
@@ -97,6 +110,7 @@ def migrate_config_file(config_path: str | Path) -> dict[str, Any]:
         if default_path is None:
             raise FileNotFoundError(config_file)
         data = _read_json(default_path)
+        _apply_policy_migrations(data)
         config_file.parent.mkdir(parents=True, exist_ok=True)
         _write_json_atomic(config_file, data)
         return data
@@ -104,10 +118,13 @@ def migrate_config_file(config_path: str | Path) -> dict[str, Any]:
     data = _read_json(config_file)
     default_path = _find_default_config(config_file)
     if default_path is None:
+        _apply_policy_migrations(data)
         return data
 
     defaults = _read_json(default_path)
-    if not _merge_missing(data, defaults):
+    changed = _merge_missing(data, defaults)
+    changed = _apply_policy_migrations(data) or changed
+    if not changed:
         return data
 
     backup_path = config_file.with_suffix(config_file.suffix + ".bak-before-migration")

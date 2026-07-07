@@ -4099,7 +4099,7 @@ class SettingsApp:
                 item["sbt_ended_lead_seconds"] = 0
                 item["use_dynamic_sbt_adjust"] = False
             if name == "状态支援":
-                item["prefer_sbt_when_duration_present"] = True
+                item["prefer_sbt_when_duration_present"] = False
             item["warn_sound"] = remaining_sound or DEFAULT_WARN_SOUND
             if name == MAGIC_SHIELD_NAME and self.magic_shield_delay is not None:
                 try:
