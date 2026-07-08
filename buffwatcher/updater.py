@@ -6,10 +6,16 @@ import json
 import os
 from pathlib import Path
 import re
+import ssl
 import subprocess
 import tempfile
 import urllib.request
 import zipfile
+
+try:
+    import certifi
+except Exception:  # pragma: no cover - optional runtime dependency
+    certifi = None
 
 
 UPDATE_METADATA_URL = (
@@ -18,8 +24,10 @@ UPDATE_METADATA_URL = (
 UPDATE_API_URL = "https://api.github.com/repos/rw594/Nogi-broadcaster/releases/latest"
 FALLBACK_UPDATE_METADATA_URLS = (
     "https://cdn.jsdelivr.net/gh/rw594/Nogi-broadcaster@main/latest.json",
+    "https://raw.githubusercontent.com/rw594/Nogi-broadcaster/main/latest.json",
 )
 VERSION_RE = re.compile(r"v?(\d+(?:\.\d+){1,2})([a-z])?", re.IGNORECASE)
+_HTTPS_CONTEXT: ssl.SSLContext | None = None
 
 
 @dataclass(frozen=True)
@@ -88,6 +96,7 @@ def fetch_latest_update(
     timeout_seconds: float = 8.0,
 ) -> UpdateInfo | None:
     last_error: Exception | None = None
+    errors: list[str] = []
     try:
         return _fetch_latest_update_from_url(
             runtime_root,
@@ -97,6 +106,7 @@ def fetch_latest_update(
         )
     except Exception as exc:
         last_error = exc
+        errors.append(f"metadata {metadata_url}: {type(exc).__name__}: {exc}")
     try:
         return _fetch_latest_update_from_github_api(
             runtime_root,
@@ -105,6 +115,7 @@ def fetch_latest_update(
         )
     except Exception as exc:
         last_error = exc
+        errors.append(f"github api: {type(exc).__name__}: {exc}")
     for candidate_url in FALLBACK_UPDATE_METADATA_URLS:
         try:
             return _fetch_latest_update_from_url(
@@ -115,8 +126,9 @@ def fetch_latest_update(
             )
         except Exception as exc:
             last_error = exc
+            errors.append(f"metadata {candidate_url}: {type(exc).__name__}: {exc}")
     if last_error is not None:
-        raise last_error
+        raise RuntimeError("；".join(errors)) from last_error
     return None
 
 
@@ -134,7 +146,7 @@ def _fetch_latest_update_from_url(
             "User-Agent": "Nogi-broadcaster-updater",
         },
     )
-    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+    with _urlopen(request, timeout=timeout_seconds) as response:
         payload = response.read(1024 * 1024)
     data = json.loads(payload.decode("utf-8-sig"))
     version = str(data.get("version") or "").strip()
@@ -183,7 +195,7 @@ def _fetch_latest_update_from_github_api(
             "User-Agent": "Nogi-broadcaster-updater",
         },
     )
-    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+    with _urlopen(request, timeout=timeout_seconds) as response:
         payload = response.read(1024 * 1024)
     data = json.loads(payload.decode("utf-8-sig"))
     version = str(data.get("tag_name") or "").strip().lstrip("vV")
@@ -286,13 +298,38 @@ def _download_file(url: str, destination: Path) -> None:
         url,
         headers={"User-Agent": "Nogi-broadcaster-updater"},
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
+    with _urlopen(request, timeout=30) as response:
         with destination.open("wb") as output:
             while True:
                 chunk = response.read(1024 * 1024)
                 if not chunk:
                     break
                 output.write(chunk)
+
+
+def _https_context() -> ssl.SSLContext:
+    global _HTTPS_CONTEXT
+    if _HTTPS_CONTEXT is not None:
+        return _HTTPS_CONTEXT
+    if certifi is not None:
+        context = ssl.create_default_context(cafile=certifi.where())
+    else:
+        context = ssl.create_default_context()
+    if hasattr(ssl, "TLSVersion"):
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
+    _HTTPS_CONTEXT = context
+    return context
+
+
+def _urlopen(request: urllib.request.Request, *, timeout: float):
+    url = str(request.full_url or "")
+    if url.lower().startswith("https://"):
+        return urllib.request.urlopen(
+            request,
+            timeout=timeout,
+            context=_https_context(),
+        )
+    return urllib.request.urlopen(request, timeout=timeout)
 
 
 def _sha256(path: Path) -> str:

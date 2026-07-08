@@ -1,16 +1,17 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.24c",
-  "versionCode": 12403,
-  "releaseName": "洛奇播报小助手 V1.24c 状态支援与机制倒计时修复",
+  "version": "1.24d",
+  "versionCode": 12404,
+  "releaseName": "洛奇播报小助手 V1.24d 药水计时与识别修复",
   "publishedAt": "2026-07-08",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24c/V1.24c.zip",
-  "sha256": "6454444ebb262675b9322e235287c1839b0087552b47d6715622cc00d41a331d",
-  "size": 64422564,
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24d/V1.24d.zip",
+  "sha256": "76571a82ce4b28c408ba5a294cd1bb0c2b6f2dfcfb70a68d49694ed580670215",
+  "size": 64556337,
   "mandatory": false,
   "notes": [
-    "修复【状态支援】计时不准确的问题。",
-    "修复【红球预警】和【激光预警】同时触发的特殊情况下，会导致播报时间轴错乱的问题。"
+    "修复部分药水存在 30 / 60 / 120 分钟不同版本时，提醒时间可能不准确的问题。",
+    "优化 Win10 用户的自动更新兼容性。",
+    "优化本人角色识别逻辑，减少队友状态串入导致的误播。"
   ]
 }

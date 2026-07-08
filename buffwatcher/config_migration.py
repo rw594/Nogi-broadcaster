@@ -9,6 +9,7 @@ from typing import Any
 
 DEFAULT_CONFIG_NAME = "buffwatcher.config.defaults.json"
 PACKAGED_DEFAULT_CONFIG = Path("config") / DEFAULT_CONFIG_NAME
+VARIABLE_DURATION_POTION_CCIDS = {62, 63, 1121, 1150}
 
 
 def default_config_candidates(config_path: str | Path) -> list[Path]:
@@ -95,6 +96,25 @@ def _apply_policy_migrations(data: dict[str, Any]) -> bool:
     for item in data.get("buffs", []):
         if not isinstance(item, dict):
             continue
+        try:
+            item_ccid = int(item.get("ccid"))
+        except (TypeError, ValueError):
+            item_ccid = None
+        if item_ccid in VARIABLE_DURATION_POTION_CCIDS:
+            for key in ("duration_seconds", "fixed_duration_seconds"):
+                if key in item:
+                    item.pop(key, None)
+                    changed = True
+            required_extra = item.get("required_extra")
+            if isinstance(required_extra, dict) and "DURA" in required_extra:
+                required_extra.pop("DURA", None)
+                changed = True
+            if item.get("prefer_sbt_when_duration_present") is not True:
+                item["prefer_sbt_when_duration_present"] = True
+                changed = True
+            if item.get("use_dynamic_sbt_adjust") is not False:
+                item["use_dynamic_sbt_adjust"] = False
+                changed = True
         if item.get("name") == "状态支援" and item.get(
             "prefer_sbt_when_duration_present"
         ):

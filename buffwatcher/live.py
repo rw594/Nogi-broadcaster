@@ -30,6 +30,7 @@ DEFAULT_WS_HOST = "127.0.0.1"
 DEFAULT_WS_PORT = 18000
 DEFAULT_WS_PATH = "/ws"
 MAX_RECORD_LOGS = 30
+MAGIC_SHIELD_SELF_LEARN_TOGGLE_WINDOW_MS = 3000
 
 
 @dataclass
@@ -436,33 +437,12 @@ class SelfFilter:
         self.disabled = disabled
         self.explicit_self_id = self_id is not None
         self._last_wait_notice_at = 0.0
+        self._magic_shield_learn_candidates: dict[str, tuple[int, int]] = {}
         if not self.disabled and self.self_id is not None:
             self.engine.set_self_entity_id(self.self_id)
 
     def observe(self, event: dict[str, Any]) -> None:
-        if self.disabled or self.explicit_self_id:
-            return
-
-        if event.get("EventId") != 12:
-            return
-
-        skill_id = event.get("SkillId")
-        caster_id = event.get("Id")
-        target_id = event.get("TargetId")
-        if skill_id is None or caster_id is None:
-            return
-
-        primary = self.engine.skill_id_to_primary.get(int(skill_id))
-        if primary is None:
-            return
-
-        caster_id = str(caster_id)
-        target_id = "" if target_id is None else str(target_id)
-        if target_id not in ("0", caster_id):
-            return
-
-        spec = self.engine.states[primary].spec
-        self._set_self_id(caster_id, f"skill {spec.name}")
+        return
 
     def allow(self, event: dict[str, Any], *, allow_learning: bool) -> bool:
         if self.disabled:
@@ -487,24 +467,35 @@ class SelfFilter:
         return target_id == self.self_id
 
     def _learning_reason(self, event: dict[str, Any], *, target_id: str) -> str | None:
-        attacker_id = event.get("AttackerId")
         event_id = event.get("EventId")
         ccid = int(event["CCId"])
         primary = self.engine.ccid_to_primary[ccid]
-        is_primary_apply = event_id == 4 and ccid == primary
-        attacker_text = "" if attacker_id is None else str(attacker_id)
-        if not is_primary_apply:
+        if primary != MAGIC_SHIELD_CCID or ccid != MAGIC_SHIELD_CCID:
             return None
-        if attacker_text and attacker_text != target_id:
-            self._notice_waiting(event, target_id=target_id, attacker_id=attacker_text)
+        if event_id not in (4, 5):
             return None
-        if not attacker_text and primary != MAGIC_SHIELD_CCID:
+        at_ms = event.get("At")
+        if not isinstance(at_ms, int):
+            at_ms = now_ms()
+        previous = self._magic_shield_learn_candidates.get(target_id)
+        self._magic_shield_learn_candidates[target_id] = (int(event_id), at_ms)
+        self._prune_magic_shield_learn_candidates(at_ms)
+        if previous is None:
             return None
-        spec = self.engine.states[primary].spec
-        reason = f"buff {spec.name}"
-        if not attacker_text:
-            reason += ", missing attacker"
-        return reason
+        previous_event_id, previous_at_ms = previous
+        if previous_event_id == int(event_id):
+            return None
+        if at_ms - previous_at_ms > MAGIC_SHIELD_SELF_LEARN_TOGGLE_WINDOW_MS:
+            return None
+        return "magic shield quick toggle"
+
+    def _prune_magic_shield_learn_candidates(self, at_ms: int) -> None:
+        cutoff = at_ms - MAGIC_SHIELD_SELF_LEARN_TOGGLE_WINDOW_MS
+        self._magic_shield_learn_candidates = {
+            target_id: candidate
+            for target_id, candidate in self._magic_shield_learn_candidates.items()
+            if candidate[1] >= cutoff
+        }
 
     def allow_self_event(self, event: dict[str, Any]) -> bool:
         if self.disabled:
@@ -916,7 +907,7 @@ def print_common_start(args: argparse.Namespace) -> None:
     elif args.self_id:
         print(f"[live] self id: {args.self_id}")
     else:
-        print("[live] self id: auto, cast or refresh one self-applied tracked buff after startup")
+        print("[live] self id: auto, quickly toggle magic shield after startup")
     print("[live] press Ctrl+C to stop")
 
 

@@ -58,6 +58,7 @@ DEFAULT_MAGIC_SHIELD_MISSING_SOUND = "assets/audio/xiaoyi/magic_shield_missing.w
 DEFAULT_MAGIC_SHIELD_MISSING_MESSAGE = "魔法盾忘开啦"
 DEFAULT_MAGIC_SHIELD_ENDED_MESSAGE = "\u9b54\u6cd5\u76fe\u5173\u95ed"
 MUSIC_BUFF_CCIDS = frozenset({192, 193, 680})
+VARIABLE_DURATION_POTION_CCIDS = frozenset({62, 63, 1121, 1150})
 TUAN_SONG_CCID = 1124
 MUSIC_APPLY_REMOVE_NOISE_WINDOW_MS = 1000
 MUSIC_REAPPLY_SUPPRESSION_GRACE_SECONDS = 1.0
@@ -978,6 +979,7 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
         if not item.get("enabled"):
             continue
 
+        item_ccid = int(item["ccid"])
         warn_sound = sound_path(item.get("warn_sound", DEFAULT_WARN_SOUND))
         critical_sound = sound_path(item.get("critical_sound", DEFAULT_CRITICAL_SOUND))
         ended_sound = sound_path(item.get("ended_sound", DEFAULT_ENDED_SOUND))
@@ -1024,33 +1026,40 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
             ]
 
         alerts.sort(key=lambda alert: alert.remaining_seconds, reverse=True)
+        duration_seconds = None
+        if item_ccid not in VARIABLE_DURATION_POTION_CCIDS:
+            duration_seconds = (
+                float(item["duration_seconds"])
+                if item.get("duration_seconds") is not None
+                else (
+                    float(item["fixed_duration_seconds"])
+                    if item.get("fixed_duration_seconds") is not None
+                    else None
+                )
+            )
 
         buff_specs.append(
             BuffSpec(
                 name=item.get("name", f"cc_{item['ccid']}"),
-                ccid=int(item["ccid"]),
+                ccid=item_ccid,
                 skill_id=int(item["skill_id"]) if item.get("skill_id") else None,
                 self_filter=bool(item.get("self_filter", True)),
                 required_extra=dict(item.get("required_extra") or {}),
-                duration_seconds=(
-                    float(item["duration_seconds"])
-                    if item.get("duration_seconds") is not None
-                    else (
-                        float(item["fixed_duration_seconds"])
-                        if item.get("fixed_duration_seconds") is not None
-                        else None
-                    )
-                ),
+                duration_seconds=duration_seconds,
                 sbt_adjust_seconds=float(
                     item.get(
                         "sbt_adjust_seconds",
                         item.get("end_time_adjust_seconds", default_sbt_adjust_seconds),
                     )
                 ),
-                use_dynamic_sbt_adjust=bool(
-                    item.get(
-                        "use_dynamic_sbt_adjust",
-                        data.get("use_dynamic_sbt_adjust", True),
+                use_dynamic_sbt_adjust=(
+                    False
+                    if item_ccid in VARIABLE_DURATION_POTION_CCIDS
+                    else bool(
+                        item.get(
+                            "use_dynamic_sbt_adjust",
+                            data.get("use_dynamic_sbt_adjust", True),
+                        )
                     )
                 ),
                 sbt_ended_lead_seconds=max(
@@ -1118,8 +1127,9 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                     int(ccid)
                     for ccid in item.get("suppress_ended_if_active_ccids", [])
                 },
-                prefer_sbt_when_duration_present=bool(
-                    item.get("prefer_sbt_when_duration_present", False)
+                prefer_sbt_when_duration_present=(
+                    item_ccid in VARIABLE_DURATION_POTION_CCIDS
+                    or bool(item.get("prefer_sbt_when_duration_present", False))
                 ),
             )
         )
@@ -2752,6 +2762,7 @@ class AlertEngine:
             stale_sbt_duration_snapshot = (
                 raw_sbt_end_ms is not None
                 and previous_raw_sbt_end_ms is not None
+                and state.spec.ccid not in VARIABLE_DURATION_POTION_CCIDS
                 and raw_sbt_end_ms
                 < previous_raw_sbt_end_ms
                 + int(DYNAMIC_SBT_NEW_END_MARGIN_SECONDS * 1000)

@@ -1238,7 +1238,8 @@
       "name": "魔攻水",
       "ccid": 1121,
       "enabled": true,
-      "duration_seconds": 1800,
+      "prefer_sbt_when_duration_present": true,
+      "use_dynamic_sbt_adjust": false,
       "warn_seconds": 60,
       "critical_seconds": 60,
       "alerts": [
@@ -1279,11 +1280,11 @@
       "name": "炼金水",
       "ccid": 1150,
       "enabled": true,
+      "prefer_sbt_when_duration_present": true,
+      "use_dynamic_sbt_adjust": false,
       "required_extra": {
-        "ITEM": 5000314,
-        "DURA": 3600000
+        "ITEM": 5000314
       },
-      "duration_seconds": 3600,
       "warn_seconds": 60,
       "critical_seconds": 60,
       "alerts": [
@@ -1603,7 +1604,8 @@
       "name": "法速水",
       "ccid": 62,
       "enabled": true,
-      "duration_seconds": 1800,
+      "prefer_sbt_when_duration_present": true,
+      "use_dynamic_sbt_adjust": false,
       "warn_seconds": 60,
       "critical_seconds": 60,
       "alerts": [
@@ -1658,7 +1660,8 @@
       "name": "物攻水",
       "ccid": 63,
       "enabled": true,
-      "duration_seconds": 1800,
+      "prefer_sbt_when_duration_present": true,
+      "use_dynamic_sbt_adjust": false,
       "warn_seconds": 60,
       "critical_seconds": 60,
       "alerts": [

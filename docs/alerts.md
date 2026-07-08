@@ -158,7 +158,7 @@ python -m buffwatcher.alerting replay --file "C:\Users\rw594\Desktop\MicoPunch\h
 1. 启动洛奇并进入角色。
 2. 以管理员身份启动 MicoPunch。
 3. 在本目录运行 `.\scripts\run_live_plugin.ps1`。
-4. 优先开关一次魔法盾，看到 `learned self id`；也可以刷新或施放一个自己给自己的已配置 buff。
+4. 快速开关魔法盾，看到 `learned self id`；插件只使用魔法盾开关来自动识别本人 ID。
 5. 进入实战测试。
 
 常用参数：
