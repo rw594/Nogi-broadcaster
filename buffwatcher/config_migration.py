@@ -10,6 +10,8 @@ from typing import Any
 DEFAULT_CONFIG_NAME = "buffwatcher.config.defaults.json"
 PACKAGED_DEFAULT_CONFIG = Path("config") / DEFAULT_CONFIG_NAME
 VARIABLE_DURATION_POTION_CCIDS = {62, 63, 1121, 1150}
+LEGACY_SBT_ADJUST_SECONDS = 16.0
+CURRENT_SBT_ADJUST_SECONDS = 22.5
 
 
 def default_config_candidates(config_path: str | Path) -> list[Path]:
@@ -93,6 +95,13 @@ def _write_json_atomic(path: Path, data: dict[str, Any]) -> None:
 
 def _apply_policy_migrations(data: dict[str, Any]) -> bool:
     changed = False
+    try:
+        current_sbt_adjust = float(data.get("sbt_adjust_seconds"))
+    except (TypeError, ValueError):
+        current_sbt_adjust = None
+    if current_sbt_adjust == LEGACY_SBT_ADJUST_SECONDS:
+        data["sbt_adjust_seconds"] = CURRENT_SBT_ADJUST_SECONDS
+        changed = True
     for item in data.get("buffs", []):
         if not isinstance(item, dict):
             continue

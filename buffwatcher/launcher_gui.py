@@ -15,8 +15,10 @@ from .console_launcher import (
     CREATE_NO_WINDOW,
     assign_to_job,
     close_handle,
+    create_log_session_dir,
     create_kill_on_close_job,
     kill_stale_processes,
+    LOG_SESSION_DIR_ENV,
     log_dir,
     package_root,
     package_title,
@@ -66,6 +68,7 @@ class LauncherApp:
         self.core_exe = watcher_exe(self.root)
         self.logs = log_dir(self.root)
         self.log_path: Path | None = None
+        self.session_logs: Path | None = None
         self.log_offset = 0
         self.log_stream = None
         self.decoder = codecs.getincrementaldecoder("utf-8")("replace")
@@ -228,9 +231,11 @@ class LauncherApp:
 
         kill_stale_processes()
         stamp = time.strftime("%Y%m%d-%H%M%S")
-        self.log_path = self.logs / f"launcher-{stamp}.log"
+        self.session_logs = create_log_session_dir(self.root, stamp=stamp)
+        self.log_path = self.session_logs / "launcher.log"
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
+        env[LOG_SESSION_DIR_ENV] = str(self.session_logs)
         creationflags = 0
         if os.name == "nt":
             creationflags = CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP
@@ -271,7 +276,10 @@ class LauncherApp:
     def append_launcher_log(self, message: str) -> None:
         try:
             self.logs.mkdir(parents=True, exist_ok=True)
-            path = self.log_path or (self.logs / "launcher-update.log")
+            if self.log_path is None:
+                self.session_logs = create_log_session_dir(self.root)
+                self.log_path = self.session_logs / "launcher-update.log"
+            path = self.log_path
             line = f"[launcher] {time.strftime('%Y-%m-%d %H:%M:%S')} {message}\n"
             with path.open("ab") as stream:
                 stream.write(line.encode("utf-8", "replace"))

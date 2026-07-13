@@ -73,11 +73,11 @@ function Assert-UnderDirectory([string]$PathToCheck, [string]$BaseDirectory) {
   }
 }
 
-function Find-LatestDesktopConfig([string]$DesktopDrop) {
-  if (-not (Test-Path -LiteralPath $DesktopDrop)) {
+function Find-LatestPackageConfig([string]$PackageDrop) {
+  if (-not (Test-Path -LiteralPath $PackageDrop)) {
     return $null
   }
-  $candidates = Get-ChildItem -LiteralPath $DesktopDrop -Directory -ErrorAction SilentlyContinue |
+  $candidates = Get-ChildItem -LiteralPath $PackageDrop -Directory -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -match '(?:^|\s)V(?<major>\d+)\.(?<minor>\d+)' } |
     ForEach-Object {
       $match = [regex]::Match($_.Name, '(?:^|\s)V(?<major>\d+)\.(?<minor>\d+)')
@@ -120,7 +120,12 @@ if (-not $NpcapInstaller) {
     Select-Object -ExpandProperty FullName -First 1
 }
 
-$desktopDrop = Join-Path $env:USERPROFILE ("Desktop\BUFF" + [char]0x8FFD + [char]0x8E2A + [char]0x5668)
+$projectDrop = Join-Path $env:USERPROFILE (
+  "OneDrive\" +
+  [string][char]0x4E2A + [string][char]0x4EBA +
+  "\Nogi\" +
+  $productName
+)
 
 if (-not $ReleaseConfigPath) {
   $ReleaseConfigPath = Join-Path $root "buffwatcher.config.defaults.json"
@@ -133,7 +138,7 @@ if (-not (Test-Path -LiteralPath $ReleaseConfigPath)) {
 }
 
 if (-not $LocalConfigPath) {
-  $LocalConfigPath = Find-LatestDesktopConfig $desktopDrop
+  $LocalConfigPath = Find-LatestPackageConfig $projectDrop
 }
 if (-not $LocalConfigPath) {
   $LocalConfigPath = Join-Path $root "buffwatcher.config.local.json"
@@ -285,18 +290,18 @@ if ($LocalConfigPath -and (Test-Path -LiteralPath $LocalConfigPath)) {
   Write-Host ("local folder config: " + $LocalConfigPath)
 }
 
-if (Test-Path -LiteralPath (Split-Path -Parent $desktopDrop)) {
-  New-Item -ItemType Directory -Force -Path $desktopDrop | Out-Null
-  $desktopZip = Join-Path $desktopDrop (Split-Path -Leaf $zipPath)
-  Copy-Item -LiteralPath $zipPath -Destination $desktopZip -Force
-  $desktopPackage = Join-Path $desktopDrop $ReleaseName
-  if (Test-Path -LiteralPath $desktopPackage) {
-    Assert-UnderDirectory $desktopPackage $desktopDrop
-    Remove-Item -LiteralPath $desktopPackage -Recurse -Force
+if (Test-Path -LiteralPath (Split-Path -Parent $projectDrop)) {
+  New-Item -ItemType Directory -Force -Path $projectDrop | Out-Null
+  $projectZip = Join-Path $projectDrop (Split-Path -Leaf $zipPath)
+  Copy-Item -LiteralPath $zipPath -Destination $projectZip -Force
+  $projectPackage = Join-Path $projectDrop $ReleaseName
+  if (Test-Path -LiteralPath $projectPackage) {
+    Assert-UnderDirectory $projectPackage $projectDrop
+    Remove-Item -LiteralPath $projectPackage -Recurse -Force
   }
-  Copy-Item -LiteralPath $packageRoot -Destination $desktopDrop -Recurse -Force
-  Write-Host ("desktop zip: " + $desktopZip)
-  Write-Host ("desktop folder: " + $desktopPackage)
+  Copy-Item -LiteralPath $packageRoot -Destination $projectDrop -Recurse -Force
+  Write-Host ("project zip: " + $projectZip)
+  Write-Host ("project folder: " + $projectPackage)
 }
 
 Write-Host ("release config for zip: " + $ReleaseConfigPath)

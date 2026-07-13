@@ -14,6 +14,9 @@ from .live import DEFAULT_HISTORIES, DEFAULT_WS_PORT, cmd_watch_file, cmd_watch_
 from .single_instance import SingleInstance
 
 
+LOG_SESSION_DIR_ENV = "NOGI_BROADCASTER_LOG_SESSION_DIR"
+
+
 def configure_output() -> None:
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -22,14 +25,20 @@ def configure_output() -> None:
             pass
 
 
-def default_record_path() -> Path:
-    name = time.strftime("%Y%m%d-%H%M%S-buffwatcher-raw.ndjson.gz")
-    return app_root() / "logs" / name
+def default_log_session_dir() -> Path:
+    configured = os.environ.get(LOG_SESSION_DIR_ENV, "").strip()
+    if configured:
+        return Path(configured)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    return app_root() / "logs" / f"{stamp}-启动日志"
 
 
-def default_alert_record_path() -> Path:
-    name = time.strftime("%Y%m%d-%H%M%S-buffwatcher-alerts.ndjson")
-    return app_root() / "logs" / name
+def default_record_path(session_dir: Path | None = None) -> Path:
+    return (session_dir or default_log_session_dir()) / "buffwatcher-raw.ndjson.gz"
+
+
+def default_alert_record_path(session_dir: Path | None = None) -> Path:
+    return (session_dir or default_log_session_dir()) / "buffwatcher-alerts.ndjson"
 
 
 def paired_alert_record_path(record_events: str) -> Path:
@@ -37,6 +46,8 @@ def paired_alert_record_path(record_events: str) -> Path:
         return default_alert_record_path()
     path = Path(record_events)
     name = path.name
+    if name == "buffwatcher-raw.ndjson.gz":
+        return path.with_name("buffwatcher-alerts.ndjson")
     suffix = "-buffwatcher-raw.ndjson.gz"
     if name.endswith(suffix):
         return path.with_name(name[: -len(suffix)] + "-buffwatcher-alerts.ndjson")
@@ -187,13 +198,23 @@ def main() -> int:
 
     try:
         print("[standalone] 洛奇播报小助手")
+        session_log_dir = default_log_session_dir()
+        session_log_dir.mkdir(parents=True, exist_ok=True)
         record_events = ""
         if not args.no_record:
-            record_events = str(default_record_path()) if args.record_events == "auto" else args.record_events
+            record_events = (
+                str(default_record_path(session_log_dir))
+                if args.record_events == "auto"
+                else args.record_events
+            )
         record_alerts = ""
         if not args.no_alert_log:
             if args.record_alerts == "auto":
-                record_alerts = str(paired_alert_record_path(record_events))
+                record_alerts = (
+                    str(default_alert_record_path(session_log_dir))
+                    if not record_events
+                    else str(paired_alert_record_path(record_events))
+                )
             else:
                 record_alerts = args.record_alerts
 

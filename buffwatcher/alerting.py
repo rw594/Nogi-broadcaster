@@ -60,6 +60,8 @@ DEFAULT_MAGIC_SHIELD_ENDED_MESSAGE = "\u9b54\u6cd5\u76fe\u5173\u95ed"
 MUSIC_BUFF_CCIDS = frozenset({192, 193, 680})
 VARIABLE_DURATION_POTION_CCIDS = frozenset({62, 63, 1121, 1150})
 TUAN_SONG_CCID = 1124
+MUSIC_EVENT_DURATION_MIN_MS = 20_000
+MUSIC_EVENT_DURATION_MAX_MS = 1_800_000
 MUSIC_APPLY_REMOVE_NOISE_WINDOW_MS = 1000
 MUSIC_REAPPLY_SUPPRESSION_GRACE_SECONDS = 1.0
 MUSIC_TUAN_EXTENSION_MIN_REMAINING_SECONDS = 700
@@ -232,7 +234,7 @@ KEY_ENEMY_DEBUFF_REQUIREMENTS = (
 KEY_ENEMY_DEBUFF_CCID_TO_REQUIREMENT = {
     1164: "physical_break",
     1165: "magic_break",
-    1166: "damage_bonus",
+    426: "damage_bonus",
     1094: "bernak_physical",
     1093: "bernak_magic",
     912: "cat",
@@ -2753,6 +2755,24 @@ class AlertEngine:
             state.last_sbt_adjust_source = None
             state.last_raw_sbt_remaining_seconds = None
             state.last_adjusted_remaining_seconds = state.spec.duration_seconds
+        elif (
+            state.spec.ccid in MUSIC_BUFF_CCIDS
+            and (duration_ms := _music_event_duration_ms(extra)) is not None
+        ):
+            # SBT is not a stable song end time. Its delta from MCAGT is the
+            # event-provided duration, including the 徒安延长 variant.
+            next_end_ms = at_ms + duration_ms
+            state.last_timing_source = "music_sbt_mcagt_duration"
+            state.last_computed_end_ms = next_end_ms
+            state.last_raw_sbt_end_ms = sbt_to_unix_ms(
+                extra["SBT"], self.tz_offset_hours
+            )
+            state.last_sbt_adjust_seconds = None
+            state.last_sbt_adjust_source = None
+            state.last_raw_sbt_remaining_seconds = (
+                state.last_raw_sbt_end_ms - at_ms
+            ) / 1000
+            state.last_adjusted_remaining_seconds = duration_ms / 1000
         elif (duration_ms := _explicit_duration_ms(extra)) is not None:
             raw_sbt_end_ms = (
                 sbt_to_unix_ms(extra["SBT"], self.tz_offset_hours)
@@ -6476,6 +6496,16 @@ def _explicit_duration_ms(extra: dict[str, Any]) -> int | None:
             continue
         if duration_ms > 0:
             return duration_ms
+    return None
+
+
+def _music_event_duration_ms(extra: dict[str, Any]) -> int | None:
+    try:
+        duration_ms = int(float(extra["SBT"])) - int(float(extra["MCAGT"]))
+    except (KeyError, TypeError, ValueError):
+        return None
+    if MUSIC_EVENT_DURATION_MIN_MS <= duration_ms <= MUSIC_EVENT_DURATION_MAX_MS:
+        return duration_ms
     return None
 
 

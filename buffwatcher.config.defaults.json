@@ -1,7 +1,7 @@
 {
   "source_file": "",
   "tz_offset_hours": 8,
-  "sbt_adjust_seconds": 16.0,
+  "sbt_adjust_seconds": 22.5,
   "sbt_ended_lead_seconds": 1,
   "buffs": [
     {

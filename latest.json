@@ -1,17 +1,17 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.24d",
-  "versionCode": 12404,
-  "releaseName": "洛奇播报小助手 V1.24d 药水计时与识别修复",
-  "publishedAt": "2026-07-08",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24d/V1.24d.zip",
-  "sha256": "76571a82ce4b28c408ba5a294cd1bb0c2b6f2dfcfb70a68d49694ed580670215",
-  "size": 64556337,
+  "version": "1.24e",
+  "versionCode": 12405,
+  "releaseName": "洛奇播报小助手 V1.24e 乐曲与DEBUFF提醒修复",
+  "publishedAt": "2026-07-13",
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24e/V1.24e.zip",
+  "sha256": "ed079aebccbcaa3ceba7ae295b326ec013e179f84b90bcd6a11cc29b3a91fc41",
+  "size": 64558355,
   "mandatory": false,
   "notes": [
-    "修复部分药水存在 30 / 60 / 120 分钟不同版本时，提醒时间可能不准确的问题。",
-    "优化 Win10 用户的自动更新兼容性。",
-    "优化本人角色识别逻辑，减少队友状态串入导致的误播。"
+    "修复乐曲BUFF在徒安延长状态下可能出现明显提前提醒的问题。",
+    "修复死亡锁定的牵引效果误触发破防DEBUFF续期提醒的问题。",
+    "优化日志整理方式，便于提交对应场次的完整诊断日志。"
   ]
 }

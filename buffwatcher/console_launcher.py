@@ -18,6 +18,7 @@ JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
 JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS = 9
 SYNCHRONIZE = 0x00100000
 WAIT_TIMEOUT = 0x00000102
+LOG_SESSION_DIR_ENV = "NOGI_BROADCASTER_LOG_SESSION_DIR"
 PRODUCT_NAME = "洛奇播报小助手"
 VERSION_RE = re.compile(r"(?:^|\s)(V\d+(?:\.\d+)+)(?:\s|$)", re.IGNORECASE)
 
@@ -105,6 +106,15 @@ def watcher_exe(root: Path | None = None) -> Path:
 
 def log_dir(root: Path | None = None) -> Path:
     return watcher_dir(root) / "logs"
+
+
+def create_log_session_dir(
+    root: Path | None = None, *, stamp: str | None = None
+) -> Path:
+    session_stamp = stamp or time.strftime("%Y%m%d-%H%M%S")
+    path = log_dir(root) / f"{session_stamp}-启动日志"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def status_json_path(root: Path | None = None) -> Path:
@@ -341,8 +351,9 @@ def main() -> int:
     logs.mkdir(parents=True, exist_ok=True)
 
     stamp = time.strftime("%Y%m%d-%H%M%S")
-    log_path = logs / f"console-{stamp}.log"
-    status_path = logs / "launcher-status.log"
+    session_logs = create_log_session_dir(root, stamp=stamp)
+    log_path = session_logs / "console.log"
+    status_path = session_logs / "launcher-status.log"
 
     print("[launcher] 洛奇播报小助手")
     print(f"[launcher] core: {core_exe}")
@@ -370,6 +381,7 @@ def main() -> int:
 
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
+    env[LOG_SESSION_DIR_ENV] = str(session_logs)
     creationflags = 0
     if os.name == "nt":
         creationflags = CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP
