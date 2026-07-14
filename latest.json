@@ -1,17 +1,26 @@
 {
-  "app": "洛奇播报小助手",
-  "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.25",
-  "versionCode": 12500,
-  "releaseName": "洛奇播报小助手 V1.25 连接稳定性与提醒修复",
-  "publishedAt": "2026-07-14",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.25/V1.25.zip",
-  "sha256": "5b62d4b65cba741664dfa204cc81acef2e095da6c5f7da24f0b1c838e2038c50",
-  "size": 64693599,
-  "mandatory": false,
-  "notes": [
-    "优化插件稳定性",
-    "修复某些情况下，插件误将已死玩家当做活人，继续疯狂催促重开魔法盾的问题=-=",
-    "音乐类BUFF的【检测到徒安续期，则取消播报】机制，现在可以手动开关了。默认设置为关闭。（也就是说，默认状态下，就算玩家用徒安续了音乐，也会照常播放乐曲到期提醒）"
-  ]
+    "app":  "洛奇播报小助手",
+    "repository":  "https://github.com/rw594/Nogi-broadcaster",
+    "version":  "1.25b",
+    "versionCode":  12502,
+    "releaseName":  "洛奇播报小助手 V1.25b 设置分区与魔法阵优化",
+    "publishedAt":  "2026-07-14",
+    "downloadUrl":  "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25b/V1.25b.zip",
+    "sha256":  "ca85cc2afc11abba7a43820298d01e92a996a9bbccc7ffb5a0bc7594e7cb117f",
+    "size":  64749284,
+    "mandatory":  false,
+    "notes":  [
+                  "由于功能越来越多，现对设置界面进行了标签页分区，方便浏览",
+                  "优化了魔法阵冷却倒计时逻辑"
+              ],
+    "downloadUrls":  [
+                         {
+                             "name":  "阿里云镜像",
+                             "url":  "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25b/V1.25b.zip"
+                         },
+                         {
+                             "name":  "GitHub",
+                             "url":  "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.25b/V1.25b.zip"
+                         }
+                     ]
 }
