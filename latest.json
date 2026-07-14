@@ -1,17 +1,17 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.24e",
-  "versionCode": 12405,
-  "releaseName": "洛奇播报小助手 V1.24e 乐曲与DEBUFF提醒修复",
-  "publishedAt": "2026-07-13",
-  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.24e/V1.24e.zip",
-  "sha256": "ed079aebccbcaa3ceba7ae295b326ec013e179f84b90bcd6a11cc29b3a91fc41",
-  "size": 64558355,
+  "version": "1.25",
+  "versionCode": 12500,
+  "releaseName": "洛奇播报小助手 V1.25 连接稳定性与提醒修复",
+  "publishedAt": "2026-07-14",
+  "downloadUrl": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.25/V1.25.zip",
+  "sha256": "5b62d4b65cba741664dfa204cc81acef2e095da6c5f7da24f0b1c838e2038c50",
+  "size": 64693599,
   "mandatory": false,
   "notes": [
-    "修复乐曲BUFF在徒安延长状态下可能出现明显提前提醒的问题。",
-    "修复死亡锁定的牵引效果误触发破防DEBUFF续期提醒的问题。",
-    "优化日志整理方式，便于提交对应场次的完整诊断日志。"
+    "优化插件稳定性",
+    "修复某些情况下，插件误将已死玩家当做活人，继续疯狂催促重开魔法盾的问题=-=",
+    "音乐类BUFF的【检测到徒安续期，则取消播报】机制，现在可以手动开关了。默认设置为关闭。（也就是说，默认状态下，就算玩家用徒安续了音乐，也会照常播放乐曲到期提醒）"
   ]
 }
