@@ -1,26 +1,26 @@
 {
-    "app":  "洛奇播报小助手",
-    "repository":  "https://github.com/rw594/Nogi-broadcaster",
-    "version":  "1.25b",
-    "versionCode":  12502,
-    "releaseName":  "洛奇播报小助手 V1.25b 设置分区与魔法阵优化",
-    "publishedAt":  "2026-07-14",
-    "downloadUrl":  "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25b/V1.25b.zip",
-    "sha256":  "ca85cc2afc11abba7a43820298d01e92a996a9bbccc7ffb5a0bc7594e7cb117f",
-    "size":  64749284,
-    "mandatory":  false,
-    "notes":  [
-                  "由于功能越来越多，现对设置界面进行了标签页分区，方便浏览",
-                  "优化了魔法阵冷却倒计时逻辑"
-              ],
-    "downloadUrls":  [
-                         {
-                             "name":  "阿里云镜像",
-                             "url":  "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25b/V1.25b.zip"
-                         },
-                         {
-                             "name":  "GitHub",
-                             "url":  "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.25b/V1.25b.zip"
-                         }
-                     ]
+  "app": "洛奇播报小助手",
+  "repository": "https://github.com/rw594/Nogi-broadcaster",
+  "version": "1.25b",
+  "versionCode": 12502,
+  "releaseName": "洛奇播报小助手 V1.25b 设置分区与魔法阵优化",
+  "publishedAt": "2026-07-14",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25b/V1.25b.zip",
+  "sha256": "ca85cc2afc11abba7a43820298d01e92a996a9bbccc7ffb5a0bc7594e7cb117f",
+  "size": 64749284,
+  "mandatory": false,
+  "notes": [
+    "由于功能越来越多，现对设置界面进行了标签页分区，方便浏览",
+    "优化了魔法阵冷却倒计时逻辑"
+  ],
+  "downloadUrls": [
+    {
+      "name": "阿里云镜像",
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25b/V1.25b.zip"
+    },
+    {
+      "name": "GitHub",
+      "url": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.25b/V1.25b.zip"
+    }
+  ]
 }
