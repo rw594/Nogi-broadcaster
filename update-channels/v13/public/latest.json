@@ -1,0 +1,27 @@
+{
+  "app": "洛奇播报小助手",
+  "channel": "nogi-v13-public",
+  "repository": "https://github.com/rw594/Nogi-broadcaster",
+  "version": "1.3",
+  "versionCode": 10300,
+  "releaseName": "洛奇播报小助手 V1.3 全新更新通道",
+  "publishedAt": "2026-07-16",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/public/releases/v1.3/V1.3.zip",
+  "sha256": "629b23b2598821bd1b626b99f4bf76b7b1940cf912b66abe474d7e36f1c0b52c",
+  "size": 65107536,
+  "mandatory": false,
+  "notes": [
+    "启用与旧版完全隔离的全新自动更新通道",
+    "进一步加强自动更新的目录、安装根和更新包通道校验"
+  ],
+  "downloadUrls": [
+    {
+      "name": "阿里云镜像",
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/public/releases/v1.3/V1.3.zip"
+    },
+    {
+      "name": "GitHub",
+      "url": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.3/V1.3.zip"
+    }
+  ]
+}
