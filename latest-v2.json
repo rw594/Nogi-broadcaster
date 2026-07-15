@@ -1,26 +1,25 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.25d",
-  "versionCode": 12504,
-  "releaseName": "洛奇播报小助手 V1.25d 自动更新与仓鼠BUFF提醒",
+  "version": "1.25e",
+  "versionCode": 12505,
+  "releaseName": "洛奇播报小助手 V1.25e 仓鼠提醒设置优化",
   "publishedAt": "2026-07-15",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25d/V1.25d.zip",
-  "sha256": "b29cd7ee06bc36cb895ede135401b3cb42212c63d2ec062c2d4f7babc7d08d4e",
-  "size": 65131425,
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25e/V1.25e.zip",
+  "sha256": "2e42fc954683b8e455a2d6ca56adea53b3fda1aba315140cd3512a8c29c48343",
+  "size": 65140497,
   "mandatory": false,
   "notes": [
-    "修复了自动更新时，会删除插件目录文件夹中其他与插件无关的文件的问题",
-    "新增仓鼠（咚咚鼠）的两项BUFF提醒"
+    "优化了蜀黍相关的设置选项和语音播报（笑"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25d/V1.25d.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25e/V1.25e.zip"
     },
     {
       "name": "GitHub",
-      "url": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.25d/V1.25d.zip"
+      "url": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.25e/V1.25e.zip"
     }
   ]
 }
