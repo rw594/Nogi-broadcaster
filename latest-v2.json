@@ -6,8 +6,8 @@
   "releaseName": "洛奇播报小助手 V1.25d 自动更新与仓鼠BUFF提醒",
   "publishedAt": "2026-07-15",
   "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25d/V1.25d.zip",
-  "sha256": "e0df028ea6fe9a0d8fe88163c21d99ecba2efe9c361ebd3b155f090205aa5d4a",
-  "size": 65130262,
+  "sha256": "b29cd7ee06bc36cb895ede135401b3cb42212c63d2ec062c2d4f7babc7d08d4e",
+  "size": 65131425,
   "mandatory": false,
   "notes": [
     "修复了自动更新时，会删除插件目录文件夹中其他与插件无关的文件的问题",
