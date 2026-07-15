@@ -1,25 +1,16 @@
 {
   "app": "洛奇播报小助手",
   "repository": "https://github.com/rw594/Nogi-broadcaster",
-  "version": "1.25e",
-  "versionCode": 12505,
-  "releaseName": "洛奇播报小助手 V1.25e 仓鼠提醒设置优化",
-  "publishedAt": "2026-07-15",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25e/V1.25e.zip",
-  "sha256": "1121c0c360496914a6d4017be29fcef56a8bae9b916e0d2b2e77e940932309aa",
-  "size": 65102918,
+  "version": "0.0.1",
+  "versionCode": 1,
+  "releaseName": "自动更新已紧急停用",
+  "publishedAt": "2026-07-16",
+  "downloadUrl": "",
+  "sha256": "",
+  "size": 0,
   "mandatory": false,
   "notes": [
-    "优化了蜀黍相关的设置选项和语音播报（笑"
+    "自动更新已紧急停用，请勿使用自动更新。"
   ],
-  "downloadUrls": [
-    {
-      "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/releases/v1.25e/V1.25e.zip"
-    },
-    {
-      "name": "GitHub",
-      "url": "https://github.com/rw594/Nogi-broadcaster/releases/download/v1.25e/V1.25e.zip"
-    }
-  ]
+  "downloadUrls": []
 }
