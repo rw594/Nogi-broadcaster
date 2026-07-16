@@ -28,7 +28,7 @@ param(
 
   [double]$PollSeconds = 0.5,
 
-  [double]$IdleReconnectSeconds = 20,
+  [double]$IdleReconnectSeconds = 0,
 
   [double]$StatusInterval = 30,
 

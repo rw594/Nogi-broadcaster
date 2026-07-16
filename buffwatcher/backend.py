@@ -81,7 +81,7 @@ class MabicatBackend:
     _lines: queue.Queue[tuple[str, str]] = field(default_factory=queue.Queue)
     _threads: list[threading.Thread] = field(default_factory=list)
 
-    def start(self, *, timeout_seconds: float = 20) -> int:
+    def start(self, *, waiting_notice_seconds: float = 20) -> int:
         if self.process is not None:
             raise RuntimeError("backend already started")
 
@@ -110,12 +110,24 @@ class MabicatBackend:
         self._start_reader("stdout", self.process.stdout)
         self._start_reader("stderr", self.process.stderr)
 
-        deadline = time.monotonic() + timeout_seconds
+        waiting_notice_at = (
+            time.monotonic() + waiting_notice_seconds
+            if waiting_notice_seconds > 0
+            else None
+        )
         buffered: list[str] = []
 
-        while time.monotonic() < deadline:
+        while True:
             if self.process.poll() is not None:
                 break
+
+            if waiting_notice_at is not None and time.monotonic() >= waiting_notice_at:
+                print(
+                    "[backend] still waiting for game data; "
+                    "Mabicat remains running and will not be restarted",
+                    flush=True,
+                )
+                waiting_notice_at = None
 
             try:
                 stream_name, line = self._lines.get(timeout=0.1)
@@ -125,6 +137,7 @@ class MabicatBackend:
             line = line.rstrip()
             if line:
                 buffered.append(f"{stream_name}: {line}")
+                buffered = buffered[-20:]
             match = LISTEN_PORT_RE.search(line)
             if match:
                 self.port = int(match.group(1))
@@ -132,9 +145,6 @@ class MabicatBackend:
 
         exit_code = self.process.poll()
         detail = "\n".join(buffered[-20:]) or "no backend output"
-        if exit_code is None:
-            self.stop()
-            raise TimeoutError("backend did not report LISTEN_PORT in time:\n" + detail)
         raise RuntimeError(f"backend exited with code {exit_code}:\n{detail}")
 
     def stop(self) -> None:

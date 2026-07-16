@@ -32,6 +32,7 @@ from .console_launcher import (
 from .updater import (
     PreparedUpdate,
     UpdateInfo,
+    UpdateProgress,
     current_version_code,
     fetch_latest_update,
     prepare_update,
@@ -82,6 +83,7 @@ class LauncherApp:
         self.update_check_started = False
         self.update_check_running = False
         self.update_in_progress = False
+        self.update_progress_fraction = 0.0
 
         self.root_window.title(self.display_title)
         self.root_window.configure(bg=COLORS["bg"])
@@ -178,8 +180,16 @@ class LauncherApp:
             width=2,
         )
         self.status_icon.pack(side="left", padx=(12, 8), pady=8)
+        status_content = tk.Frame(status_row, bg=COLORS["row"])
+        status_content.pack(
+            side="left",
+            fill="both",
+            expand=True,
+            padx=(0, 12),
+            pady=(7, 7),
+        )
         self.status_text = tk.Label(
-            status_row,
+            status_content,
             text="正在连接",
             bg=COLORS["row"],
             fg=COLORS["text"],
@@ -187,7 +197,26 @@ class LauncherApp:
             anchor="w",
             width=30,
         )
-        self.status_text.pack(side="left", fill="x", expand=True, padx=(0, 12))
+        self.status_text.pack(side="top", fill="x", expand=True)
+        self.update_progress_canvas = tk.Canvas(
+            status_content,
+            height=9,
+            bg=COLORS["panel"],
+            highlightbackground=COLORS["muted"],
+            highlightthickness=1,
+            bd=0,
+        )
+        self.update_progress_fill = self.update_progress_canvas.create_rectangle(
+            0,
+            0,
+            0,
+            9,
+            fill=COLORS["update"],
+            outline=COLORS["update"],
+        )
+        self.update_progress_canvas.bind(
+            "<Configure>", self._redraw_update_progress
+        )
 
         button_row = tk.Frame(outer, bg=COLORS["panel"])
         button_row.grid(row=2, column=0, columnspan=4, sticky="ew", padx=10, pady=(2, 12))
@@ -388,11 +417,17 @@ class LauncherApp:
             return
         self.update_in_progress = True
         self.update_badge.grid_remove()
-        self.set_update_status("下载更新中，完成后会自动重启")
+        self._show_update_progress()
+        self._set_update_progress_fraction(0.0)
+        self.set_update_status("正在准备下载更新……")
 
         def worker() -> None:
             try:
-                prepared = prepare_update(self.root, info)
+                prepared = prepare_update(
+                    self.root,
+                    info,
+                    progress_callback=self._queue_update_progress,
+                )
             except Exception as exc:
                 self.root_window.after(0, lambda: self.update_failed(str(exc)))
                 return
@@ -401,7 +436,8 @@ class LauncherApp:
         threading.Thread(target=worker, name="update-download", daemon=True).start()
 
     def apply_prepared_update(self, prepared: PreparedUpdate) -> None:
-        self.set_update_status("更新中，完成后会自动重启")
+        self._set_update_progress_fraction(1.0)
+        self.set_update_status("更新包已就绪，正在重启……")
         core_pid = self.process.pid if self.process is not None else 0
         try:
             start_update(
@@ -417,6 +453,7 @@ class LauncherApp:
 
     def update_failed(self, message: str) -> None:
         self.update_in_progress = False
+        self._hide_update_progress()
         self.last_status_text = ""
         if self.ready:
             self.set_status(True, "播报已启用")
@@ -430,6 +467,96 @@ class LauncherApp:
         self.last_status_text = text
         self.status_icon.configure(text="𝄞", fg=COLORS["update"])
         self.status_text.configure(text=text)
+
+    def _show_update_progress(self) -> None:
+        if not self.update_progress_canvas.winfo_manager():
+            self.update_progress_canvas.pack(
+                side="top",
+                fill="x",
+                pady=(6, 0),
+            )
+
+    def _hide_update_progress(self) -> None:
+        self.update_progress_canvas.pack_forget()
+        self._set_update_progress_fraction(0.0)
+
+    def _redraw_update_progress(self, _event: object | None = None) -> None:
+        width = max(0, int(self.update_progress_canvas.winfo_width()) - 2)
+        height = max(1, int(self.update_progress_canvas.winfo_height()) - 2)
+        filled = int(round(width * self.update_progress_fraction))
+        self.update_progress_canvas.coords(
+            self.update_progress_fill,
+            1,
+            1,
+            max(1, filled),
+            height,
+        )
+
+    def _set_update_progress_fraction(self, value: float) -> None:
+        self.update_progress_fraction = min(1.0, max(0.0, float(value)))
+        self._redraw_update_progress()
+
+    @staticmethod
+    def _format_update_bytes(value: int) -> str:
+        return f"{max(0, value) / (1024 * 1024):.1f} MB"
+
+    def _queue_update_progress(self, progress: UpdateProgress) -> None:
+        self.append_launcher_log(
+            "update progress "
+            f"stage={progress.stage} source={progress.source_name or '-'} "
+            f"downloaded={progress.downloaded} total={progress.total} "
+            f"detail={progress.detail or '-'}"
+        )
+        try:
+            self.root_window.after(
+                0,
+                lambda current=progress: self._apply_update_progress(current),
+            )
+        except RuntimeError:
+            return
+
+    def _apply_update_progress(self, progress: UpdateProgress) -> None:
+        self._show_update_progress()
+        if progress.stage == "connecting":
+            self._set_update_progress_fraction(0.0)
+            self.set_update_status(f"正在连接{progress.source_name}……")
+            return
+        if progress.stage == "downloading":
+            if progress.total > 0:
+                fraction = min(1.0, progress.downloaded / progress.total)
+                percent = int(fraction * 100)
+                self._set_update_progress_fraction(fraction)
+                self.set_update_status(
+                    f"正在从{progress.source_name}下载：{percent}% "
+                    f"（{self._format_update_bytes(progress.downloaded)} / "
+                    f"{self._format_update_bytes(progress.total)}）"
+                )
+            else:
+                self.set_update_status(
+                    f"正在从{progress.source_name}下载："
+                    f"{self._format_update_bytes(progress.downloaded)}"
+                )
+            return
+        if progress.stage == "source_failed":
+            self._set_update_progress_fraction(0.0)
+            if progress.detail:
+                self.set_update_status(
+                    f"{progress.source_name}失败，正在切换{progress.detail}……"
+                )
+            else:
+                self.set_update_status(f"{progress.source_name}下载失败")
+            return
+        if progress.stage == "verifying":
+            self._set_update_progress_fraction(1.0)
+            self.set_update_status(f"{progress.source_name}下载完成，正在校验……")
+            return
+        if progress.stage == "extracting":
+            self._set_update_progress_fraction(1.0)
+            self.set_update_status("校验通过，正在解压更新包……")
+            return
+        if progress.stage == "ready":
+            self._set_update_progress_fraction(1.0)
+            self.set_update_status("更新包准备完成，正在重启……")
 
     def poll_status(self) -> None:
         if self.log_path is not None:
@@ -477,6 +604,12 @@ class LauncherApp:
             self.update_status_from_log_line(line)
 
     def update_status_from_log_line(self, line: str) -> None:
+        if (
+            "[standalone] starting packet backend; waiting for game data" in line
+            or "[backend] still waiting for game data" in line
+        ):
+            self.connected = False
+            self.set_status(False, "等待游戏数据")
         if "[live] websocket connected" in line:
             self.connected = True
             if self.ready:

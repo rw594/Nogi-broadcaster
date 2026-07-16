@@ -54,6 +54,11 @@ CLIPS = [
     ("manus_elixir_ended", "马纽斯秘药，结束"),
     ("purification_wave_remaining", "净化之浪"),
     ("purification_wave_ended", "净化之浪，结束"),
+    # Use 孰 as a pronunciation-safe homophone for 熟 (shú) in the Edge-TTS fallback.
+    ("hamster_supercharged_remaining", "鼠孰"),
+    ("hamster_supercharged_ended", "鼠熟，已去世"),
+    ("hamster_adrenaline_remaining", "鼠熟回血"),
+    ("hamster_adrenaline_ended", "鼠熟回血，结束"),
     ("vitality_song_remaining", "活力之歌"),
     ("vitality_song_ended", "活力之歌，结束"),
     ("status_support_remaining", "状态支援"),

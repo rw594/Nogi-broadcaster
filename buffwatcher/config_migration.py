@@ -6,12 +6,55 @@ from pathlib import Path
 import shutil
 from typing import Any
 
+from .astrology_cards import (
+    ASTROLOGY_CARD_TRACKER_CONFIG_KEY,
+    ensure_astrology_card_tracker_config,
+)
+from .hamster_buffs import ensure_hamster_buff_items
+
 
 DEFAULT_CONFIG_NAME = "buffwatcher.config.defaults.json"
 PACKAGED_DEFAULT_CONFIG = Path("config") / DEFAULT_CONFIG_NAME
 VARIABLE_DURATION_POTION_CCIDS = {62, 63, 1121, 1150}
+MAGIC_CIRCLE_CCID = 10133
+MAGIC_CIRCLE_DEFAULT_COOLDOWN_SECONDS = 140
+PALL_OF_RUINATION_CCID = 803
+PALL_OF_RUINATION_SKILL_ID = 59005
+PALL_OF_RUINATION_COOLDOWN_SECONDS = 180
+SHORT_COOLDOWN_OVERLAY_CONFIG_KEY = "experimental_short_cooldown_visual_overlay"
+IGNIS_PLUME_TRACKER_CCID = -59060
+IGNIS_PLUME_SKILL_ID = 59060
+IGNIS_PLUME_COOLDOWN_SECONDS = 6
+AQUA_VOLLEY_TRACKER_CCID = -59061
+AQUA_VOLLEY_SKILL_ID = 59061
+AQUA_VOLLEY_COOLDOWN_SECONDS = 10
+SHORT_COOLDOWN_TRACKERS = (
+    (
+        "ignis_plume",
+        "爆炎箭",
+        IGNIS_PLUME_TRACKER_CCID,
+        IGNIS_PLUME_SKILL_ID,
+        IGNIS_PLUME_COOLDOWN_SECONDS,
+        "assets/icon/visual-overlay/short-cooldown/ignis-plume.png",
+    ),
+    (
+        "aqua_volley",
+        "水流箭",
+        AQUA_VOLLEY_TRACKER_CCID,
+        AQUA_VOLLEY_SKILL_ID,
+        AQUA_VOLLEY_COOLDOWN_SECONDS,
+        "assets/icon/visual-overlay/short-cooldown/aqua-volley.png",
+    ),
+)
+THIRD_EYE_CCID = 521
+THIRD_EYE_COOLDOWN_CHOICES = {240, 300}
+THIRD_EYE_DEFAULT_COOLDOWN_SECONDS = 300
 LEGACY_SBT_ADJUST_SECONDS = 16.0
 CURRENT_SBT_ADJUST_SECONDS = 22.5
+DEATH_MARK_DAMAGE_CCID = 426
+DEATH_MARK_PULL_CCID = 1166
+DEATH_MARK_DAMAGE_NAME = "死亡锁定增伤"
+DEATH_MARK_PULL_NAME = "牵引吸怪（非死亡锁定增伤）"
 
 
 def default_config_candidates(config_path: str | Path) -> list[Path]:
@@ -95,6 +138,7 @@ def _write_json_atomic(path: Path, data: dict[str, Any]) -> None:
 
 def _apply_policy_migrations(data: dict[str, Any]) -> bool:
     changed = False
+    changed = ensure_hamster_buff_items(data) or changed
     try:
         current_sbt_adjust = float(data.get("sbt_adjust_seconds"))
     except (TypeError, ValueError):
@@ -102,13 +146,230 @@ def _apply_policy_migrations(data: dict[str, Any]) -> bool:
     if current_sbt_adjust == LEGACY_SBT_ADJUST_SECONDS:
         data["sbt_adjust_seconds"] = CURRENT_SBT_ADJUST_SECONDS
         changed = True
-    for item in data.get("buffs", []):
+    buffs = data.setdefault("buffs", [])
+    music_overlay = data.get("experimental_music_visual_overlay")
+    other_overlay_config = data.get("experimental_other_skill_visual_overlay")
+    short_overlay_config = data.get(SHORT_COOLDOWN_OVERLAY_CONFIG_KEY)
+    visual_overlay_present = any(
+        isinstance(value, dict)
+        for value in (music_overlay, other_overlay_config, short_overlay_config)
+    )
+    if visual_overlay_present:
+        astrology_before = deepcopy(data.get(ASTROLOGY_CARD_TRACKER_CONFIG_KEY))
+        astrology_after = ensure_astrology_card_tracker_config(data)
+        if astrology_before != astrology_after:
+            changed = True
+        pall_item = next(
+            (
+                item
+                for item in buffs
+                if isinstance(item, dict)
+                and (
+                    item.get("name") == "崩坏波动"
+                    or str(item.get("ccid")) == str(PALL_OF_RUINATION_CCID)
+                )
+            ),
+            None,
+        )
+        if pall_item is None:
+            pall_item = {
+                "name": "崩坏波动",
+                "ccid": PALL_OF_RUINATION_CCID,
+                "enabled": True,
+                "skill_id": PALL_OF_RUINATION_SKILL_ID,
+                "self_filter": True,
+                "warn_seconds": 0,
+                "critical_seconds": 0,
+                "alerts": [],
+                "ended_alert": False,
+                "cooldown_alert": False,
+                "cooldown_delay_seconds": PALL_OF_RUINATION_COOLDOWN_SECONDS,
+                "cooldown_from_skill_use": True,
+                "audio_volume": 100,
+            }
+            buffs.append(pall_item)
+            changed = True
+        else:
+            required_pall_values = {
+                "name": "崩坏波动",
+                "ccid": PALL_OF_RUINATION_CCID,
+                "enabled": True,
+                "skill_id": PALL_OF_RUINATION_SKILL_ID,
+                "self_filter": True,
+                "ended_alert": False,
+                "cooldown_alert": False,
+                "cooldown_delay_seconds": PALL_OF_RUINATION_COOLDOWN_SECONDS,
+                "cooldown_from_skill_use": True,
+            }
+            for key, value in required_pall_values.items():
+                if pall_item.get(key) != value:
+                    pall_item[key] = value
+                    changed = True
+
+        for (
+            _condition_key,
+            tracker_name,
+            tracker_ccid,
+            tracker_skill_id,
+            default_cooldown_seconds,
+            _icon_path,
+        ) in SHORT_COOLDOWN_TRACKERS:
+            tracker_item = next(
+                (
+                    item
+                    for item in buffs
+                    if isinstance(item, dict)
+                    and (
+                        item.get("name") == tracker_name
+                        or str(item.get("ccid")) == str(tracker_ccid)
+                    )
+                ),
+                None,
+            )
+            required_tracker_values = {
+                "name": tracker_name,
+                "ccid": tracker_ccid,
+                "enabled": True,
+                "skill_id": tracker_skill_id,
+                "self_filter": True,
+                "warn_seconds": 0,
+                "critical_seconds": 0,
+                "alerts": [],
+                "ended_alert": False,
+                "cooldown_alert": False,
+                "cooldown_from_skill_use": True,
+                "audio_volume": 100,
+            }
+            if tracker_item is None:
+                tracker_item = deepcopy(required_tracker_values)
+                tracker_item["cooldown_delay_seconds"] = default_cooldown_seconds
+                buffs.append(tracker_item)
+                changed = True
+            else:
+                for key, value in required_tracker_values.items():
+                    if tracker_item.get(key) != value:
+                        tracker_item[key] = deepcopy(value)
+                        changed = True
+                try:
+                    cooldown_seconds = float(
+                        tracker_item.get("cooldown_delay_seconds")
+                    )
+                except (TypeError, ValueError):
+                    cooldown_seconds = 0.0
+                if cooldown_seconds <= 0:
+                    tracker_item["cooldown_delay_seconds"] = (
+                        default_cooldown_seconds
+                    )
+                    changed = True
+
+        short_overlay = data.get(SHORT_COOLDOWN_OVERLAY_CONFIG_KEY)
+        if not isinstance(short_overlay, dict):
+            short_overlay = {}
+            data[SHORT_COOLDOWN_OVERLAY_CONFIG_KEY] = short_overlay
+            changed = True
+        short_defaults = {
+            "enabled": True,
+            "center_y_ratio": 0.715,
+            "gap_px": 6,
+            "default_icons_version": 2,
+        }
+        for key, value in short_defaults.items():
+            if key not in short_overlay:
+                short_overlay[key] = value
+                changed = True
+        try:
+            short_icon_version = int(short_overlay.get("default_icons_version", 0))
+        except (TypeError, ValueError):
+            short_icon_version = 0
+        if short_icon_version < 2:
+            short_overlay["default_icons_version"] = 2
+            changed = True
+        short_conditions = short_overlay.get("conditions")
+        if not isinstance(short_conditions, dict):
+            short_conditions = {}
+            short_overlay["conditions"] = short_conditions
+            changed = True
+        for (
+            condition_key,
+            tracker_name,
+            _tracker_ccid,
+            _tracker_skill_id,
+            _default_cooldown_seconds,
+            icon_path,
+        ) in SHORT_COOLDOWN_TRACKERS:
+            condition = short_conditions.get(condition_key)
+            if not isinstance(condition, dict):
+                condition = {}
+                short_conditions[condition_key] = condition
+                changed = True
+            for field_name, default_value in (
+                ("enabled", True),
+                ("name", tracker_name),
+                ("icon", icon_path),
+            ):
+                if field_name not in condition:
+                    condition[field_name] = default_value
+                    changed = True
+
+    if isinstance(music_overlay, dict):
+        music_conditions = music_overlay.get("conditions")
+        if isinstance(music_conditions, dict) and "874" in music_conditions:
+            music_conditions.pop("874", None)
+            changed = True
+
+        other_overlay = data.get("experimental_other_skill_visual_overlay")
+        if not isinstance(other_overlay, dict):
+            other_overlay = {}
+            data["experimental_other_skill_visual_overlay"] = other_overlay
+            changed = True
+        if "enabled" not in other_overlay:
+            other_overlay["enabled"] = False
+            changed = True
+        other_conditions = other_overlay.get("conditions")
+        if not isinstance(other_conditions, dict):
+            other_conditions = {}
+            other_overlay["conditions"] = other_conditions
+            changed = True
+        other_defaults = {
+            "magic_circle": (True, "魔法阵", "assets/icon/visual-overlay/other-skills/magic-circle.png"),
+            "pall_of_ruination": (True, "崩坏波动", "assets/icon/visual-overlay/other-skills/pall-of-ruination.png"),
+            "manus_potion": (True, "马纽斯秘药", "assets/icon/visual-overlay/other-skills/manus-potion.png"),
+            "purification_wave": (True, "净化之浪", "assets/icon/visual-overlay/other-skills/purification-wave.png"),
+            "life_temperature": (False, "生命的温度", "assets/icon/visual-overlay/life-temperature.png"),
+        }
+        for key, (enabled, name, icon) in other_defaults.items():
+            condition = other_conditions.get(key)
+            if not isinstance(condition, dict):
+                condition = {}
+                other_conditions[key] = condition
+                changed = True
+            for field_name, default_value in (
+                ("enabled", enabled),
+                ("name", name),
+                ("icon", icon),
+            ):
+                if field_name not in condition:
+                    condition[field_name] = default_value
+                    changed = True
+
+    for item in buffs:
         if not isinstance(item, dict):
             continue
         try:
             item_ccid = int(item.get("ccid"))
         except (TypeError, ValueError):
             item_ccid = None
+        if item_ccid == DEATH_MARK_DAMAGE_CCID:
+            if item.get("name") != DEATH_MARK_DAMAGE_NAME:
+                item["name"] = DEATH_MARK_DAMAGE_NAME
+                changed = True
+        if item_ccid == DEATH_MARK_PULL_CCID:
+            if item.get("name") != DEATH_MARK_PULL_NAME:
+                item["name"] = DEATH_MARK_PULL_NAME
+                changed = True
+            if item.get("enabled") is not False:
+                item["enabled"] = False
+                changed = True
         if item_ccid in VARIABLE_DURATION_POTION_CCIDS:
             for key in ("duration_seconds", "fixed_duration_seconds"):
                 if key in item:
@@ -123,6 +384,33 @@ def _apply_policy_migrations(data: dict[str, Any]) -> bool:
                 changed = True
             if item.get("use_dynamic_sbt_adjust") is not False:
                 item["use_dynamic_sbt_adjust"] = False
+                changed = True
+        if item_ccid == MAGIC_CIRCLE_CCID or item.get("name") == "魔法阵":
+            if item.get("cooldown_from_skill_use") is not True:
+                item["cooldown_from_skill_use"] = True
+                changed = True
+            try:
+                cooldown_seconds = int(float(item.get("cooldown_delay_seconds")))
+            except (TypeError, ValueError):
+                cooldown_seconds = None
+            if cooldown_seconds != MAGIC_CIRCLE_DEFAULT_COOLDOWN_SECONDS:
+                item["cooldown_delay_seconds"] = (
+                    MAGIC_CIRCLE_DEFAULT_COOLDOWN_SECONDS
+                )
+                changed = True
+            if "cooldown_from_apply" in item:
+                item.pop("cooldown_from_apply", None)
+                changed = True
+        if item_ccid == THIRD_EYE_CCID or item.get("name") == "第三只眼":
+            if item.get("cooldown_from_apply") is not True:
+                item["cooldown_from_apply"] = True
+                changed = True
+            try:
+                cooldown_seconds = int(float(item.get("cooldown_delay_seconds")))
+            except (TypeError, ValueError):
+                cooldown_seconds = None
+            if cooldown_seconds not in THIRD_EYE_COOLDOWN_CHOICES:
+                item["cooldown_delay_seconds"] = THIRD_EYE_DEFAULT_COOLDOWN_SECONDS
                 changed = True
         if item.get("name") == "状态支援" and item.get(
             "prefer_sbt_when_duration_present"
@@ -150,8 +438,12 @@ def migrate_config_file(config_path: str | Path) -> dict[str, Any]:
         _apply_policy_migrations(data)
         return data
 
+    # Run policy migrations before merging new default fields. This preserves the
+    # ability to distinguish a legacy config from one that already opted into a
+    # new timing anchor.
+    changed = _apply_policy_migrations(data)
     defaults = _read_json(default_path)
-    changed = _merge_missing(data, defaults)
+    changed = _merge_missing(data, defaults) or changed
     changed = _apply_policy_migrations(data) or changed
     if not changed:
         return data

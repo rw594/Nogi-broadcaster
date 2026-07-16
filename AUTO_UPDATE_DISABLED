@@ -1,0 +1,4 @@
+Automatic updates were globally disabled on 2026-07-16 after reports of updater-driven file deletion.
+
+Do not remove this file or republish any update manifest until the updater has been audited,
+fixed, and tested against directories that contain unrelated user files.

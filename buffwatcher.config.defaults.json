@@ -3,6 +3,8 @@
   "tz_offset_hours": 8,
   "sbt_adjust_seconds": 22.5,
   "sbt_ended_lead_seconds": 1,
+  "music_tuan_silence_enabled": false,
+  "hamster_reminder_merge_version": 1,
   "buffs": [
     {
       "name": "状态支援",
@@ -415,7 +417,7 @@
       ]
     },
     {
-      "name": "cc_426",
+      "name": "死亡锁定增伤",
       "ccid": 426,
       "enabled": false,
       "warn_seconds": 60,
@@ -751,7 +753,7 @@
       ]
     },
     {
-      "name": "cc_1166",
+      "name": "牵引吸怪（非死亡锁定增伤）",
       "ccid": 1166,
       "enabled": false,
       "warn_seconds": 60,
@@ -892,6 +894,79 @@
         "note": "Hidden potion status. ExtraData: ITEM=5000138, DURA=600000, MATK=30, PATK=30, SBT present. No remove event observed because capture stopped after about 10 seconds."
       },
       "warn_sound": "assets/audio/xiaoyi/manus_elixir_remaining.wav"
+    },
+    {
+      "name": "超燃咚咚",
+      "ccid": 1225,
+      "enabled": true,
+      "duration_seconds": 180,
+      "warn_seconds": 30,
+      "critical_seconds": 30,
+      "remaining_enabled": true,
+      "alerts": [
+        {
+          "remaining_seconds": 30,
+          "sound": "assets/audio/xiaoyi/hamster_supercharged_remaining.wav",
+          "message": "{name}"
+        }
+      ],
+      "ended_alert": true,
+      "ended_sound": "assets/audio/xiaoyi/hamster_supercharged_ended.wav",
+      "ended_message": "{name} 结束",
+      "ended_on_remove_only": true,
+      "ended_grace_seconds": 0,
+      "sbt_ended_lead_seconds": 0,
+      "use_dynamic_sbt_adjust": false,
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/hamster_supercharged_remaining.wav",
+      "observed": {
+        "pet_race_ids": [
+          490500,
+          490501
+        ],
+        "pet_skill_id": 50279,
+        "duration_seconds": 180,
+        "extra_data": {
+          "MCDSAD": 40,
+          "MCDSMA": 40,
+          "MCDSPA": 40
+        },
+        "source_session": "20260715-191607-启动日志"
+      }
+    },
+    {
+      "name": "咚咚肾上腺素",
+      "ccid": 1186,
+      "enabled": false,
+      "duration_seconds": 180,
+      "warn_seconds": 30,
+      "critical_seconds": 30,
+      "alerts": [],
+      "ended_alert": false,
+      "ended_sound": "assets/audio/xiaoyi/hamster_adrenaline_ended.wav",
+      "ended_message": "{name} 结束",
+      "ended_on_remove_only": true,
+      "ended_grace_seconds": 0,
+      "sbt_ended_lead_seconds": 0,
+      "use_dynamic_sbt_adjust": false,
+      "audio_volume": 100,
+      "warn_sound": "assets/audio/xiaoyi/hamster_adrenaline_remaining.wav",
+      "observed": {
+        "pet_race_ids": [
+          490500,
+          490501
+        ],
+        "pet_skill_id": 50279,
+        "duration_seconds": 180,
+        "extra_data": {
+          "MCDSR": 50000
+        },
+        "whale_override": {
+          "purification_wave_ccid": 645,
+          "same_timestamp_remove_observed": true
+        },
+        "source_session": "20260715-191607-启动日志"
+      }
     },
     {
       "name": "净化之浪",
@@ -1218,7 +1293,8 @@
       "ended_sound": "assets/audio/xiaoyi/third_eye_ended.wav",
       "ended_message": "三眼 结束",
       "cooldown_alert": true,
-      "cooldown_delay_seconds": 180,
+      "cooldown_delay_seconds": 300,
+      "cooldown_from_apply": true,
       "cooldown_sound": "assets/audio/xiaoyi/third_eye_cooldown.wav",
       "cooldown_message": "三眼 就绪",
       "audio_volume": 100,
@@ -1230,7 +1306,7 @@
         "apply_time": "2026-06-30 19:09:57.978 +08:00",
         "remove_time": "2026-06-30 19:11:58.097 +08:00",
         "duration_seconds": 120.119,
-        "notes": "CCId 521 on self, DUR=120000, SOOS_TT=10000 periodic refresh. SBT is not a reliable end time, so end/cooldown reminders are remove-only."
+        "notes": "CCId 521 on self, DUR=120000, SOOS_TT=10000 periodic refresh. The end reminder remains remove-only; cooldown is anchored to the first apply event and defaults to apply+300 seconds (optionally apply+240 seconds for special equipment)."
       },
       "ended_grace_seconds": 0
     },
@@ -2128,14 +2204,22 @@
             "ccid": 10137,
             "mceid": 2
           }
-        ]
+        ],
+        "cooldown_anchor": "self SkillId 10103 / EventId 12",
+        "cooldown_seconds": 140,
+        "cooldown_anchor_samples": [
+          "20260714-121849-启动日志",
+          "20260714-123253-启动日志"
+        ],
+        "cooldown_anchor_note": "The self-targeted variant produced CCId 10133/10138/10137 around E12. The ground-targeted variant kept SkillId 10103 and the same self actor Id, used a non-empty TargetId, and produced no self buff CCIds. A canceled preparation produced only EventId 10/11."
       },
       "alerts": [],
       "ended_alert": false,
       "ended_sound": "assets/audio/xiaoyi/self_buff_magic_circle_ended.wav",
       "ended_message": "魔法阵 结束",
       "cooldown_alert": true,
-      "cooldown_delay_seconds": 15,
+      "cooldown_delay_seconds": 140,
+      "cooldown_from_skill_use": true,
       "cooldown_sound": "assets/audio/xiaoyi/self_buff_magic_circle_cooldown.wav",
       "cooldown_message": "魔法阵 就绪",
       "audio_volume": 100,
@@ -2624,15 +2708,17 @@
     "name": "关键敌人DEBUFF提醒",
     "complete_enabled": false,
     "expiry_enabled": true,
+    "visual_hud_enabled": false,
+    "visual_expiry_enabled": true,
     "expiry_seconds": 30,
     "complete_sound": "assets/audio/xiaoyi/debuffs_ready.wav",
     "complete_message": "BUFF齐啦",
     "expiry_sound": "assets/audio/xiaoyi/debuffs_renew.wav",
     "expiry_message": "破防该续啦",
-    "physical_break_min": 30,
-    "magic_break_min": 41,
-    "damage_bonus_min": 61,
-    "rabbit_stacks_min": 4,
+    "physical_break_min": null,
+    "magic_break_min": null,
+    "damage_bonus_min": null,
+    "rabbit_stacks_min": null,
     "max_hp_values": [
       698517000,
       850368600,
@@ -2726,7 +2812,7 @@
   ],
   "boss_laser_alerts": [
     {
-      "name": "布3/布4激光预警",
+      "name": "布3/布4激光前倒计时",
       "enabled": false,
       "entity_id": "",
       "max_hp_values": [
@@ -2755,7 +2841,6 @@
       "sound": "assets/audio/xiaoyi/laser_warning_prefix.wav",
       "message": "激光 四 三 二 一 零",
       "audio_volume": 100,
-      "note": "***激光预警功能，尚在测试中，可能存在BUG，请勿过度依赖***",
       "countdown_sounds": {
         "4": "assets/audio/xiaoyi/red_orb_countdown/count_04.wav",
         "3": "assets/audio/xiaoyi/red_orb_countdown/count_03.wav",

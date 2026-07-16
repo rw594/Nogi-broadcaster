@@ -89,6 +89,7 @@ def is_transient_backend_traffic_error(exc: Exception) -> bool:
             "newgameserverpacketreader failed",
             "the source string must not be empty",
             "backend did not report listen_port",
+            "backend exited with code",
         )
     )
 
@@ -122,12 +123,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--tz-offset-hours", type=int, default=DEFAULT_TZ_OFFSET_HOURS)
     parser.add_argument("--poll-seconds", type=float, default=0.1)
     parser.add_argument("--reconnect-seconds", type=float, default=3)
-    parser.add_argument("--idle-reconnect-seconds", type=float, default=20)
+    parser.add_argument(
+        "--idle-reconnect-seconds",
+        type=float,
+        default=0,
+        help="Deprecated compatibility option; quiet game traffic no longer forces reconnects.",
+    )
     parser.add_argument(
         "--backend-idle-reconnects",
         type=int,
-        default=3,
-        help="Restart the bundled backend after this many idle websocket reconnects. Use 0 to disable.",
+        default=0,
+        help="Deprecated compatibility option; quiet game traffic no longer restarts Mabicat.",
     )
     parser.add_argument("--status-interval", type=float, default=30.0)
     parser.add_argument("--self-id")
@@ -179,14 +185,19 @@ def main() -> int:
                 if not is_transient_backend_traffic_error(exc):
                     raise
                 print(
-                    "[standalone] packet backend did not detect game traffic; "
+                    "[standalone] packet backend exited before becoming ready; "
                     f"retrying in 5s (attempt {attempt}). "
-                    "Keep Mabinogi connected and move or refresh one BUFF once."
+                    "Keep Mabinogi connected; the process is only restarted after an actual exit."
                 )
+                print(f"[standalone] backend exit detail: {exc}")
                 time.sleep(5)
                 continue
             print(f"[standalone] backend port: {port}")
             return port
+
+    def backend_is_alive() -> bool:
+        process = None if backend is None else backend.process
+        return process is not None and process.poll() is None
 
     def restart_backend() -> int:
         nonlocal backend
@@ -268,7 +279,7 @@ def main() -> int:
         else:
             backend_path = find_backend(args.backend)
             print(f"[standalone] backend: {backend_path}")
-            print("[standalone] starting packet backend...")
+            print("[standalone] starting packet backend; waiting for game data.")
             port = start_backend()
 
         ws_args = argparse.Namespace(
@@ -291,11 +302,8 @@ def main() -> int:
             record_events=record_events,
             record_alerts=record_alerts,
             max_seconds=args.max_seconds,
+            backend_is_alive=None if use_existing_backend else backend_is_alive,
             restart_backend=None if use_existing_backend else restart_backend,
-            backend_restart_after_idle_reconnects=(
-                0 if use_existing_backend else max(0, args.backend_idle_reconnects)
-            ),
-            reset_self_on_backend_restart=True,
         )
         return cmd_watch_ws(ws_args)
     finally:

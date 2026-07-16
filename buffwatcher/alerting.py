@@ -17,6 +17,11 @@ import uuid
 import wave
 from typing import Any, Iterable
 
+from .astrology_cards import (
+    AstrologyCardTracker,
+    AstrologyCardTrackerSettings,
+    load_astrology_card_tracker_settings,
+)
 from .config_migration import migrate_config_file
 from .events import (
     DEFAULT_TZ_OFFSET_HOURS,
@@ -69,7 +74,10 @@ MUSIC_TUAN_EXTENSION_RECENT_WINDOW_MS = 15_000
 DEFAULT_MUSIC_STRONG_REMINDER_ENABLED = False
 DEFAULT_MUSIC_STRONG_REMINDER_REPEAT_SECONDS = 5.0
 DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND = "assets/audio/xiaoyi/music_strong_beep.wav"
+DEFAULT_MUSIC_TUAN_SILENCE_ENABLED = False
 PLAYER_HP_STAT_ID = 28
+PLAYER_REVIVE_HP_CHANGE_MIN = 5.0
+PLAYER_REVIVE_MIN_DELAY_MS = 1_000
 BOSS_HP_CURRENT_STAT_ID = 28
 BOSS_HP_MAX_STAT_ID = 30
 BOSS_HP_INFERRED_BATTLE_STALE_MS = 15_000
@@ -158,7 +166,7 @@ DEFAULT_BOSS_RED_ORB_LATE_CONFIRM_OP = "0x6d66"
 DEFAULT_BOSS_RED_ORB_LATE_CONFIRM_START_SECONDS = 12.0
 DEFAULT_BOSS_RED_ORB_LATE_CONFIRM_END_SECONDS = 14.75
 DEFAULT_BOSS_RED_ORB_STALE_SECONDS = 25.0
-DEFAULT_BOSS_LASER_WARNING_NAME = "布3/布4激光预警"
+DEFAULT_BOSS_LASER_WARNING_NAME = "布3/布4激光前倒计时"
 DEFAULT_BOSS_LASER_WARNING_SOUND = "assets/audio/xiaoyi/laser_warning_prefix.wav"
 DEFAULT_BOSS_LASER_WARNING_MESSAGE = "激光 四 三 二 一 零"
 DEFAULT_BOSS_LASER_BOSS_MAX_HP_VALUES = (1_967_880_100, 3_449_779_200)
@@ -175,10 +183,19 @@ DEFAULT_BOSS_LASER_STARDUST_RACE_IDS = (
     7620,
 )
 DEFAULT_BOSS_LASER_CAST_OP = "0xafe7"
+DEFAULT_BOSS_LASER_CAST_OP_ALIASES = ("0xafe7", "0xafe8")
 DEFAULT_BOSS_LASER_SKILL_ID = 52401
 DEFAULT_BOSS_LASER_CAST_SECONDS = 5.0
 DEFAULT_BOSS_LASER_CLUSTER_WINDOW_MS = 250
 DEFAULT_BOSS_LASER_STALE_SECONDS = 8.0
+# Older captures exposed 0xAFDA, while the current clean BU3 capture carries
+# the same dynamic duration in 0xAFDB.  A valid duration field, not the opcode
+# name alone, decides whether the packet starts a movement countdown.
+DEFAULT_BOSS_LASER_MOVEMENT_OP_ALIASES = frozenset(("0xafda", "0xafdb"))
+DEFAULT_BOSS_LASER_MOVEMENT_DURATION_MESSAGE_INDEX = 3
+BOSS_LASER_MOVEMENT_VISUAL_CONFIG_KEY = (
+    "experimental_bu34_rotating_laser_visual_countdown"
+)
 DEFAULT_BOSS_LASER_COUNTDOWN_SOUNDS = {
     4: DEFAULT_BOSS_RED_ORB_COUNTDOWN_4_SOUND,
     3: DEFAULT_BOSS_RED_ORB_COUNTDOWN_3_SOUND,
@@ -196,8 +213,20 @@ DEFAULT_KEY_ENEMY_DEBUFF_MAGIC_BREAK_MIN = 41
 DEFAULT_KEY_ENEMY_DEBUFF_DAMAGE_BONUS_MIN = 61
 DEFAULT_KEY_ENEMY_DEBUFF_RABBIT_STACKS_MIN = 4
 KEY_ENEMY_DEBUFF_UNTIMED_CCIDS = {598}
+DEATH_MARK_DAMAGE_CCID = 426
+DEATH_MARK_PULL_CCID = 1166
+DEATH_MARK_DAMAGE_FIELD = "DAMAGE_BONUS"
+KEY_ENEMY_DEBUFF_EXCLUDED_CCIDS = {DEATH_MARK_PULL_CCID}
 KAILAHE_PHASE_1_MAX_HP = 80_032_160
 KAILAHE_PHASE_2_MAX_HP = 104_041_810
+SHORT_COOLDOWN_TEST_TARGET_RACE_IDS = {4860}
+SHORT_COOLDOWN_TEST_TARGET_MAX_HP = 100_000_000
+SHORT_COOLDOWN_TEST_TARGET_REQUIRED_STATS = {
+    11: 1,
+    12: 1,
+    13: 1,
+    14: 1,
+}
 DEFAULT_KEY_ENEMY_GUNNER_EYE_NAME = "枪手之眼"
 DEFAULT_KEY_ENEMY_GUNNER_EYE_CCID = 1122
 DEFAULT_KEY_ENEMY_GUNNER_EYE_SECONDS = 5
@@ -220,6 +249,19 @@ DEFAULT_KEY_ENEMY_DEBUFF_BOSS_MAX_HP_VALUES = (
     KAILAHE_PHASE_1_MAX_HP,
     KAILAHE_PHASE_2_MAX_HP,
 )
+BRONNTANAS_HP_OVERLAY_CONFIG_KEY = (
+    "experimental_bronntanas_hp_visual_overlay"
+)
+BRONNTANAS_MAX_HP = 1_143_352_700
+MIRACLE_ORB_HP_OVERLAY_CONFIG_KEY = (
+    "experimental_bu3_miracle_orb_hp_visual_overlay"
+)
+MIRACLE_ORB_BOSS_MAX_HP = 1_967_880_100
+MIRACLE_ORB_RACE_IDS = (7604, 7605, 7606)
+MIRACLE_ORB_GROUP_WINDOW_MS = 1_000
+MIRACLE_ORB_BOSS_PHASE_MIN_PERCENT = 59.95
+MIRACLE_ORB_BOSS_PHASE_MAX_PERCENT = 60.05
+MIRACLE_ORB_FOCUS_MIN_DAMAGE = 10_000
 KEY_ENEMY_DEBUFF_REQUIREMENTS = (
     "physical_break",
     "magic_break",
@@ -234,7 +276,7 @@ KEY_ENEMY_DEBUFF_REQUIREMENTS = (
 KEY_ENEMY_DEBUFF_CCID_TO_REQUIREMENT = {
     1164: "physical_break",
     1165: "magic_break",
-    426: "damage_bonus",
+    DEATH_MARK_DAMAGE_CCID: "damage_bonus",
     1094: "bernak_physical",
     1093: "bernak_magic",
     912: "cat",
@@ -459,6 +501,7 @@ class BossLaserAlertSpec:
     message: str = DEFAULT_BOSS_LASER_WARNING_MESSAGE
     countdown_sounds: dict[int, str] = field(default_factory=dict)
     audio_volume: int = 100
+    voice_enabled: bool = True
 
 
 @dataclass(frozen=True)
@@ -491,6 +534,8 @@ class KeyEnemyDebuffAlertSpec:
     magic_break_min: float = DEFAULT_KEY_ENEMY_DEBUFF_MAGIC_BREAK_MIN
     damage_bonus_min: float = DEFAULT_KEY_ENEMY_DEBUFF_DAMAGE_BONUS_MIN
     rabbit_stacks_min: int = DEFAULT_KEY_ENEMY_DEBUFF_RABBIT_STACKS_MIN
+    visual_hud_enabled: bool = False
+    visual_expiry_enabled: bool = True
     watched_debuffs: tuple[WatchedKeyEnemyDebuffSpec, ...] = ()
     audio_volume: int = 100
 
@@ -520,6 +565,8 @@ class BuffSpec:
     early_remove_reapply_grace_seconds: float = 0
     cooldown_alert: bool = False
     cooldown_delay_seconds: float = 0
+    cooldown_from_apply: bool = False
+    cooldown_from_skill_use: bool = False
     cooldown_sound: str = DEFAULT_ENDED_SOUND
     cooldown_message: str = "{name} 就绪"
     clear_after_stack_alert: bool = False
@@ -585,6 +632,7 @@ class BuffState:
     ended_pending_at_ms: int | None = None
     cooldown_pending_at_ms: int | None = None
     cooldown_fired: bool = False
+    cooldown_anchor_at_ms: int | None = None
     stack_alert_fired: bool = False
     clear_alert_fired: bool = False
     clear_pending_at_ms: int | None = None
@@ -649,6 +697,18 @@ class BossHpAlertState:
 
 
 @dataclass
+class MiracleOrbHpState:
+    entity_id: str
+    owner_id: str
+    race_id: int
+    spawned_at_ms: int
+    active: bool = False
+    last_seen_at_ms: int | None = None
+    last_current_hp: float | None = None
+    last_max_hp: float | None = None
+
+
+@dataclass
 class BossSkillBurstAlertState:
     spec: BossSkillBurstAlertSpec
     tracked_entity_id: str | None = None
@@ -707,6 +767,15 @@ class BossLaserPendingState:
 
 
 @dataclass
+class BossLaserMovementCountdownState:
+    boss_entity_id: str
+    start_at_ms: int
+    end_at_ms: int
+    duration_ms: int
+    stardust_entity_ids: set[str] = field(default_factory=set)
+
+
+@dataclass
 class BossLaserAlertState:
     spec: BossLaserAlertSpec
     tracked_entity_id: str | None = None
@@ -718,6 +787,7 @@ class BossLaserAlertState:
     stardust_race_ids_by_entity_id: dict[str, int] = field(default_factory=dict)
     stardust_removed_entity_ids: set[str] = field(default_factory=set)
     pending_alerts: list[BossLaserPendingState] = field(default_factory=list)
+    movement_countdown: BossLaserMovementCountdownState | None = None
 
 
 @dataclass
@@ -802,12 +872,32 @@ class LoadedSpecs:
         DEFAULT_MUSIC_STRONG_REMINDER_REPEAT_SECONDS
     )
     music_strong_reminder_prefix_sound: str = DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND
+    music_tuan_silence_enabled: bool = DEFAULT_MUSIC_TUAN_SILENCE_ENABLED
+    astrology_card_tracker_settings: AstrologyCardTrackerSettings = field(
+        default_factory=AstrologyCardTrackerSettings
+    )
+
+
+def optional_key_enemy_debuff_threshold(
+    data: dict[str, Any],
+    key: str,
+    *,
+    integer: bool = False,
+) -> float | int:
+    raw = data.get(key)
+    if raw is None or not str(raw).strip():
+        return 2_147_483_647 if integer else math.inf
+    try:
+        return int(raw) if integer else float(raw)
+    except (TypeError, ValueError):
+        return 2_147_483_647 if integer else math.inf
 
 
 def load_all_specs(config_path: str | Path) -> LoadedSpecs:
     config_file = Path(config_path)
     config_dir = config_file.resolve().parent
     data = migrate_config_file(config_file)
+    astrology_card_tracker_settings = load_astrology_card_tracker_settings(data)
     buff_specs: list[BuffSpec] = []
     progress_specs: list[ProgressSpec] = []
     stat_drop_effect_specs: list[StatDropEffectSpec] = []
@@ -927,6 +1017,12 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                 "prefix_sound",
                 DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND,
             )
+        )
+    )
+    music_tuan_silence_enabled = bool(
+        data.get(
+            "music_tuan_silence_enabled",
+            DEFAULT_MUSIC_TUAN_SILENCE_ENABLED,
         )
     )
 
@@ -1099,6 +1195,10 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                 cooldown_alert=bool(item.get("cooldown_alert", False)),
                 cooldown_delay_seconds=max(
                     0.0, float(item.get("cooldown_delay_seconds", 0))
+                ),
+                cooldown_from_apply=bool(item.get("cooldown_from_apply", False)),
+                cooldown_from_skill_use=bool(
+                    item.get("cooldown_from_skill_use", False)
                 ),
                 cooldown_sound=cooldown_sound,
                 cooldown_message=item.get("cooldown_message", "{name} 就绪"),
@@ -1423,6 +1523,42 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
         for spec in boss_hp_alert_specs
         for max_hp in spec.max_hp_values
     }
+    bronntanas_hp_overlay = data.get(BRONNTANAS_HP_OVERLAY_CONFIG_KEY)
+    if (
+        isinstance(bronntanas_hp_overlay, dict)
+        and bool(bronntanas_hp_overlay.get("enabled", True))
+        and BRONNTANAS_MAX_HP not in tracked_boss_hp_keys
+    ):
+        tracked_boss_hp_keys.add(BRONNTANAS_MAX_HP)
+        boss_hp_alert_specs.append(
+            BossHpAlertSpec(
+                name="布隆塔纳斯（50% HUD 数据）",
+                short_name="布本2王",
+                max_hp_values=(float(BRONNTANAS_MAX_HP),),
+                current_hp_stat_id=BOSS_HP_CURRENT_STAT_ID,
+                max_hp_stat_id=BOSS_HP_MAX_STAT_ID,
+                alerts=[],
+                audio_volume=default_audio_volume,
+            )
+        )
+    miracle_orb_hp_overlay = data.get(MIRACLE_ORB_HP_OVERLAY_CONFIG_KEY)
+    if (
+        isinstance(miracle_orb_hp_overlay, dict)
+        and bool(miracle_orb_hp_overlay.get("enabled", True))
+        and MIRACLE_ORB_BOSS_MAX_HP not in tracked_boss_hp_keys
+    ):
+        tracked_boss_hp_keys.add(MIRACLE_ORB_BOSS_MAX_HP)
+        boss_hp_alert_specs.append(
+            BossHpAlertSpec(
+                name="布三60%神迹球（HUD数据）",
+                short_name="布本3王",
+                max_hp_values=(float(MIRACLE_ORB_BOSS_MAX_HP),),
+                current_hp_stat_id=BOSS_HP_CURRENT_STAT_ID,
+                max_hp_stat_id=BOSS_HP_MAX_STAT_ID,
+                alerts=[],
+                audio_volume=default_audio_volume,
+            )
+        )
     for name, short_name, max_hp in (
         ("凯莱赫-1阶段", "雪女1阶段", KAILAHE_PHASE_1_MAX_HP),
         ("凯莱赫-2阶段", "雪女2阶段", KAILAHE_PHASE_2_MAX_HP),
@@ -1866,8 +2002,36 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                 audio_volume=normalize_volume(
                     item.get("audio_volume", default_audio_volume)
                 ),
+                voice_enabled=bool(item.get("voice_enabled", True)),
             )
         )
+
+    raw_laser_visual = data.get(BOSS_LASER_MOVEMENT_VISUAL_CONFIG_KEY)
+    laser_visual_tracking_enabled = isinstance(raw_laser_visual, dict) and bool(
+        raw_laser_visual.get("enabled", True)
+    )
+    if laser_visual_tracking_enabled:
+        covered_max_hp_keys = {
+            int(round(max_hp))
+            for spec in boss_laser_alert_specs
+            for max_hp in spec.max_hp_values
+        }
+        missing_max_hp_values = tuple(
+            max_hp
+            for max_hp in DEFAULT_BOSS_LASER_BOSS_MAX_HP_VALUES
+            if int(round(max_hp)) not in covered_max_hp_keys
+        )
+        if missing_max_hp_values:
+            # The visual countdown has its own switch.  Keep the movement
+            # packets available even when the older spoken laser warning is
+            # disabled, without silently re-enabling that warning.
+            boss_laser_alert_specs.append(
+                BossLaserAlertSpec(
+                    name=DEFAULT_BOSS_LASER_WARNING_NAME,
+                    max_hp_values=missing_max_hp_values,
+                    voice_enabled=False,
+                )
+            )
 
     key_enemy_data = data.get("key_enemy_debuff_alert")
     if isinstance(key_enemy_data, dict):
@@ -1878,6 +2042,10 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
             )
         )
         expiry_enabled = bool(key_enemy_data.get("expiry_enabled", True))
+        visual_hud_enabled = bool(key_enemy_data.get("visual_hud_enabled", False))
+        visual_expiry_enabled = bool(
+            key_enemy_data.get("visual_expiry_enabled", True)
+        )
         raw_max_hp_values = key_enemy_data.get(
             "max_hp_values",
             DEFAULT_KEY_ENEMY_DEBUFF_BOSS_MAX_HP_VALUES,
@@ -1968,10 +2136,12 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                 )
             )
 
-        if complete_enabled or expiry_enabled or watched_debuffs:
+        if complete_enabled or expiry_enabled or visual_hud_enabled or watched_debuffs:
             key_enemy_debuff_alert_spec = KeyEnemyDebuffAlertSpec(
                 complete_enabled=complete_enabled,
                 expiry_enabled=expiry_enabled,
+                visual_hud_enabled=visual_hud_enabled,
+                visual_expiry_enabled=visual_expiry_enabled,
                 max_hp_values=tuple(max_hp_values),
                 current_hp_stat_id=int(
                     key_enemy_data.get("current_hp_stat_id", BOSS_HP_CURRENT_STAT_ID)
@@ -2013,29 +2183,30 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
                     ),
                 ),
                 physical_break_min=float(
-                    key_enemy_data.get(
+                    optional_key_enemy_debuff_threshold(
+                        key_enemy_data,
                         "physical_break_min",
-                        DEFAULT_KEY_ENEMY_DEBUFF_PHYSICAL_BREAK_MIN,
                     )
                 ),
                 magic_break_min=float(
-                    key_enemy_data.get(
+                    optional_key_enemy_debuff_threshold(
+                        key_enemy_data,
                         "magic_break_min",
-                        DEFAULT_KEY_ENEMY_DEBUFF_MAGIC_BREAK_MIN,
                     )
                 ),
                 damage_bonus_min=float(
-                    key_enemy_data.get(
+                    optional_key_enemy_debuff_threshold(
+                        key_enemy_data,
                         "damage_bonus_min",
-                        DEFAULT_KEY_ENEMY_DEBUFF_DAMAGE_BONUS_MIN,
                     )
                 ),
                 rabbit_stacks_min=max(
                     1,
                     int(
-                        key_enemy_data.get(
+                        optional_key_enemy_debuff_threshold(
+                            key_enemy_data,
                             "rabbit_stacks_min",
-                            DEFAULT_KEY_ENEMY_DEBUFF_RABBIT_STACKS_MIN,
+                            integer=True,
                         )
                     ),
                 ),
@@ -2062,6 +2233,8 @@ def load_all_specs(config_path: str | Path) -> LoadedSpecs:
         music_strong_reminder_enabled=music_strong_reminder_enabled,
         music_strong_reminder_repeat_seconds=music_strong_reminder_repeat_seconds,
         music_strong_reminder_prefix_sound=music_strong_reminder_prefix_sound,
+        music_tuan_silence_enabled=music_tuan_silence_enabled,
+        astrology_card_tracker_settings=astrology_card_tracker_settings,
     )
 
 
@@ -2092,6 +2265,9 @@ class AlertEngine:
             DEFAULT_MUSIC_STRONG_REMINDER_REPEAT_SECONDS
         ),
         music_strong_reminder_prefix_sound: str = DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND,
+        music_tuan_silence_enabled: bool = DEFAULT_MUSIC_TUAN_SILENCE_ENABLED,
+        astrology_card_tracker_settings: AstrologyCardTrackerSettings | None = None,
+        server_clock_calibrator: Any | None = None,
     ) -> None:
         self.tz_offset_hours = tz_offset_hours
         self.death_clear_suppression_window_ms = max(
@@ -2112,6 +2288,11 @@ class AlertEngine:
             music_strong_reminder_prefix_sound
             or DEFAULT_MUSIC_STRONG_REMINDER_PREFIX_SOUND
         )
+        self.music_tuan_silence_enabled = bool(music_tuan_silence_enabled)
+        self.astrology_card_tracker = AstrologyCardTracker(
+            astrology_card_tracker_settings or AstrologyCardTrackerSettings()
+        )
+        self.server_clock_calibrator = server_clock_calibrator
         self.recent_music_remove_with_tuan_at_ms: dict[int, int] = {}
         self.dynamic_sbt_adjust_seconds: float | None = None
         self._dynamic_sbt_adjust_samples: list[float] = []
@@ -2123,6 +2304,11 @@ class AlertEngine:
         self.stat_drop_effect_states: list[StatDropEffectState] = []
         self.boss_hp_alert_states: dict[str, BossHpAlertState] = {}
         self.boss_hp_alert_states_by_max_hp: dict[int, BossHpAlertState] = {}
+        self.miracle_orb_hp_states: dict[str, MiracleOrbHpState] = {}
+        self.miracle_orb_entity_id_by_race_id: dict[int, str] = {}
+        self.miracle_orb_selected_entity_id: str | None = None
+        self.miracle_orb_active_owner_id: str | None = None
+        self.miracle_orb_completed_owner_ids: set[str] = set()
         self.boss_skill_burst_alert_states: dict[str, BossSkillBurstAlertState] = {}
         self.boss_skill_burst_alert_states_by_max_hp: dict[
             int, BossSkillBurstAlertState
@@ -2136,6 +2322,8 @@ class AlertEngine:
         self.boss_laser_pending_stardust_race_by_entity_id: dict[str, int] = {}
         self.key_enemy_debuff_alert = key_enemy_debuff_alert
         self.key_enemy_debuff_entity_states: dict[str, KeyEnemyDebuffEntityState] = {}
+        self._astrology_tracking_context_was_active = False
+        self.short_cooldown_test_target_entity_ids: set[str] = set()
         self.key_enemy_watched_debuffs_by_ccid: dict[
             int, WatchedKeyEnemyDebuffSpec
         ] = {}
@@ -2161,6 +2349,8 @@ class AlertEngine:
         self.self_entity_id: str | None = None
         self.self_player_dead = False
         self.last_self_hp: float | None = None
+        self.self_death_hp_reference: float | None = None
+        self.self_death_at_ms: int | None = None
         self.ccid_to_primary: dict[int, int] = {}
         self.skill_id_to_primary: dict[int, int] = {}
 
@@ -2238,9 +2428,13 @@ class AlertEngine:
         if self.self_entity_id == normalized:
             return
         self._reset_self_filtered_buff_states()
+        self.astrology_card_tracker.reset()
         self.self_entity_id = normalized
+        self._reset_miracle_orb_hp_tracking(clear_completed=True)
         self.self_player_dead = False
         self.last_self_hp = None
+        self.self_death_hp_reference = None
+        self.self_death_at_ms = None
         self._clear_magic_shield_missing_schedule()
 
     def _reset_self_filtered_buff_states(self) -> None:
@@ -2251,6 +2445,12 @@ class AlertEngine:
 
     def process_event(self, event: dict[str, Any]) -> list[FiredAlert]:
         alerts: list[FiredAlert] = []
+        self._process_short_cooldown_test_target_event(event)
+        if self._sync_astrology_tracking_context():
+            self.astrology_card_tracker.process_event(
+                event,
+                self_entity_id=self.self_entity_id,
+            )
         if self.is_death_signal_event(event):
             self._apply_death_signal(event, int(event.get("At", 0)))
             return alerts
@@ -2259,10 +2459,15 @@ class AlertEngine:
             self._process_battle_timer_event(event)
             return alerts
 
+        if self.is_skill_cooldown_anchor_event(event):
+            alerts.extend(self._process_skill_cooldown_anchor(event))
+            return alerts
+
         if event.get("EventId") == 17:
             self._process_self_stats(event)
             alerts.extend(self._process_stats(event))
             alerts.extend(self._process_boss_hp_stats(event))
+            self._process_miracle_orb_hp_stats(event)
             self._process_boss_skill_burst_stats(event)
             self._process_boss_red_orb_stats(event)
             self._process_boss_laser_stats(event)
@@ -2271,6 +2476,7 @@ class AlertEngine:
             return alerts
 
         self._process_boss_hp_entity_lifecycle(event)
+        self._process_miracle_orb_hp_event(event)
         self._process_boss_skill_burst_entity_lifecycle(event)
         self._process_boss_red_orb_entity_lifecycle(event)
         self._process_boss_laser_entity_lifecycle(event)
@@ -2303,6 +2509,133 @@ class AlertEngine:
         if event_id == 5:
             alerts.extend(self._remove(state, int(ccid), at_ms))
             return alerts
+        return alerts
+
+    def is_skill_cooldown_anchor_event(self, event: dict[str, Any]) -> bool:
+        if event.get("EventId") != 12:
+            return False
+        try:
+            skill_id = int(event.get("SkillId"))
+        except (TypeError, ValueError):
+            return False
+        primary = self.skill_id_to_primary.get(skill_id)
+        if primary is None:
+            return False
+        return self.states[primary].spec.cooldown_from_skill_use
+
+    @property
+    def short_cooldown_test_target_active(self) -> bool:
+        return bool(self.short_cooldown_test_target_entity_ids)
+
+    @property
+    def astrology_tracking_context_active(self) -> bool:
+        return self.short_cooldown_test_target_active or any(
+            state.active for state in self.key_enemy_debuff_entity_states.values()
+        )
+
+    def _sync_astrology_tracking_context(self) -> bool:
+        active = self.astrology_tracking_context_active
+        if active != self._astrology_tracking_context_was_active:
+            # Skills used outside the supported encounters make the inferred
+            # counter/card state unknowable.  Start every supported encounter
+            # from the configured deck origin and discard it again on exit.
+            self.astrology_card_tracker.reset()
+            self._astrology_tracking_context_was_active = active
+        return active
+
+    def is_short_cooldown_test_target_event(
+        self, event: dict[str, Any]
+    ) -> bool:
+        event_id = event.get("EventId")
+        event_entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if event_id == 1:
+            try:
+                race_id = int(event.get("RaceId"))
+            except (TypeError, ValueError):
+                return False
+            return race_id in SHORT_COOLDOWN_TEST_TARGET_RACE_IDS
+        if event_id == ENTITY_REMOVED_EVENT_ID:
+            return event_entity_id in self.short_cooldown_test_target_entity_ids
+        if event_id != 17:
+            return False
+        return (
+            event_entity_id in self.short_cooldown_test_target_entity_ids
+            or self._short_cooldown_test_target_stats_match(event)
+        )
+
+    @staticmethod
+    def _short_cooldown_test_target_stats_match(event: dict[str, Any]) -> bool:
+        current_values = _event_stat_values(event)
+        if (
+            current_values.get(BOSS_HP_MAX_STAT_ID)
+            != SHORT_COOLDOWN_TEST_TARGET_MAX_HP
+        ):
+            return False
+        return all(
+            current_values.get(stat_id) == expected_value
+            for stat_id, expected_value in (
+                SHORT_COOLDOWN_TEST_TARGET_REQUIRED_STATS.items()
+            )
+        )
+
+    def _process_short_cooldown_test_target_event(
+        self, event: dict[str, Any]
+    ) -> None:
+        event_entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if not event_entity_id:
+            return
+        event_id = event.get("EventId")
+        if event_id == ENTITY_REMOVED_EVENT_ID:
+            self.short_cooldown_test_target_entity_ids.discard(event_entity_id)
+            return
+        if event_id == 1:
+            try:
+                race_id = int(event.get("RaceId"))
+            except (TypeError, ValueError):
+                return
+            if race_id in SHORT_COOLDOWN_TEST_TARGET_RACE_IDS:
+                self.short_cooldown_test_target_entity_ids.add(event_entity_id)
+            return
+        if event_id == 17 and self._short_cooldown_test_target_stats_match(event):
+            self.short_cooldown_test_target_entity_ids.add(event_entity_id)
+
+    def _process_skill_cooldown_anchor(
+        self, event: dict[str, Any]
+    ) -> list[FiredAlert]:
+        try:
+            skill_id = int(event.get("SkillId"))
+        except (TypeError, ValueError):
+            return []
+        primary = self.skill_id_to_primary.get(skill_id)
+        if primary is None:
+            return []
+        state = self.states[primary]
+        if not state.spec.cooldown_from_skill_use:
+            return []
+        if state.spec.self_filter:
+            event_entity_id = event.get("Id")
+            if (
+                self.self_entity_id is None
+                or event_entity_id is None
+                or str(event_entity_id) != self.self_entity_id
+            ):
+                return []
+
+        at_ms = int(event.get("At", 0))
+        alerts: list[FiredAlert] = []
+        if (
+            state.cooldown_pending_at_ms is not None
+            and at_ms >= state.cooldown_pending_at_ms
+        ):
+            alerts.extend(self._fire_cooldown_alert(state))
+
+        state.cooldown_anchor_at_ms = at_ms
+        state.cooldown_fired = False
+        if state.spec.cooldown_alert:
+            cooldown_ms = int(state.spec.cooldown_delay_seconds * 1000)
+            state.cooldown_pending_at_ms = at_ms + cooldown_ms
+        else:
+            state.cooldown_pending_at_ms = None
         return alerts
 
     def effective_sbt_adjust_seconds(self, spec: BuffSpec) -> float:
@@ -2349,6 +2682,23 @@ class AlertEngine:
         max_hp = current_values.get(BOSS_HP_MAX_STAT_ID)
         return self._boss_hp_state_for_max_hp(max_hp) is not None
 
+    def is_miracle_orb_hp_event(self, event: dict[str, Any]) -> bool:
+        event_id = event.get("EventId")
+        event_entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if event_id == 1:
+            try:
+                return int(event.get("RaceId")) in MIRACLE_ORB_RACE_IDS
+            except (TypeError, ValueError):
+                return False
+        if event_id in (17, ENTITY_REMOVED_EVENT_ID):
+            return event_entity_id in self.miracle_orb_hp_states
+        if event_id == 3:
+            target_id = (
+                "" if event.get("TargetId") is None else str(event.get("TargetId"))
+            )
+            return target_id in self.miracle_orb_hp_states
+        return False
+
     def is_key_enemy_debuff_event(self, event: dict[str, Any]) -> bool:
         spec = self.key_enemy_debuff_alert
         if spec is None:
@@ -2372,6 +2722,11 @@ class AlertEngine:
         try:
             ccid = int(event.get("CCId"))
         except (TypeError, ValueError):
+            return False
+        # CC1166 is Death Mark's pull/traction side effect, not the damage
+        # amplification debuff.  Keep it explicitly excluded so it can never
+        # be reintroduced through a generic watched-debuff configuration.
+        if ccid in KEY_ENEMY_DEBUFF_EXCLUDED_CCIDS:
             return False
         if (
             ccid not in KEY_ENEMY_DEBUFF_CCID_TO_REQUIREMENT
@@ -2492,6 +2847,20 @@ class AlertEngine:
                     return True
                 if self._stats_match(current_values, state.spec.start_stat_matches):
                     return True
+                if (
+                    state.active
+                    and state.spec.timer_sync_stat_matches
+                    and (
+                        state.spec.timer_sync_event_id is None
+                        or int(event.get("EventId", -1))
+                        == state.spec.timer_sync_event_id
+                    )
+                    and self._stats_match(
+                        current_values,
+                        state.spec.timer_sync_stat_matches,
+                    )
+                ):
+                    return True
             return False
 
         return any(
@@ -2517,6 +2886,10 @@ class AlertEngine:
 
     def advance_time(self, at_ms: int) -> list[FiredAlert]:
         alerts: list[FiredAlert] = []
+        for state in self._unique_boss_laser_states():
+            movement = state.movement_countdown
+            if movement is not None and int(at_ms) >= movement.end_at_ms:
+                state.movement_countdown = None
         for state in self.states.values():
             if (
                 state.pending_dynamic_sbt_learn_at_ms is not None
@@ -2539,7 +2912,11 @@ class AlertEngine:
                 alerts.extend(self._fire_stack_clear_alert(state))
 
             if (
-                not state.active
+                (
+                    not state.active
+                    or state.spec.cooldown_from_apply
+                    or state.spec.cooldown_from_skill_use
+                )
                 and state.cooldown_pending_at_ms is not None
                 and at_ms >= state.cooldown_pending_at_ms
             ):
@@ -2636,7 +3013,12 @@ class AlertEngine:
             if state.spec.ended_alert and not state.ended_fired:
                 lead_ms = int(state.spec.sbt_ended_lead_seconds * 1000)
                 pending_times.add(state.end_ms - lead_ms)
-            if state.spec.cooldown_alert and not state.cooldown_fired:
+            if (
+                state.spec.cooldown_alert
+                and not state.cooldown_fired
+                and not state.spec.cooldown_from_apply
+                and not state.spec.cooldown_from_skill_use
+            ):
                 cooldown_ms = int(state.spec.cooldown_delay_seconds * 1000)
                 pending_times.add(state.end_ms + cooldown_ms)
             if (
@@ -2763,6 +3145,13 @@ class AlertEngine:
             # event-provided duration, including the 徒安延长 variant.
             next_end_ms = at_ms + duration_ms
             state.last_timing_source = "music_sbt_mcagt_duration"
+            if self.server_clock_calibrator is not None:
+                calibrated_end_ms = (
+                    self.server_clock_calibrator.calibrated_music_end_ms(event)
+                )
+                if calibrated_end_ms is not None:
+                    next_end_ms = calibrated_end_ms
+                    state.last_timing_source = "music_login_server_clock"
             state.last_computed_end_ms = next_end_ms
             state.last_raw_sbt_end_ms = sbt_to_unix_ms(
                 extra["SBT"], self.tz_offset_hours
@@ -2884,8 +3273,12 @@ class AlertEngine:
                     state.fired_thresholds.clear()
                     state.ended_fired = False
                     state.ended_pending_at_ms = None
-                    state.cooldown_fired = False
-                    state.cooldown_pending_at_ms = None
+                    if not (
+                        state.spec.cooldown_from_apply
+                        or state.spec.cooldown_from_skill_use
+                    ):
+                        state.cooldown_fired = False
+                        state.cooldown_pending_at_ms = None
                     if not clear_pending_cancelled:
                         state.stack_alert_fired = False
                         state.clear_alert_fired = False
@@ -2913,7 +3306,10 @@ class AlertEngine:
         if state.cooldown_pending_at_ms is not None:
             if at_ms >= state.cooldown_pending_at_ms:
                 alerts.extend(self._fire_cooldown_alert(state))
-            else:
+            elif not (
+                state.spec.cooldown_from_apply
+                or state.spec.cooldown_from_skill_use
+            ):
                 state.cooldown_pending_at_ms = None
 
         if state.ended_pending_at_ms is not None:
@@ -2926,8 +3322,13 @@ class AlertEngine:
             state.fired_thresholds.clear()
             state.ended_fired = False
             state.ended_pending_at_ms = None
-            state.cooldown_fired = False
-            state.cooldown_pending_at_ms = None
+            if not state.spec.cooldown_from_skill_use:
+                state.cooldown_fired = False
+                state.cooldown_pending_at_ms = None
+                state.cooldown_anchor_at_ms = at_ms
+                if state.spec.cooldown_alert and state.spec.cooldown_from_apply:
+                    cooldown_ms = int(state.spec.cooldown_delay_seconds * 1000)
+                    state.cooldown_pending_at_ms = at_ms + cooldown_ms
             if not clear_pending_cancelled:
                 state.stack_alert_fired = False
                 state.clear_alert_fired = False
@@ -2945,8 +3346,12 @@ class AlertEngine:
                 if next_end_ms > previous_end + ALERT_REARM_MARGIN_SECONDS * 1000:
                     state.ended_fired = False
                     state.ended_pending_at_ms = None
-                    state.cooldown_fired = False
-                    state.cooldown_pending_at_ms = None
+                    if not (
+                        state.spec.cooldown_from_apply
+                        or state.spec.cooldown_from_skill_use
+                    ):
+                        state.cooldown_fired = False
+                        state.cooldown_pending_at_ms = None
 
             state.end_ms = next_end_ms
 
@@ -2965,14 +3370,9 @@ class AlertEngine:
         state.last_apply_at_ms = at_ms
         state.ended_pending_at_ms = None
         state.last_event_at_ms = at_ms
-        if (
-            self.self_player_dead
-            and state.spec.ccid == MAGIC_SHIELD_CCID
-            and self._event_targets_self(event)
-        ):
-            self.self_player_dead = False
         if state.spec.ccid == TUAN_SONG_CCID:
-            self._clear_music_strong_reminders_for_tuan()
+            if self.music_tuan_silence_enabled:
+                self._clear_music_strong_reminders_for_tuan()
             for music_state in self.states.values():
                 if music_state.active and music_state.spec.ccid in MUSIC_BUFF_CCIDS:
                     self._update_music_toan_extension_on_apply(music_state, at_ms)
@@ -3110,7 +3510,10 @@ class AlertEngine:
             self.music_strong_reminder_enabled
             and state.spec.ccid in MUSIC_BUFF_CCIDS
             and not state.music_toan_extended
-            and not self._is_tuan_song_active(at_ms)
+            and (
+                not self.music_tuan_silence_enabled
+                or not self._is_tuan_song_active(at_ms)
+            )
         )
 
     def _music_strong_reminder_sound(self, base_sound: str) -> str:
@@ -3143,7 +3546,10 @@ class AlertEngine:
         ):
             self._clear_music_strong_reminder(state)
             return []
-        if self._is_tuan_song_active(at_ms) or state.music_toan_extended:
+        if (
+            self.music_tuan_silence_enabled
+            and self._is_tuan_song_active(at_ms)
+        ) or state.music_toan_extended:
             self._clear_music_strong_reminder(state)
             return []
         if at_ms < state.music_strong_reminder_next_at_ms:
@@ -3383,8 +3789,12 @@ class AlertEngine:
             ):
                 state.ended_fired = False
                 state.ended_pending_at_ms = None
-                state.cooldown_fired = False
-                state.cooldown_pending_at_ms = None
+                if not (
+                    state.spec.cooldown_from_apply
+                    or state.spec.cooldown_from_skill_use
+                ):
+                    state.cooldown_fired = False
+                    state.cooldown_pending_at_ms = None
 
     def _remove(self, state: BuffState, event_ccid: int, at_ms: int) -> list[FiredAlert]:
         state.last_event_at_ms = at_ms
@@ -3659,7 +4069,12 @@ class AlertEngine:
             return []
 
         cooldown_ms = int(state.spec.cooldown_delay_seconds * 1000)
-        state.cooldown_pending_at_ms = (ended_at_ms or at_ms) + cooldown_ms
+        if state.spec.cooldown_from_apply or state.spec.cooldown_from_skill_use:
+            if state.cooldown_anchor_at_ms is None:
+                return []
+            state.cooldown_pending_at_ms = state.cooldown_anchor_at_ms + cooldown_ms
+        else:
+            state.cooldown_pending_at_ms = (ended_at_ms or at_ms) + cooldown_ms
         if at_ms < state.cooldown_pending_at_ms:
             return []
         return self._fire_cooldown_alert(state, at_ms=at_ms)
@@ -3702,6 +4117,12 @@ class AlertEngine:
         if not state.spec.suppress_remaining_if_active_ccids:
             return False
         for ccid in state.spec.suppress_remaining_if_active_ccids:
+            if (
+                state.spec.ccid in MUSIC_BUFF_CCIDS
+                and ccid == TUAN_SONG_CCID
+                and not self.music_tuan_silence_enabled
+            ):
+                continue
             primary = self.ccid_to_primary.get(ccid, ccid)
             other_state = self.states.get(primary)
             if other_state is None or not other_state.active:
@@ -3718,13 +4139,21 @@ class AlertEngine:
     def _should_suppress_ended_alert(
         self, spec: BuffSpec, *, at_ms: int | None = None
     ) -> bool:
-        if spec.ccid in MUSIC_BUFF_CCIDS and self._is_ccid_active(
-            TUAN_SONG_CCID, at_ms
+        if (
+            self.music_tuan_silence_enabled
+            and spec.ccid in MUSIC_BUFF_CCIDS
+            and self._is_ccid_active(TUAN_SONG_CCID, at_ms)
         ):
             return True
         if not spec.suppress_ended_if_active_ccids:
             return False
         for ccid in spec.suppress_ended_if_active_ccids:
+            if (
+                spec.ccid in MUSIC_BUFF_CCIDS
+                and ccid == TUAN_SONG_CCID
+                and not self.music_tuan_silence_enabled
+            ):
+                continue
             if self._is_ccid_active(ccid, at_ms):
                 return True
         return False
@@ -3832,10 +4261,22 @@ class AlertEngine:
         hp = current_values.get(PLAYER_HP_STAT_ID)
         if hp is None:
             return
+        at_ms = int(event.get("At", 0))
+        if self.self_player_dead:
+            if self.self_death_hp_reference is None:
+                self.self_death_hp_reference = hp
+            elif (
+                hp > 0
+                and self.self_death_at_ms is not None
+                and at_ms - self.self_death_at_ms >= PLAYER_REVIVE_MIN_DELAY_MS
+                and abs(hp - self.self_death_hp_reference)
+                >= PLAYER_REVIVE_HP_CHANGE_MIN
+            ):
+                self.self_player_dead = False
+                self.self_death_hp_reference = None
+                self.self_death_at_ms = None
+                self._resync_magic_shield_missing_schedule(at_ms)
         self.last_self_hp = hp
-        if self.self_player_dead and hp > 0:
-            self.self_player_dead = False
-            self._resync_magic_shield_missing_schedule(int(event.get("At", 0)))
 
     def _clear_magic_shield_missing_schedule(self) -> None:
         self.magic_shield_missing_next_due_ms = None
@@ -3913,6 +4354,7 @@ class AlertEngine:
         state.ended_fired = True
         state.cooldown_pending_at_ms = None
         state.cooldown_fired = True
+        state.cooldown_anchor_at_ms = None
         state.clear_pending_at_ms = None
         state.clear_pending_cleared_at_ms = None
         self._clear_pending_dynamic_sbt_adjust(state)
@@ -3922,6 +4364,8 @@ class AlertEngine:
     def _apply_death_signal(self, event: dict[str, Any], at_ms: int) -> None:
         if self._event_targets_self(event):
             self.self_player_dead = True
+            self.self_death_hp_reference = self.last_self_hp
+            self.self_death_at_ms = at_ms
             self._clear_magic_shield_missing_schedule()
 
         lookback_ms = max(
@@ -4158,6 +4602,179 @@ class AlertEngine:
         state.last_raw_percent = raw_percent
         self._resync_magic_shield_missing_schedule(at_ms)
         return alerts
+
+    def _process_miracle_orb_hp_event(self, event: dict[str, Any]) -> None:
+        event_id = event.get("EventId")
+        if event_id == 1:
+            self._process_miracle_orb_hp_spawn(event)
+            return
+
+        event_entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if event_id == ENTITY_REMOVED_EVENT_ID:
+            if event_entity_id == self.miracle_orb_active_owner_id:
+                self._complete_miracle_orb_hp_tracking(event_entity_id)
+                return
+            self._remove_miracle_orb_hp_entity(event_entity_id)
+            return
+        if event_id != 3 or self.self_entity_id is None:
+            return
+        if event_entity_id != self.self_entity_id:
+            return
+        target_id = "" if event.get("TargetId") is None else str(event.get("TargetId"))
+        target = self.miracle_orb_hp_states.get(target_id)
+        if target is None or not target.active:
+            return
+        damage_values: list[float] = []
+        for key in ("Damage", "ManaDamage", "Wound"):
+            try:
+                damage_values.append(max(0.0, float(event.get(key) or 0)))
+            except (TypeError, ValueError):
+                continue
+        if damage_values and max(damage_values) >= MIRACLE_ORB_FOCUS_MIN_DAMAGE:
+            self.miracle_orb_selected_entity_id = target_id
+
+    def _process_miracle_orb_hp_spawn(self, event: dict[str, Any]) -> None:
+        try:
+            race_id = int(event.get("RaceId"))
+        except (TypeError, ValueError):
+            return
+        if race_id not in MIRACLE_ORB_RACE_IDS:
+            return
+        owner_id = "" if event.get("OwnerId") is None else str(event.get("OwnerId"))
+        if (
+            not owner_id
+            or owner_id in self.miracle_orb_completed_owner_ids
+            or not self._miracle_orb_spawn_is_in_60_percent_phase(owner_id)
+        ):
+            return
+        if self.miracle_orb_active_owner_id is not None:
+            # Once the real 60% trio is locked, similarly shaped entities from
+            # later mechanics must never replace any of its three members.
+            return
+        entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if not entity_id:
+            return
+        at_ms = int(event.get("At", 0))
+
+        old_entity_id = self.miracle_orb_entity_id_by_race_id.get(race_id)
+        if old_entity_id and old_entity_id != entity_id:
+            self._remove_miracle_orb_hp_entity(old_entity_id)
+        state = MiracleOrbHpState(
+            entity_id=entity_id,
+            owner_id=owner_id,
+            race_id=race_id,
+            spawned_at_ms=at_ms,
+            last_seen_at_ms=at_ms,
+        )
+        self.miracle_orb_hp_states[entity_id] = state
+        self.miracle_orb_entity_id_by_race_id[race_id] = entity_id
+        self._activate_complete_miracle_orb_group(owner_id)
+
+    def _miracle_orb_spawn_is_in_60_percent_phase(self, owner_id: str) -> bool:
+        boss_state = self.boss_hp_alert_states.get(owner_id)
+        if (
+            boss_state is None
+            or boss_state.tracked_entity_id != owner_id
+            or boss_state.last_current_hp is None
+            or boss_state.last_max_hp is None
+            or int(round(boss_state.last_max_hp)) != MIRACLE_ORB_BOSS_MAX_HP
+            or boss_state.last_max_hp <= 0
+        ):
+            return False
+        percent = boss_state.last_current_hp / boss_state.last_max_hp * 100.0
+        return (
+            MIRACLE_ORB_BOSS_PHASE_MIN_PERCENT
+            <= percent
+            <= MIRACLE_ORB_BOSS_PHASE_MAX_PERCENT
+        )
+
+    def _activate_complete_miracle_orb_group(self, owner_id: str) -> None:
+        group: list[MiracleOrbHpState] = []
+        for race_id in MIRACLE_ORB_RACE_IDS:
+            entity_id = self.miracle_orb_entity_id_by_race_id.get(race_id)
+            state = self.miracle_orb_hp_states.get(entity_id or "")
+            if state is None or state.owner_id != owner_id:
+                return
+            group.append(state)
+        spawn_times = [state.spawned_at_ms for state in group]
+        if max(spawn_times) - min(spawn_times) > MIRACLE_ORB_GROUP_WINDOW_MS:
+            return
+        group_ids = {state.entity_id for state in group}
+        for entity_id in list(self.miracle_orb_hp_states):
+            if entity_id not in group_ids:
+                self._remove_miracle_orb_hp_entity(entity_id)
+        for state in group:
+            state.active = True
+        self.miracle_orb_active_owner_id = owner_id
+
+    def _process_miracle_orb_hp_stats(self, event: dict[str, Any]) -> None:
+        entity_id = "" if event.get("Id") is None else str(event.get("Id"))
+        if entity_id == self.miracle_orb_active_owner_id:
+            values = _event_stat_values(event)
+            current_hp = values.get(BOSS_HP_CURRENT_STAT_ID)
+            max_hp = values.get(BOSS_HP_MAX_STAT_ID)
+            if (
+                current_hp is not None
+                and max_hp is not None
+                and max_hp > 0
+                and current_hp / max_hp * 100.0
+                < MIRACLE_ORB_BOSS_PHASE_MIN_PERCENT
+            ):
+                self._complete_miracle_orb_hp_tracking(entity_id)
+            return
+        state = self.miracle_orb_hp_states.get(entity_id)
+        if state is None:
+            return
+        values = _event_stat_values(event)
+        current_hp = values.get(BOSS_HP_CURRENT_STAT_ID)
+        max_hp = values.get(BOSS_HP_MAX_STAT_ID)
+        if current_hp is not None:
+            state.last_current_hp = max(0.0, float(current_hp))
+        if max_hp is not None and max_hp > 0:
+            state.last_max_hp = float(max_hp)
+        state.last_seen_at_ms = int(event.get("At", 0))
+        active_states = [
+            candidate
+            for candidate in self.miracle_orb_hp_states.values()
+            if candidate.active
+        ]
+        if active_states and all(
+            candidate.last_current_hp is not None
+            and candidate.last_current_hp <= 0
+            for candidate in active_states
+        ):
+            self._complete_miracle_orb_hp_tracking(state.owner_id)
+
+    def _remove_miracle_orb_hp_entity(self, entity_id: str) -> None:
+        state = self.miracle_orb_hp_states.pop(entity_id, None)
+        if state is None:
+            return
+        if self.miracle_orb_entity_id_by_race_id.get(state.race_id) == entity_id:
+            self.miracle_orb_entity_id_by_race_id.pop(state.race_id, None)
+        if self.miracle_orb_selected_entity_id == entity_id:
+            self.miracle_orb_selected_entity_id = None
+        if (
+            state.active
+            and state.owner_id == self.miracle_orb_active_owner_id
+            and not any(
+                candidate.active and candidate.owner_id == state.owner_id
+                for candidate in self.miracle_orb_hp_states.values()
+            )
+        ):
+            self._complete_miracle_orb_hp_tracking(state.owner_id)
+
+    def _complete_miracle_orb_hp_tracking(self, owner_id: str) -> None:
+        if owner_id:
+            self.miracle_orb_completed_owner_ids.add(owner_id)
+        self._reset_miracle_orb_hp_tracking(clear_completed=False)
+
+    def _reset_miracle_orb_hp_tracking(self, *, clear_completed: bool) -> None:
+        self.miracle_orb_hp_states.clear()
+        self.miracle_orb_entity_id_by_race_id.clear()
+        self.miracle_orb_selected_entity_id = None
+        self.miracle_orb_active_owner_id = None
+        if clear_completed:
+            self.miracle_orb_completed_owner_ids.clear()
 
     def _boss_hp_alert_payload(
         self,
@@ -5133,7 +5750,23 @@ class AlertEngine:
             return []
 
         spec = state.spec
-        if str(event.get("Op", "")).lower() != spec.cast_op.lower():
+        op = str(event.get("Op", "")).lower()
+        if op in DEFAULT_BOSS_LASER_MOVEMENT_OP_ALIASES:
+            self._start_or_join_boss_laser_movement_countdown(
+                state,
+                event_entity_id,
+                event,
+            )
+            return []
+        configured_cast_op = spec.cast_op.lower()
+        accepted_cast_ops = {configured_cast_op}
+        if configured_cast_op in DEFAULT_BOSS_LASER_CAST_OP_ALIASES:
+            # Current clean BU4 captures use 0xafe8 for the same five-entity
+            # 52401 cast that older captures exposed as 0xafe7.  Treat the two
+            # wire aliases as one signal while keeping custom op overrides
+            # strict.
+            accepted_cast_ops.update(DEFAULT_BOSS_LASER_CAST_OP_ALIASES)
+        if not spec.voice_enabled or op not in accepted_cast_ops:
             return []
         messages = event.get("Msg") or []
         if not messages or not isinstance(messages[0], dict):
@@ -5189,6 +5822,47 @@ class AlertEngine:
                 },
             )
         ]
+
+    @staticmethod
+    def _start_or_join_boss_laser_movement_countdown(
+        state: BossLaserAlertState,
+        event_entity_id: str,
+        event: dict[str, Any],
+    ) -> None:
+        messages = event.get("Msg") or []
+        duration_index = DEFAULT_BOSS_LASER_MOVEMENT_DURATION_MESSAGE_INDEX
+        if len(messages) <= duration_index or not isinstance(
+            messages[duration_index], dict
+        ):
+            return
+        try:
+            at_ms = int(event.get("At", 0))
+            duration_ms = int(round(float(messages[duration_index].get("V"))))
+        except (TypeError, ValueError):
+            return
+        if at_ms <= 0 or not 100 <= duration_ms <= 60_000:
+            return
+
+        current = state.movement_countdown
+        cluster_window_ms = max(0, int(state.spec.cluster_window_ms))
+        if (
+            current is not None
+            and current.start_at_ms <= at_ms
+            and at_ms - current.start_at_ms <= cluster_window_ms
+        ):
+            # All five laser entities report the same segment.  The first
+            # packet is the earliest moment the HUD can appear; later copies
+            # only confirm membership and must not restart the countdown.
+            current.stardust_entity_ids.add(event_entity_id)
+            return
+
+        state.movement_countdown = BossLaserMovementCountdownState(
+            boss_entity_id=str(state.tracked_entity_id),
+            start_at_ms=at_ms,
+            end_at_ms=at_ms + duration_ms,
+            duration_ms=duration_ms,
+            stardust_entity_ids={event_entity_id},
+        )
 
     def _boss_laser_recent_pending(
         self,
@@ -5328,6 +6002,7 @@ class AlertEngine:
         state.stardust_race_ids_by_entity_id.clear()
         state.stardust_removed_entity_ids.clear()
         state.pending_alerts.clear()
+        state.movement_countdown = None
         self.boss_laser_alert_states[entity_id] = state
         for stardust_id in self.boss_laser_pending_stardust_by_owner.pop(
             entity_id, set()
@@ -5365,6 +6040,7 @@ class AlertEngine:
         state.stardust_race_ids_by_entity_id.clear()
         state.stardust_removed_entity_ids.clear()
         state.pending_alerts.clear()
+        state.movement_countdown = None
 
     def _unique_boss_laser_states(self) -> list[BossLaserAlertState]:
         seen: set[int] = set()
@@ -5443,6 +6119,8 @@ class AlertEngine:
             return []
         requirement_key = KEY_ENEMY_DEBUFF_CCID_TO_REQUIREMENT.get(ccid)
         watched_spec = self.key_enemy_watched_debuffs_by_ccid.get(ccid)
+        if ccid in KEY_ENEMY_DEBUFF_EXCLUDED_CCIDS:
+            return []
         if requirement_key is None and watched_spec is None:
             return []
 
@@ -5495,6 +6173,14 @@ class AlertEngine:
                 requirement_state.ended_fired_end_ms = None
             if previous_active and not requirement_state.active:
                 self._mark_key_enemy_debuff_incomplete(entity_state, at_ms)
+            return alerts
+
+        if not self._key_enemy_debuff_apply_has_valid_signal(
+            requirement_key, event
+        ):
+            # In particular, Death Mark must carry DAMAGE_BONUS.  Pull-only
+            # packets expose similarly named MCDDMB* fields and must not enter
+            # either the completion or the expiry tracker.
             return alerts
 
         previous_expiry_end_ms = expiry_requirement_state.end_ms
@@ -5986,15 +6672,22 @@ class AlertEngine:
             )
         if requirement_key == "damage_bonus":
             return (
-                _max_numeric_extra(
-                    extra,
-                    ("DAMAGE_BONUS", "MCDDMBPV", "MCDDMBTPV"),
-                )
+                _numeric_extra(extra, DEATH_MARK_DAMAGE_FIELD)
                 >= spec.damage_bonus_min
             )
         if requirement_key == "rabbit":
             return _numeric_extra(extra, "MCCSSC") >= spec.rabbit_stacks_min
         return True
+
+    @staticmethod
+    def _key_enemy_debuff_apply_has_valid_signal(
+        requirement_key: str,
+        event: dict[str, Any],
+    ) -> bool:
+        if requirement_key != "damage_bonus":
+            return True
+        extra = event.get("ExtraData") or {}
+        return math.isfinite(_numeric_extra(extra, DEATH_MARK_DAMAGE_FIELD))
 
     def _key_enemy_debuff_event_end_ms(
         self,
@@ -6927,6 +7620,8 @@ def cmd_replay(args: argparse.Namespace) -> int:
         music_strong_reminder_enabled=loaded.music_strong_reminder_enabled,
         music_strong_reminder_repeat_seconds=loaded.music_strong_reminder_repeat_seconds,
         music_strong_reminder_prefix_sound=loaded.music_strong_reminder_prefix_sound,
+        music_tuan_silence_enabled=loaded.music_tuan_silence_enabled,
+        astrology_card_tracker_settings=loaded.astrology_card_tracker_settings,
     )
 
     previous_at: int | None = None
@@ -6984,9 +7679,15 @@ def cmd_list_enabled(args: argparse.Namespace) -> int:
         thresholds = ", ".join(str(rule.remaining_seconds) for rule in spec.alerts)
         ended = "yes" if spec.ended_alert else "no"
         clear = "yes" if spec.clear_after_stack_alert else "no"
-        cooldown = (
-            f"{spec.cooldown_delay_seconds:g}s" if spec.cooldown_alert else "no"
-        )
+        cooldown = "no"
+        if spec.cooldown_alert:
+            if spec.cooldown_from_skill_use:
+                anchor = "skill E12+"
+            elif spec.cooldown_from_apply:
+                anchor = "apply+"
+            else:
+                anchor = "end+"
+            cooldown = f"{anchor}{spec.cooldown_delay_seconds:g}s"
         print(
             f"{spec.name}: ccid={spec.ccid}, linked={linked}, "
             f"stack={stack}, stack_alert={stack_alert}, "

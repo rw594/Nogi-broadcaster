@@ -6,7 +6,16 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 import tkinter as tk
-from tkinter import BooleanVar, DoubleVar, IntVar, StringVar, Tk, filedialog, messagebox
+from tkinter import (
+    BooleanVar,
+    DoubleVar,
+    IntVar,
+    StringVar,
+    Tk,
+    filedialog,
+    messagebox,
+    ttk,
+)
 
 from .alerting import (
     DEFAULT_ENDED_SOUND,
@@ -15,9 +24,32 @@ from .alerting import (
     normalize_volume,
     play_sound,
 )
+from .astrology_cards import (
+    ASTROLOGY_CARD_OPTIONS,
+    ASTROLOGY_CARD_TRACKER_CONFIG_KEY,
+    ASTROLOGY_CORE_COOLDOWN_DEFAULTS,
+    ASTROLOGY_COUNTER_CHOICES,
+    ASTROLOGY_DEFAULT_COUNTER_THRESHOLD,
+    ASTROLOGY_MAX_COOLDOWN_SECONDS,
+    ASTROLOGY_MIN_COOLDOWN_SECONDS,
+    ASTROLOGY_SKILLS,
+    ASTROLOGY_SUIT_OPTIONS,
+    ASTROLOGY_UNSET_LABEL,
+    default_astrology_card_tracker_config,
+    ensure_astrology_card_tracker_config,
+)
 from .backend import app_root
 from .config_migration import migrate_config_file
 from .console_launcher import package_title
+from .hamster_buffs import (
+    HAMSTER_BUFF_DURATION_SECONDS,
+    HAMSTER_BUFF_NAMES,
+    HAMSTER_DEFAULT_WARNING_SECONDS,
+    HAMSTER_SETTINGS_NAME,
+    HAMSTER_SUPERCHARGED_NAME,
+    ensure_hamster_buff_items,
+)
+from .theme import ROOT_BACKGROUND, SETTINGS_COLORS
 
 
 BUFF_GROUPS = [
@@ -37,16 +69,142 @@ BUFF_GROUPS = [
             "星辰交汇-炼金",
         ],
     ),
-    ("其他", ["净化之浪"]),
+    ("其他", ["净化之浪", HAMSTER_SETTINGS_NAME]),
 ]
 BUFF_ORDER = [name for _group, names in BUFF_GROUPS for name in names]
-MUSIC_BUFF_NOTICE = (
-    "音乐BUFF的提醒时间，暂时无法做到100%精确；有时可能会有10+秒的提前或延后。"
-    "这是正常现象，正在想办法修复，但暂时莓有完美的方案orz 请悉知"
-)
 MUSIC_STRONG_REMINDER_ENABLED = False
 MUSIC_STRONG_REMINDER_REPEAT_SECONDS = 5.0
 MUSIC_STRONG_REMINDER_PREFIX_SOUND = "assets/audio/xiaoyi/music_strong_beep.wav"
+MUSIC_TUAN_SILENCE_LABEL = "检测到徒安之歌时，静默播报"
+MUSIC_TUAN_SILENCE_DEFAULT = False
+VISUAL_HUD_TUAN_SILENCE_LABEL = "检测到徒安之歌时，屏蔽视觉提醒"
+SETTINGS_TAB_GENERAL = "常规提醒"
+SETTINGS_TAB_DUNGEON = "副本机制提醒"
+SETTINGS_TAB_VISUAL_HUD = "可视化HUD"
+SETTINGS_TAB_SHORT_COOLDOWN = "短CD技能冷却提示"
+SETTINGS_TAB_ASTROLOGY = "战斗占星追踪"
+
+VISUAL_HUD_CONFIG_KEY = "experimental_music_visual_overlay"
+VISUAL_HUD_DEFAULT_SHOW_BEFORE_SECONDS = 15.0
+VISUAL_HUD_MIN_SHOW_BEFORE_SECONDS = 0.1
+VISUAL_HUD_MAX_SHOW_BEFORE_SECONDS = 9999.0
+VISUAL_HUD_MUSIC_CCIDS = (192, 193, 680)
+VISUAL_HUD_DEFAULT_ICONS_VERSION = 1
+VISUAL_HUD_DEFAULT_ICONS = {
+    192: "assets/icon/visual-overlay/vivace.png",
+    193: "assets/icon/visual-overlay/march-song.png",
+    680: "assets/icon/visual-overlay/battlefield-overture.png",
+}
+VISUAL_HUD_CONDITION_DEFAULTS = {
+    192: {
+        "enabled": True,
+        "name": "活跃曲",
+        "icon": VISUAL_HUD_DEFAULT_ICONS[192],
+        "show_before_seconds": VISUAL_HUD_DEFAULT_SHOW_BEFORE_SECONDS,
+        "ring_sound_enabled": False,
+    },
+    193: {
+        "enabled": True,
+        "name": "行进曲",
+        "icon": VISUAL_HUD_DEFAULT_ICONS[193],
+        "show_before_seconds": VISUAL_HUD_DEFAULT_SHOW_BEFORE_SECONDS,
+        "ring_sound_enabled": False,
+    },
+    680: {
+        "enabled": True,
+        "name": "战争序曲",
+        "icon": VISUAL_HUD_DEFAULT_ICONS[680],
+        "show_before_seconds": VISUAL_HUD_DEFAULT_SHOW_BEFORE_SECONDS,
+        "ring_sound_enabled": False,
+    },
+}
+OTHER_SKILL_HUD_CONFIG_KEY = "experimental_other_skill_visual_overlay"
+OTHER_SKILL_HUD_DEFAULT_ICONS_VERSION = 2
+OTHER_SKILL_HUD_CONDITION_DEFAULTS = {
+    "magic_circle": {
+        "enabled": True,
+        "name": "魔法阵",
+        "icon": "assets/icon/visual-overlay/other-skills/magic-circle.png",
+    },
+    "pall_of_ruination": {
+        "enabled": True,
+        "name": "崩坏波动",
+        "icon": "assets/icon/visual-overlay/other-skills/pall-of-ruination.png",
+    },
+    "manus_potion": {
+        "enabled": True,
+        "name": "马纽斯秘药",
+        "icon": "assets/icon/visual-overlay/other-skills/manus-potion.png",
+    },
+    "purification_wave": {
+        "enabled": True,
+        "name": "净化之浪",
+        "icon": "assets/icon/visual-overlay/other-skills/purification-wave.png",
+    },
+    "hamster_supercharged": {
+        "enabled": True,
+        "name": HAMSTER_SETTINGS_NAME,
+        "icon": "assets/icon/visual-overlay/other-skills/hamster-supercharged.png",
+    },
+    "life_temperature": {
+        "enabled": False,
+        "name": "生命的温度",
+        "icon": "assets/icon/visual-overlay/life-temperature.png",
+    },
+}
+SHORT_COOLDOWN_HUD_CONFIG_KEY = "experimental_short_cooldown_visual_overlay"
+BRONNTANAS_HP_HUD_CONFIG_KEY = "experimental_bronntanas_hp_visual_overlay"
+BRONNTANAS_HP_HUD_SECTION_NAME = "布本二王50%机制血量监控"
+BRONNTANAS_HP_HUD_DEFAULT_ICON = (
+    "assets/icon/visual-overlay/boss/bronntanas.png"
+)
+MIRACLE_ORB_HP_HUD_CONFIG_KEY = (
+    "experimental_bu3_miracle_orb_hp_visual_overlay"
+)
+MIRACLE_ORB_HP_HUD_SECTION_NAME = "布三60%神迹球血量追踪"
+ROTATING_LASER_COUNTDOWN_HUD_CONFIG_KEY = (
+    "experimental_bu34_rotating_laser_visual_countdown"
+)
+ROTATING_LASER_COUNTDOWN_HUD_SECTION_NAME = (
+    "布三/布四旋转激光移动倒计时"
+)
+SHORT_COOLDOWN_HUD_DEFAULT_ICONS_VERSION = 2
+SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS = {
+    "ignis_plume": {
+        "enabled": True,
+        "name": "爆炎箭",
+        "icon": "assets/icon/visual-overlay/short-cooldown/ignis-plume.png",
+        "tracker_ccid": -59060,
+        "skill_id": 59060,
+        "cooldown_seconds": 6,
+    },
+    "aqua_volley": {
+        "enabled": True,
+        "name": "水流箭",
+        "icon": "assets/icon/visual-overlay/short-cooldown/aqua-volley.png",
+        "tracker_ccid": -59061,
+        "skill_id": 59061,
+        "cooldown_seconds": 10,
+    },
+}
+
+
+def settings_tab_titles(data: dict) -> tuple[str, ...]:
+    titles = [SETTINGS_TAB_GENERAL, SETTINGS_TAB_DUNGEON]
+    if any(
+        key in data
+        for key in (
+            VISUAL_HUD_CONFIG_KEY,
+            OTHER_SKILL_HUD_CONFIG_KEY,
+            SHORT_COOLDOWN_HUD_CONFIG_KEY,
+        )
+    ):
+        titles.append(SETTINGS_TAB_VISUAL_HUD)
+    if SHORT_COOLDOWN_HUD_CONFIG_KEY in data:
+        titles.append(SETTINGS_TAB_SHORT_COOLDOWN)
+    if ASTROLOGY_CARD_TRACKER_CONFIG_KEY in data:
+        titles.append(SETTINGS_TAB_ASTROLOGY)
+    return tuple(titles)
 
 PROGRESS_ORDER = [
     "托亚灵进度",
@@ -132,8 +290,11 @@ BOSS_RED_ORB_LATE_CONFIRM_OP = "0x6d66"
 BOSS_RED_ORB_LATE_CONFIRM_START_SECONDS = 12.0
 BOSS_RED_ORB_LATE_CONFIRM_END_SECONDS = 14.75
 BOSS_RED_ORB_STALE_SECONDS = 25.0
-BOSS_LASER_ALERT_NAME = "布3/布4激光预警"
-BOSS_LASER_ALERT_NOTICE = "***激光预警功能，尚在测试中，可能存在BUG，请勿过度依赖***"
+BOSS_LASER_ALERT_NAME = "布3/布4激光前倒计时"
+BOSS_LASER_ALERT_LEGACY_NAMES = {
+    BOSS_LASER_ALERT_NAME,
+    "布3/布4激光预警",
+}
 BOSS_LASER_ALERT_SOUND = "assets/audio/xiaoyi/laser_warning_prefix.wav"
 BOSS_LASER_ALERT_MESSAGE = "激光 四 三 二 一 零"
 BOSS_LASER_BOSS_MAX_HP_VALUES = [1967880100, SAFEHOUSE_BOSS_MAX_HP]
@@ -263,9 +424,9 @@ THIRD_EYE_NAME = "第三只眼"
 SPECIAL_END_ONLY_ORDER = [SELF_BUFF_CIRCLE_NAME, DEMI_GOD_NAME, THIRD_EYE_NAME]
 SPECIAL_END_ONLY_DEFAULTS = {
     SELF_BUFF_CIRCLE_NAME: {
-        "cooldown_seconds": 15,
-        "cooldown_min": 0,
-        "cooldown_max": 600,
+        "cooldown_seconds": 140,
+        "cooldown_fixed": True,
+        "cooldown_from_skill_use": True,
         "cooldown_enabled": True,
         "ended_enabled": False,
         "cooldown_sound": "assets/audio/xiaoyi/self_buff_magic_circle_cooldown.wav",
@@ -289,9 +450,11 @@ SPECIAL_END_ONLY_DEFAULTS = {
         "use_dynamic_sbt_adjust": False,
     },
     THIRD_EYE_NAME: {
-        "cooldown_seconds": 180,
-        "cooldown_min": 0,
-        "cooldown_max": 600,
+        "cooldown_seconds": 300,
+        "cooldown_min": 240,
+        "cooldown_max": 300,
+        "cooldown_choices": (300, 240),
+        "cooldown_from_apply": True,
         "cooldown_enabled": True,
         "ended_enabled": True,
         "cooldown_sound": "assets/audio/xiaoyi/third_eye_cooldown.wav",
@@ -340,6 +503,11 @@ DEFAULT_RULES = {
     "法速水": {"remaining_enabled": True, "seconds": 60},
     "炼金水": {"remaining_enabled": True, "seconds": 60},
     "净化之浪": {"remaining_enabled": True, "seconds": 10},
+    HAMSTER_SUPERCHARGED_NAME: {
+        "enabled": True,
+        "remaining_enabled": True,
+        "seconds": HAMSTER_DEFAULT_WARNING_SECONDS,
+    },
     "活力之歌": {"remaining_enabled": True, "seconds": 30},
     "状态支援": {"remaining_enabled": True, "seconds": 30},
     "生命的温度": {"remaining_enabled": True, "seconds": 10},
@@ -433,20 +601,24 @@ class KeyEnemyDebuffRow:
     item: dict
     complete_enabled: BooleanVar
     expiry_enabled: BooleanVar
+    visual_hud_enabled: BooleanVar
+    visual_expiry_enabled: BooleanVar
     expiry_seconds: IntVar
-    physical_break_min: IntVar
-    magic_break_min: IntVar
-    damage_bonus_min: IntVar
-    rabbit_stacks_min: IntVar
+    physical_break_min: StringVar
+    magic_break_min: StringVar
+    damage_bonus_min: StringVar
+    rabbit_stacks_min: StringVar
     complete_sound: StringVar
     expiry_sound: StringVar
     complete_toggle: tk.Checkbutton
     expiry_toggle: tk.Checkbutton
+    visual_hud_toggle: tk.Checkbutton | None
+    visual_expiry_toggle: tk.Checkbutton | None
     expiry_seconds_widget: tk.Spinbox
-    physical_widget: tk.Spinbox
-    magic_widget: tk.Spinbox
-    damage_bonus_widget: tk.Spinbox
-    rabbit_stacks_widget: tk.Spinbox
+    physical_widget: tk.Entry
+    magic_widget: tk.Entry
+    damage_bonus_widget: tk.Entry
+    rabbit_stacks_widget: tk.Entry
     complete_sound_entry: tk.Entry
     expiry_sound_entry: tk.Entry
     complete_choose: tk.Button
@@ -504,7 +676,7 @@ class SpecialEndOnlyRow:
     cooldown_enabled: BooleanVar
     cooldown_seconds: IntVar
     cooldown_sound: StringVar
-    cooldown_widget: tk.Spinbox
+    cooldown_widget: tk.Widget
     ended_toggle: tk.Checkbutton
     ended_sound_entry: tk.Entry
     ended_choose: tk.Button
@@ -513,6 +685,58 @@ class SpecialEndOnlyRow:
     cooldown_sound_entry: tk.Entry
     cooldown_choose: tk.Button
     cooldown_test: tk.Button
+
+
+@dataclass
+class VisualHudRow:
+    item: dict
+    enabled: BooleanVar
+    tuan_silence_enabled: BooleanVar
+    condition_enabled: dict[int, BooleanVar]
+    condition_show_before_seconds: dict[int, DoubleVar]
+    condition_ring_sound_enabled: dict[int, BooleanVar]
+    condition_icons: dict[int, StringVar]
+    condition_toggles: dict[int, tk.Checkbutton]
+    show_before_widgets: dict[int, tk.Spinbox]
+    ring_toggles: dict[int, tk.Checkbutton]
+    icon_entries: dict[int, tk.Entry]
+    icon_choose_buttons: dict[int, tk.Button]
+    icon_reset_buttons: dict[int, tk.Button]
+
+
+@dataclass
+class OtherSkillHudRow:
+    item: dict
+    enabled: BooleanVar
+    condition_enabled: dict[str, BooleanVar]
+    condition_icons: dict[str, StringVar]
+    condition_toggles: dict[str, tk.Checkbutton]
+    icon_entries: dict[str, tk.Entry]
+    icon_choose_buttons: dict[str, tk.Button]
+    icon_reset_buttons: dict[str, tk.Button]
+
+
+@dataclass
+class ShortCooldownHudRow:
+    item: dict
+    condition_enabled: dict[str, BooleanVar]
+    cooldown_seconds: dict[str, StringVar]
+    condition_icons: dict[str, StringVar]
+    condition_toggles: dict[str, tk.Checkbutton]
+    cooldown_widgets: dict[str, tk.Spinbox]
+    icon_entries: dict[str, tk.Entry]
+    icon_choose_buttons: dict[str, tk.Button]
+    icon_reset_buttons: dict[str, tk.Button]
+
+
+@dataclass
+class AstrologyCardTrackerRow:
+    item: dict
+    enabled_skills: dict[int, BooleanVar]
+    counter_threshold: StringVar
+    deck: list[StringVar]
+    skill_suits: dict[int, StringVar]
+    base_cooldown_seconds: dict[int, StringVar]
 
 
 def load_config(path: Path) -> dict:
@@ -547,6 +771,257 @@ def clamp_float(value: object, minimum: float, maximum: float) -> float:
     except (TypeError, ValueError, tk.TclError):
         return minimum
     return max(minimum, min(maximum, number))
+
+
+def find_or_create_visual_hud(data: dict) -> dict:
+    item = data.get(VISUAL_HUD_CONFIG_KEY)
+    if not isinstance(item, dict):
+        item = {}
+        data[VISUAL_HUD_CONFIG_KEY] = item
+
+    had_legacy_show_before_seconds = "show_before_seconds" in item
+    try:
+        condition_controls_version = int(item.get("condition_controls_version", 0))
+    except (TypeError, ValueError):
+        condition_controls_version = 0
+    item.setdefault("enabled", True)
+    item.setdefault("show_before_seconds", VISUAL_HUD_DEFAULT_SHOW_BEFORE_SECONDS)
+    if "ring_sound_enabled" not in item:
+        item["ring_sound_enabled"] = (
+            not bool(item.get("muted")) if "muted" in item else False
+        )
+    legacy_show_before_seconds = clamp_float(
+        item.get("show_before_seconds", VISUAL_HUD_DEFAULT_SHOW_BEFORE_SECONDS),
+        VISUAL_HUD_MIN_SHOW_BEFORE_SECONDS,
+        VISUAL_HUD_MAX_SHOW_BEFORE_SECONDS,
+    )
+    legacy_ring_sound_enabled = bool(item["ring_sound_enabled"])
+    item.setdefault("entity_name", "自己")
+    item.setdefault("tuan_silence_enabled", False)
+    item.setdefault("arrival_sound", MUSIC_STRONG_REMINDER_PREFIX_SOUND)
+    item.setdefault("three_second_sound", MUSIC_STRONG_REMINDER_PREFIX_SOUND)
+
+    conditions = item.get("conditions")
+    if not isinstance(conditions, dict):
+        conditions = {}
+        item["conditions"] = conditions
+    conditions.pop(str(874), None)
+    try:
+        default_icons_version = int(item.get("default_icons_version", 0))
+    except (TypeError, ValueError):
+        default_icons_version = 0
+    adopt_new_default_icons = (
+        default_icons_version < VISUAL_HUD_DEFAULT_ICONS_VERSION
+    )
+    for ccid, defaults in VISUAL_HUD_CONDITION_DEFAULTS.items():
+        key = str(ccid)
+        condition = conditions.get(key)
+        if not isinstance(condition, dict):
+            condition = {}
+            conditions[key] = condition
+        condition.setdefault("enabled", defaults["enabled"])
+        condition.setdefault("name", defaults["name"])
+        condition.setdefault(
+            "show_before_seconds",
+            (
+                legacy_show_before_seconds
+                if condition_controls_version < 1
+                and had_legacy_show_before_seconds
+                else defaults["show_before_seconds"]
+            ),
+        )
+        condition.setdefault("ring_sound_enabled", legacy_ring_sound_enabled)
+        if adopt_new_default_icons and not str(condition.get("icon") or "").strip():
+            condition["icon"] = defaults["icon"]
+        else:
+            condition.setdefault("icon", defaults["icon"])
+    item["default_icons_version"] = VISUAL_HUD_DEFAULT_ICONS_VERSION
+    item["condition_controls_version"] = 1
+    item["ring_sound_enabled"] = False
+    item["muted"] = False
+    return item
+
+
+def find_or_create_bronntanas_hp_hud(data: dict) -> dict:
+    item = data.get(BRONNTANAS_HP_HUD_CONFIG_KEY)
+    if not isinstance(item, dict):
+        item = {}
+        data[BRONNTANAS_HP_HUD_CONFIG_KEY] = item
+    item.setdefault("enabled", True)
+    item["icon"] = str(
+        item.get("icon") or BRONNTANAS_HP_HUD_DEFAULT_ICON
+    ).strip() or BRONNTANAS_HP_HUD_DEFAULT_ICON
+    item["activation_percent"] = 52.0
+    item["warning_percent"] = 50.0
+    item["dismiss_after_seconds"] = 2.0
+    item["center_y_ratio"] = 0.89
+    return item
+
+
+def find_or_create_miracle_orb_hp_hud(data: dict) -> dict:
+    item = data.get(MIRACLE_ORB_HP_HUD_CONFIG_KEY)
+    if not isinstance(item, dict):
+        item = {}
+        data[MIRACLE_ORB_HP_HUD_CONFIG_KEY] = item
+    item.setdefault("enabled", True)
+    item["left_x_ratio"] = 0.108
+    item["top_y_ratio"] = 0.125
+    item["focus_center_y_ratio"] = 0.855
+    return item
+
+
+def find_or_create_rotating_laser_countdown_hud(data: dict) -> dict:
+    item = data.get(ROTATING_LASER_COUNTDOWN_HUD_CONFIG_KEY)
+    if not isinstance(item, dict):
+        item = {}
+        data[ROTATING_LASER_COUNTDOWN_HUD_CONFIG_KEY] = item
+    item.setdefault("enabled", True)
+    item["center_y_ratio"] = 0.89
+    return item
+
+
+def visual_hud_icon(item: dict, ccid: int) -> str:
+    conditions = item.get("conditions")
+    if not isinstance(conditions, dict):
+        return ""
+    condition = conditions.get(str(ccid))
+    if not isinstance(condition, dict):
+        return ""
+    return str(condition.get("icon") or "").strip()
+
+
+def find_or_create_other_skill_hud(data: dict) -> dict:
+    item = data.get(OTHER_SKILL_HUD_CONFIG_KEY)
+    if not isinstance(item, dict):
+        item = {}
+        data[OTHER_SKILL_HUD_CONFIG_KEY] = item
+    item.setdefault("enabled", False)
+    item.setdefault("left_offset_px", 8)
+    item.setdefault("center_y_ratio", 0.28)
+    item.setdefault("gap_px", 6)
+    conditions = item.get("conditions")
+    if not isinstance(conditions, dict):
+        conditions = {}
+        item["conditions"] = conditions
+    conditions.pop("hamster_adrenaline", None)
+    try:
+        icon_version = int(item.get("default_icons_version", 0))
+    except (TypeError, ValueError):
+        icon_version = 0
+    adopt_default_icons = icon_version < OTHER_SKILL_HUD_DEFAULT_ICONS_VERSION
+    for key, defaults in OTHER_SKILL_HUD_CONDITION_DEFAULTS.items():
+        condition = conditions.get(key)
+        if not isinstance(condition, dict):
+            condition = {}
+            conditions[key] = condition
+        condition.setdefault("enabled", defaults["enabled"])
+        condition.setdefault("name", defaults["name"])
+        if adopt_default_icons and not str(condition.get("icon") or "").strip():
+            condition["icon"] = defaults["icon"]
+        else:
+            condition.setdefault("icon", defaults["icon"])
+    item["default_icons_version"] = OTHER_SKILL_HUD_DEFAULT_ICONS_VERSION
+    return item
+
+
+def other_skill_hud_icon(item: dict, key: str) -> str:
+    conditions = item.get("conditions")
+    if not isinstance(conditions, dict):
+        return ""
+    condition = conditions.get(str(key))
+    if not isinstance(condition, dict):
+        return ""
+    return str(condition.get("icon") or "").strip()
+
+
+def find_or_create_short_cooldown_hud(data: dict) -> dict:
+    item = data.get(SHORT_COOLDOWN_HUD_CONFIG_KEY)
+    if not isinstance(item, dict):
+        item = {}
+        data[SHORT_COOLDOWN_HUD_CONFIG_KEY] = item
+    item.setdefault("enabled", True)
+    item.setdefault("center_y_ratio", 0.715)
+    item.setdefault("gap_px", 6)
+    conditions = item.get("conditions")
+    if not isinstance(conditions, dict):
+        conditions = {}
+        item["conditions"] = conditions
+    try:
+        icon_version = int(item.get("default_icons_version", 0))
+    except (TypeError, ValueError):
+        icon_version = 0
+    adopt_default_icons = icon_version < SHORT_COOLDOWN_HUD_DEFAULT_ICONS_VERSION
+    for key, defaults in SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS.items():
+        condition = conditions.get(key)
+        if not isinstance(condition, dict):
+            condition = {}
+            conditions[key] = condition
+        condition.setdefault("enabled", defaults["enabled"])
+        condition.setdefault("name", defaults["name"])
+        if adopt_default_icons and not str(condition.get("icon") or "").strip():
+            condition["icon"] = defaults["icon"]
+        else:
+            condition.setdefault("icon", defaults["icon"])
+    item["default_icons_version"] = SHORT_COOLDOWN_HUD_DEFAULT_ICONS_VERSION
+    return item
+
+
+def short_cooldown_hud_icon(item: dict, key: str) -> str:
+    conditions = item.get("conditions")
+    if not isinstance(conditions, dict):
+        return ""
+    condition = conditions.get(str(key))
+    if not isinstance(condition, dict):
+        return ""
+    return str(condition.get("icon") or "").strip()
+
+
+def find_or_create_short_cooldown_tracker(data: dict, key: str) -> dict:
+    defaults = SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS[key]
+    buffs = data.setdefault("buffs", [])
+    tracker_ccid = int(defaults["tracker_ccid"])
+    tracker = next(
+        (
+            item
+            for item in buffs
+            if isinstance(item, dict)
+            and (
+                str(item.get("ccid")) == str(tracker_ccid)
+                or item.get("name") == defaults["name"]
+            )
+        ),
+        None,
+    )
+    if tracker is None:
+        tracker = {}
+        buffs.append(tracker)
+    required = {
+        "name": defaults["name"],
+        "ccid": tracker_ccid,
+        "enabled": True,
+        "skill_id": int(defaults["skill_id"]),
+        "self_filter": True,
+        "warn_seconds": 0,
+        "critical_seconds": 0,
+        "alerts": [],
+        "ended_alert": False,
+        "cooldown_alert": False,
+        "cooldown_from_skill_use": True,
+        "audio_volume": 100,
+    }
+    tracker.update(required)
+    try:
+        cooldown_seconds = float(tracker.get("cooldown_delay_seconds"))
+    except (TypeError, ValueError):
+        cooldown_seconds = 0.0
+    if cooldown_seconds <= 0:
+        tracker["cooldown_delay_seconds"] = defaults["cooldown_seconds"]
+    return tracker
+
+
+def short_cooldown_hud_cooldown_seconds(data: dict, key: str) -> float:
+    tracker = find_or_create_short_cooldown_tracker(data, key)
+    return float(tracker["cooldown_delay_seconds"])
 
 
 def relpath(path: Path, base: Path) -> str:
@@ -952,14 +1427,13 @@ def boss_laser_alert_defaults() -> dict:
         },
         "message": BOSS_LASER_ALERT_MESSAGE,
         "audio_volume": 100,
-        "note": BOSS_LASER_ALERT_NOTICE,
     }
 
 
 def find_or_create_boss_laser_alert(data: dict) -> dict:
     items = data.setdefault("boss_laser_alerts", [])
     for item in items:
-        if item.get("name") == BOSS_LASER_ALERT_NAME:
+        if item.get("name") in BOSS_LASER_ALERT_LEGACY_NAMES:
             break
     else:
         item = boss_laser_alert_defaults()
@@ -982,7 +1456,7 @@ def find_or_create_boss_laser_alert(data: dict) -> dict:
     item.setdefault("countdown_sounds", defaults["countdown_sounds"])
     item["message"] = defaults["message"]
     item.setdefault("audio_volume", 100)
-    item["note"] = defaults["note"]
+    item.pop("note", None)
     return item
 
 
@@ -1068,21 +1542,70 @@ def key_enemy_debuff_defaults() -> dict:
         "name": KEY_ENEMY_DEBUFF_SECTION_NAME,
         "complete_enabled": False,
         "expiry_enabled": True,
+        "visual_hud_enabled": False,
+        "visual_expiry_enabled": True,
         "expiry_seconds": KEY_ENEMY_DEBUFF_DEFAULT_EXPIRY_SECONDS,
         "complete_sound": KEY_ENEMY_DEBUFF_COMPLETE_SOUND,
         "complete_message": KEY_ENEMY_DEBUFF_COMPLETE_MESSAGE,
         "expiry_sound": KEY_ENEMY_DEBUFF_EXPIRY_SOUND,
         "expiry_message": KEY_ENEMY_DEBUFF_EXPIRY_MESSAGE,
-        "physical_break_min": KEY_ENEMY_DEBUFF_PHYSICAL_BREAK_MIN,
-        "magic_break_min": KEY_ENEMY_DEBUFF_MAGIC_BREAK_MIN,
-        "damage_bonus_min": KEY_ENEMY_DEBUFF_DAMAGE_BONUS_MIN,
-        "rabbit_stacks_min": KEY_ENEMY_DEBUFF_RABBIT_STACKS_MIN,
+        "physical_break_min": None,
+        "magic_break_min": None,
+        "damage_bonus_min": None,
+        "rabbit_stacks_min": None,
         "max_hp_values": list(KEY_ENEMY_DEBUFF_BOSS_MAX_HP_VALUES),
         "current_hp_stat_id": BOSS_HP_CURRENT_STAT_ID,
         "max_hp_stat_id": BOSS_HP_MAX_STAT_ID,
         "audio_volume": 100,
         "watched_debuffs": [key_enemy_gunner_eye_defaults()],
     }
+
+
+KEY_ENEMY_DEBUFF_THRESHOLD_FIELDS = (
+    ("physical_break_min", "物理破坏", 0, 999),
+    ("magic_break_min", "魔法破坏", 0, 999),
+    ("damage_bonus_min", "死亡锁定增伤", 0, 999),
+    ("rabbit_stacks_min", "兔子层数", 1, 10),
+)
+
+
+def key_enemy_debuff_threshold_text(value: object) -> str:
+    if value is None or not str(value).strip():
+        return ""
+    try:
+        number = int(float(value))
+    except (TypeError, ValueError):
+        return str(value).strip()
+    return str(number)
+
+
+def parse_key_enemy_debuff_threshold_values(
+    values: dict[str, object],
+    *,
+    require_complete: bool,
+) -> dict[str, int | None]:
+    parsed: dict[str, int | None] = {}
+    missing: list[str] = []
+    for key, label, minimum, maximum in KEY_ENEMY_DEBUFF_THRESHOLD_FIELDS:
+        raw = str(values.get(key, "") or "").strip()
+        if not raw:
+            parsed[key] = None
+            missing.append(label)
+            continue
+        try:
+            number = int(raw)
+        except ValueError as exc:
+            raise ValueError(f"“{label}”必须填写整数。") from exc
+        if not minimum <= number <= maximum:
+            raise ValueError(f"“{label}”必须填写 {minimum}–{maximum} 之间的整数。")
+        parsed[key] = number
+    if require_complete and missing:
+        raise ValueError(
+            "启用破防上齐提醒前，必须完整填写四项预期破防数值："
+            + "、".join(label for _key, label, _min, _max in KEY_ENEMY_DEBUFF_THRESHOLD_FIELDS)
+            + "。"
+        )
+    return parsed
 
 
 def key_enemy_gunner_eye_defaults() -> dict:
@@ -1276,6 +1799,10 @@ def special_defaults(name: str) -> dict:
         "cooldown_message": rules["cooldown_message"],
         "audio_volume": 100,
     }
+    if rules.get("cooldown_from_apply"):
+        item["cooldown_from_apply"] = True
+    if rules.get("cooldown_from_skill_use"):
+        item["cooldown_from_skill_use"] = True
     if rules.get("ended_on_remove_only"):
         item["ended_on_remove_only"] = True
     if "ended_grace_seconds" in rules:
@@ -1307,6 +1834,19 @@ def find_or_create_special_end_only(data: dict, name: str) -> dict:
         item.setdefault("ended_message", rules["ended_message"])
         item.setdefault("cooldown_alert", rules["cooldown_enabled"])
         item.setdefault("cooldown_delay_seconds", rules["cooldown_seconds"])
+        if rules.get("cooldown_from_apply"):
+            item["cooldown_from_apply"] = True
+            try:
+                cooldown_seconds = int(float(item.get("cooldown_delay_seconds")))
+            except (TypeError, ValueError):
+                cooldown_seconds = None
+            if cooldown_seconds not in rules["cooldown_choices"]:
+                item["cooldown_delay_seconds"] = rules["cooldown_seconds"]
+        if rules.get("cooldown_from_skill_use"):
+            item["cooldown_from_skill_use"] = True
+            item.pop("cooldown_from_apply", None)
+        if rules.get("cooldown_fixed"):
+            item["cooldown_delay_seconds"] = rules["cooldown_seconds"]
         item.setdefault("cooldown_sound", rules["cooldown_sound"])
         item.setdefault("cooldown_message", rules["cooldown_message"])
         if rules.get("ended_on_remove_only"):
@@ -1513,22 +2053,36 @@ class SettingsApp:
         self.food_timer: FoodTimerRow | None = None
         self.safehouse: SafeHouseRow | None = None
         self.boss_hp_rows: list[BossHpAlertRow] = []
+        self.bronntanas_hp_hud_enabled: BooleanVar | None = None
+        self.miracle_orb_hp_hud_enabled: BooleanVar | None = None
+        self.rotating_laser_countdown_hud_enabled: BooleanVar | None = None
         self.key_enemy_debuff: KeyEnemyDebuffRow | None = None
         self.gunner_eye_row: BuffRow | None = None
         self.music_strong_enabled: BooleanVar | None = None
+        self.music_tuan_silence_enabled: BooleanVar | None = None
+        self.visual_hud: VisualHudRow | None = None
+        self.other_skill_hud: OtherSkillHudRow | None = None
+        self.short_cooldown_hud: ShortCooldownHudRow | None = None
+        self.astrology_card_tracker: AstrologyCardTrackerRow | None = None
         self.boss_red_orb: BossRedOrbRow | None = None
         self.boss_laser: BossLaserAlertRow | None = None
         self.magic_shield_delay: MagicShieldDelayRow | None = None
         self.azure_wound: AzureWoundRow | None = None
         self.special_end_only_rows: list[SpecialEndOnlyRow] = []
+        self.notebook: ttk.Notebook | None = None
+        self.tab_frames: dict[str, tk.Frame] = {}
+        self.tab_scroll_canvases: dict[str, tk.Canvas] = {}
+        self.tab_scroll_contents: dict[str, tk.Frame] = {}
+        self.tab_scroll_windows: dict[str, int] = {}
         self.scroll_canvas: tk.Canvas | None = None
         self.scroll_content: tk.Frame | None = None
         self.scroll_window: int | None = None
+        self.volume_row: tk.Frame | None = None
         self.volume = IntVar(value=normalize_volume(self.data.get("audio_volume", 100)))
 
         root.title(f"{package_title()} 设置")
         root.minsize(900, 520)
-        root.configure(bg="#d8d0c2")
+        root.configure(bg=ROOT_BACKGROUND)
         self._set_default_geometry()
         self._set_window_icon()
         try:
@@ -1566,36 +2120,122 @@ class SettingsApp:
             anchor="w",
         ).pack(side="left", padx=18)
 
-        scroll_host = tk.Frame(outer, bg=colors["content"], bd=1, relief="solid")
-        scroll_host.grid(row=1, column=0, sticky="nsew", padx=18, pady=(14, 10))
-        scroll_host.columnconfigure(0, weight=1)
-        scroll_host.rowconfigure(0, weight=1)
-
-        canvas = tk.Canvas(
-            scroll_host,
-            bg=colors["content"],
-            highlightthickness=0,
-            bd=0,
+        self._configure_notebook_style()
+        notebook = ttk.Notebook(outer, style="Settings.TNotebook")
+        notebook.grid(row=1, column=0, sticky="nsew", padx=18, pady=(14, 10))
+        self.notebook = notebook
+        general_main = self._create_scrollable_tab(notebook, SETTINGS_TAB_GENERAL)
+        dungeon_main = self._create_scrollable_tab(notebook, SETTINGS_TAB_DUNGEON)
+        self.visual_hud_available = (
+            SETTINGS_TAB_VISUAL_HUD in settings_tab_titles(self.data)
         )
-        vbar = tk.Scrollbar(scroll_host, orient="vertical", command=canvas.yview)
-        hbar = tk.Scrollbar(scroll_host, orient="horizontal", command=canvas.xview)
-        canvas.configure(yscrollcommand=vbar.set, xscrollcommand=hbar.set)
-        canvas.grid(row=0, column=0, sticky="nsew")
-        vbar.grid(row=0, column=1, sticky="ns")
-        hbar.grid(row=1, column=0, sticky="ew")
+        visual_main = (
+            self._create_scrollable_tab(notebook, SETTINGS_TAB_VISUAL_HUD)
+            if self.visual_hud_available
+            else None
+        )
+        short_cooldown_main = (
+            self._create_scrollable_tab(notebook, SETTINGS_TAB_SHORT_COOLDOWN)
+            if SETTINGS_TAB_SHORT_COOLDOWN in settings_tab_titles(self.data)
+            else None
+        )
+        astrology_main = (
+            self._create_scrollable_tab(notebook, SETTINGS_TAB_ASTROLOGY)
+            if SETTINGS_TAB_ASTROLOGY in settings_tab_titles(self.data)
+            else None
+        )
+        notebook.bind("<<NotebookTabChanged>>", self._on_notebook_tab_changed)
+        self.root.bind_all("<MouseWheel>", self._on_mousewheel)
 
-        main = tk.Frame(canvas, bg=colors["content"], bd=0)
-        self.scroll_canvas = canvas
-        self.scroll_content = main
-        self.scroll_window = canvas.create_window((0, 0), window=main, anchor="nw")
-        main.bind("<Configure>", self._on_scroll_content_configure)
-        canvas.bind("<Configure>", self._on_scroll_canvas_configure)
-        canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-        main.columnconfigure(0, weight=1)
-        main.rowconfigure(1, weight=1)
+        ensure_hamster_buff_items(self.data)
+        find_or_create_astrology_buffs(self.data)
+        key_enemy_item = find_or_create_key_enemy_debuff_alert(self.data)
+        gunner_eye_item = find_or_create_key_enemy_gunner_eye(key_enemy_item)
+        gunner_eye_item["_key_enemy_watched_debuff"] = True
+        items_by_name = {
+            item.get("name"): item
+            for item in self.data.get("buffs", [])
+            if item.get("name") in BUFF_ORDER
+            or item.get("name") == HAMSTER_SUPERCHARGED_NAME
+        }
+        hamster_item = items_by_name.get(HAMSTER_SUPERCHARGED_NAME)
+        if hamster_item is not None:
+            items_by_name[HAMSTER_SETTINGS_NAME] = hamster_item
+        items_by_name[KEY_ENEMY_GUNNER_EYE_NAME] = gunner_eye_item
+        progress_by_name = {
+            item.get("name"): item
+            for item in self.data.get("progresses", [])
+            if item.get("name") in PROGRESS_ORDER
+        }
 
-        volume_row = self._row_frame(main)
-        volume_row.grid(row=0, column=0, sticky="ew", padx=10, pady=(10, 5))
+        content_row = 0
+        for group_name, names in BUFF_GROUPS:
+            self._build_buff_group(
+                general_main,
+                content_row,
+                group_name,
+                names,
+                items_by_name,
+                seconds_header="秒",
+            )
+            content_row += 1
+
+        self._build_buff_group(
+            general_main,
+            content_row,
+            "托亚灵震爆",
+            PROGRESS_ORDER,
+            progress_by_name,
+            seconds_header="进度%",
+            progress_mode=True,
+        )
+        content_row += 1
+
+        self._build_magic_shield_delay(general_main, content_row)
+        content_row += 1
+        self._build_key_enemy_debuff_alert(general_main, content_row)
+        content_row += 1
+        self._build_special_end_only(general_main, content_row)
+        content_row += 1
+        self._build_food_timer(general_main, content_row)
+
+        dungeon_row = 0
+        self._build_azure_wound(dungeon_main, dungeon_row)
+        dungeon_row += 1
+        self._build_safehouse(dungeon_main, dungeon_row)
+        dungeon_row += 1
+        self._build_boss_hp_alerts(dungeon_main, dungeon_row)
+        dungeon_row += 1
+        if BRONNTANAS_HP_HUD_CONFIG_KEY in self.data:
+            self._build_bronntanas_hp_hud(dungeon_main, dungeon_row)
+            dungeon_row += 1
+        if MIRACLE_ORB_HP_HUD_CONFIG_KEY in self.data:
+            self._build_miracle_orb_hp_hud(dungeon_main, dungeon_row)
+            dungeon_row += 1
+        if ROTATING_LASER_COUNTDOWN_HUD_CONFIG_KEY in self.data:
+            self._build_rotating_laser_countdown_hud(dungeon_main, dungeon_row)
+            dungeon_row += 1
+        self._build_boss_red_orb(dungeon_main, dungeon_row)
+        dungeon_row += 1
+        self._build_boss_laser(dungeon_main, dungeon_row)
+
+        if visual_main is not None:
+            visual_row = 0
+            self._build_visual_hud(visual_main, visual_row)
+            visual_row += 1
+            self._build_other_skill_hud(visual_main, visual_row)
+            visual_row += 1
+            self._build_visual_debuff_expiry(visual_main, visual_row)
+
+        if short_cooldown_main is not None:
+            self._build_short_cooldown_hud(short_cooldown_main, 0)
+
+        if astrology_main is not None:
+            self._build_astrology_card_tracker(astrology_main, 0)
+
+        volume_row = self._row_frame(outer)
+        self.volume_row = volume_row
+        volume_row.grid(row=2, column=0, sticky="ew", padx=18, pady=(2, 14))
         volume_row.columnconfigure(1, weight=1)
         tk.Label(
             volume_row,
@@ -1603,9 +2243,9 @@ class SettingsApp:
             bg=colors["row"],
             fg=colors["text"],
             font=("Microsoft YaHei UI", 10, "bold"),
-            width=16,
+            width=12,
             anchor="w",
-        ).grid(row=0, column=0, sticky="w", padx=12, pady=8)
+        ).grid(row=0, column=0, sticky="w", padx=(12, 4), pady=8)
         tk.Scale(
             volume_row,
             from_=0,
@@ -1626,92 +2266,877 @@ class SettingsApp:
             fg=colors["text"],
             font=("Microsoft YaHei UI", 10, "bold"),
         )
-        self.volume_label.grid(row=0, column=2, sticky="e", padx=12)
+        self.volume_label.grid(row=0, column=2, sticky="e", padx=(4, 12))
+        self._button(volume_row, "恢复默认规则", self.restore_defaults).grid(
+            row=0, column=3, padx=(6, 0), pady=7
+        )
+        self._button(volume_row, "保存并关闭", self.save_and_close).grid(
+            row=0, column=4, padx=(8, 0), pady=7
+        )
+        self._button(volume_row, "保存", self.save, primary=True).grid(
+            row=0, column=5, padx=(8, 12), pady=7
+        )
         self.volume.trace_add("write", lambda *_: self._sync_volume_label())
         self._sync_volume_label()
 
-        find_or_create_astrology_buffs(self.data)
-        key_enemy_item = find_or_create_key_enemy_debuff_alert(self.data)
-        gunner_eye_item = find_or_create_key_enemy_gunner_eye(key_enemy_item)
-        gunner_eye_item["_key_enemy_watched_debuff"] = True
-        items_by_name = {
-            item.get("name"): item
-            for item in self.data.get("buffs", [])
-            if item.get("name") in BUFF_ORDER
-        }
-        items_by_name[KEY_ENEMY_GUNNER_EYE_NAME] = gunner_eye_item
-        progress_by_name = {
-            item.get("name"): item
-            for item in self.data.get("progresses", [])
-            if item.get("name") in PROGRESS_ORDER
-        }
-
-        content_row = 1
-        for group_name, names in BUFF_GROUPS:
-            self._build_buff_group(
-                main,
-                content_row,
-                group_name,
-                names,
-                items_by_name,
-                seconds_header="秒",
-            )
-            content_row += 1
-
-        self._build_buff_group(
-            main,
-            content_row,
-            "托亚灵震爆",
-            PROGRESS_ORDER,
-            progress_by_name,
-            seconds_header="进度%",
-            progress_mode=True,
+    def _configure_notebook_style(self) -> None:
+        colors = self._colors()
+        style = ttk.Style(self.root)
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+        style.configure(
+            "Settings.TNotebook",
+            background=colors["content"],
+            borderwidth=0,
+            tabmargins=(0, 0, 0, 0),
         )
-        content_row += 1
+        style.configure(
+            "Settings.TNotebook.Tab",
+            background=colors["button"],
+            foreground=colors["text"],
+            padding=(15, 6),
+            font=("Microsoft YaHei UI", 9, "bold"),
+        )
+        style.map(
+            "Settings.TNotebook.Tab",
+            background=[
+                ("selected", colors["title"]),
+                ("active", colors["accent"]),
+            ],
+            foreground=[("selected", colors["accent_dark"])],
+            padding=[("selected", (22, 10))],
+            font=[("selected", ("Microsoft YaHei UI", 11, "bold"))],
+        )
 
-        self._build_magic_shield_delay(main, content_row)
-        content_row += 1
-        self._build_azure_wound(main, content_row)
-        content_row += 1
-        self._build_safehouse(main, content_row)
-        content_row += 1
-        self._build_boss_hp_alerts(main, content_row)
-        content_row += 1
-        self._build_key_enemy_debuff_alert(main, content_row)
-        content_row += 1
-        self._build_boss_red_orb(main, content_row)
-        content_row += 1
-        self._build_boss_laser(main, content_row)
-        content_row += 1
-        self._build_special_end_only(main, content_row)
-        content_row += 1
-        self._build_food_timer(main, content_row)
+    def _create_scrollable_tab(
+        self,
+        notebook: ttk.Notebook,
+        title: str,
+    ) -> tk.Frame:
+        colors = self._colors()
+        tab = tk.Frame(notebook, bg=colors["content"], bd=0)
+        tab.columnconfigure(0, weight=1)
+        tab.rowconfigure(0, weight=1)
+        notebook.add(tab, text=title)
 
-        buttons = tk.Frame(outer, bg=colors["panel"])
-        buttons.grid(row=2, column=0, sticky="ew", padx=18, pady=(4, 14))
-        self._button(buttons, "保存", self.save, primary=True).pack(side="right", padx=(8, 0))
-        self._button(buttons, "保存并关闭", self.save_and_close).pack(side="right", padx=(8, 0))
-        self._button(buttons, "恢复默认规则", self.restore_defaults).pack(side="left")
+        scroll_host = tk.Frame(tab, bg=colors["content"], bd=1, relief="solid")
+        scroll_host.grid(row=0, column=0, sticky="nsew")
+        scroll_host.columnconfigure(0, weight=1)
+        scroll_host.rowconfigure(0, weight=1)
+        canvas = tk.Canvas(
+            scroll_host,
+            bg=colors["content"],
+            highlightthickness=0,
+            bd=0,
+        )
+        vbar = tk.Scrollbar(scroll_host, orient="vertical", command=canvas.yview)
+        hbar = tk.Scrollbar(scroll_host, orient="horizontal", command=canvas.xview)
+        canvas.configure(yscrollcommand=vbar.set, xscrollcommand=hbar.set)
+        canvas.grid(row=0, column=0, sticky="nsew")
+        vbar.grid(row=0, column=1, sticky="ns")
+        hbar.grid(row=1, column=0, sticky="ew")
 
-    def _on_scroll_content_configure(self, _event: tk.Event) -> None:
-        self._sync_scroll_region()
+        content = tk.Frame(canvas, bg=colors["content"], bd=0)
+        content.columnconfigure(0, weight=1)
+        window_id = canvas.create_window((0, 0), window=content, anchor="nw")
+        tab_id = str(tab)
+        self.tab_frames[title] = tab
+        self.tab_scroll_canvases[tab_id] = canvas
+        self.tab_scroll_contents[tab_id] = content
+        self.tab_scroll_windows[tab_id] = window_id
+        content.bind(
+            "<Configure>",
+            lambda _event, c=canvas, w=content, i=window_id: self._sync_scroll_region_for(
+                c, w, i
+            ),
+        )
+        canvas.bind(
+            "<Configure>",
+            lambda _event, c=canvas, w=content, i=window_id: self._sync_scroll_region_for(
+                c, w, i
+            ),
+        )
+        if self.scroll_canvas is None:
+            self.scroll_canvas = canvas
+            self.scroll_content = content
+            self.scroll_window = window_id
+        return content
 
-    def _on_scroll_canvas_configure(self, _event: tk.Event) -> None:
-        self._sync_scroll_region()
+    # Settings copy rule: unless the user explicitly requests it, new sections
+    # contain only titles, controls, field labels, and units—no explanatory text.
+    def _build_visual_hud(self, parent: tk.Frame, row_index: int) -> None:
+        colors = self._colors()
+        item = find_or_create_visual_hud(self.data)
+        enabled = BooleanVar(value=bool(item.get("enabled", True)))
+        tuan_silence_enabled = BooleanVar(
+            value=bool(item.get("tuan_silence_enabled", False))
+        )
+        conditions = item["conditions"]
+        condition_enabled = {
+            ccid: BooleanVar(value=bool(conditions[str(ccid)].get("enabled", True)))
+            for ccid in VISUAL_HUD_CONDITION_DEFAULTS
+        }
+        condition_show_before_seconds = {
+            ccid: DoubleVar(
+                value=clamp_float(
+                    conditions[str(ccid)].get(
+                        "show_before_seconds",
+                        VISUAL_HUD_DEFAULT_SHOW_BEFORE_SECONDS,
+                    ),
+                    VISUAL_HUD_MIN_SHOW_BEFORE_SECONDS,
+                    VISUAL_HUD_MAX_SHOW_BEFORE_SECONDS,
+                )
+            )
+            for ccid in VISUAL_HUD_CONDITION_DEFAULTS
+        }
+        condition_ring_sound_enabled = {
+            ccid: BooleanVar(
+                value=bool(
+                    conditions[str(ccid)].get("ring_sound_enabled", False)
+                )
+            )
+            for ccid in VISUAL_HUD_CONDITION_DEFAULTS
+        }
+        condition_icons = {
+            ccid: StringVar(value=visual_hud_icon(item, ccid))
+            for ccid in VISUAL_HUD_CONDITION_DEFAULTS
+        }
 
-    def _sync_scroll_region(self) -> None:
-        if (
-            self.scroll_canvas is None
-            or self.scroll_content is None
-            or self.scroll_window is None
+        section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
+        section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 4))
+        for col, weight in [
+            (0, 0),
+            (1, 0),
+            (2, 0),
+            (3, 0),
+            (4, 1),
+            (5, 1),
+            (6, 0),
+            (7, 0),
+        ]:
+            section.columnconfigure(col, weight=weight)
+
+        tk.Label(
+            section,
+            text="音乐技能HUD提醒",
+            bg=colors["row"],
+            fg=colors["text"],
+            font=("Microsoft YaHei UI", 10, "bold"),
+            anchor="w",
+        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(9, 2), columnspan=6)
+        master_toggle = tk.Checkbutton(
+            section,
+            variable=enabled,
+            text="启用音乐技能HUD提醒",
+            bg=colors["row"],
+            fg=colors["text"],
+            selectcolor=colors["accent"],
+            activebackground=colors["row"],
+            bd=0,
+            highlightthickness=0,
+            font=("Microsoft YaHei UI", 9, "bold"),
+        )
+        master_toggle.grid(
+            row=0, column=6, columnspan=2, sticky="e", padx=12, pady=(9, 2)
+        )
+        tk.Checkbutton(
+            section,
+            variable=tuan_silence_enabled,
+            text=VISUAL_HUD_TUAN_SILENCE_LABEL,
+            bg=colors["row_alt"],
+            fg=colors["text"],
+            selectcolor=colors["accent"],
+            activebackground=colors["row_alt"],
+            bd=0,
+            highlightthickness=0,
+            font=("Microsoft YaHei UI", 9, "bold"),
+        ).grid(
+            row=1,
+            column=0,
+            columnspan=8,
+            sticky="w",
+            padx=12,
+            pady=(5, 4),
+        )
+        headers = ("项目", "HUD", "提前提醒（秒）", "铃声", "图标", "", "", "")
+        for column, text in enumerate(headers):
+            tk.Label(
+                section,
+                text=text,
+                bg=colors["row_alt"],
+                fg=colors["muted"],
+                font=("Microsoft YaHei UI", 9, "bold"),
+                anchor="w",
+            ).grid(row=2, column=column, sticky="ew", padx=5, pady=(6, 4))
+
+        condition_toggles: dict[int, tk.Checkbutton] = {}
+        show_before_widgets: dict[int, tk.Spinbox] = {}
+        ring_toggles: dict[int, tk.Checkbutton] = {}
+        icon_entries: dict[int, tk.Entry] = {}
+        icon_choose_buttons: dict[int, tk.Button] = {}
+        icon_reset_buttons: dict[int, tk.Button] = {}
+
+        def add_condition_row(local_row: int, label: str, ccid: int) -> None:
+            row_bg = colors["row"] if local_row % 2 else colors["row_alt"]
+            tk.Label(
+                section,
+                text=label,
+                bg=row_bg,
+                fg=colors["text"],
+                font=("Microsoft YaHei UI", 9, "bold"),
+                anchor="w",
+            ).grid(row=local_row, column=0, sticky="ew", padx=(12, 5), pady=5)
+            toggle = tk.Checkbutton(
+                section,
+                variable=condition_enabled[ccid],
+                text="ON",
+                bg=row_bg,
+                fg=colors["text"],
+                selectcolor=colors["accent"],
+                activebackground=row_bg,
+                bd=0,
+                highlightthickness=0,
+            )
+            toggle.grid(row=local_row, column=1, sticky="ew", padx=5, pady=5)
+            show_before = tk.Spinbox(
+                section,
+                from_=VISUAL_HUD_MIN_SHOW_BEFORE_SECONDS,
+                to=VISUAL_HUD_MAX_SHOW_BEFORE_SECONDS,
+                increment=0.5,
+                textvariable=condition_show_before_seconds[ccid],
+                width=8,
+                bg=colors["input"],
+                fg=colors["text"],
+                buttonbackground=colors["button"],
+                relief="solid",
+                bd=1,
+                justify="center",
+            )
+            show_before.grid(
+                row=local_row, column=2, sticky="ew", padx=5, pady=5, ipady=4
+            )
+            ring_toggle = tk.Checkbutton(
+                section,
+                variable=condition_ring_sound_enabled[ccid],
+                text="ON",
+                bg=row_bg,
+                fg=colors["text"],
+                selectcolor=colors["accent"],
+                activebackground=row_bg,
+                bd=0,
+                highlightthickness=0,
+            )
+            ring_toggle.grid(
+                row=local_row, column=3, sticky="ew", padx=5, pady=5
+            )
+            entry = tk.Entry(
+                section,
+                textvariable=condition_icons[ccid],
+                bg=colors["input"],
+                fg=colors["text"],
+                relief="solid",
+                bd=1,
+            )
+            entry.grid(
+                row=local_row,
+                column=4,
+                columnspan=2,
+                sticky="ew",
+                padx=5,
+                pady=5,
+                ipady=5,
+            )
+            choose = self._button(
+                section,
+                "选择图片",
+                lambda condition_ccid=ccid: self.choose_visual_hud_icon(
+                    condition_ccid
+                ),
+            )
+            choose.grid(row=local_row, column=6, padx=5, pady=5)
+            reset = self._button(
+                section,
+                "恢复默认图标",
+                lambda condition_ccid=ccid: self.reset_visual_hud_icon(
+                    condition_ccid
+                ),
+            )
+            reset.grid(row=local_row, column=7, padx=(5, 12), pady=5)
+            condition_toggles[ccid] = toggle
+            show_before_widgets[ccid] = show_before
+            ring_toggles[ccid] = ring_toggle
+            icon_entries[ccid] = entry
+            icon_choose_buttons[ccid] = choose
+            icon_reset_buttons[ccid] = reset
+
+        for local_row, ccid, label in (
+            (3, 192, "活跃曲图标"),
+            (4, 680, "战争序曲图标"),
+            (5, 193, "行进曲图标"),
         ):
+            add_condition_row(local_row, label.removesuffix("图标"), ccid)
+
+        self.visual_hud = VisualHudRow(
+            item=item,
+            enabled=enabled,
+            tuan_silence_enabled=tuan_silence_enabled,
+            condition_enabled=condition_enabled,
+            condition_show_before_seconds=condition_show_before_seconds,
+            condition_ring_sound_enabled=condition_ring_sound_enabled,
+            condition_icons=condition_icons,
+            condition_toggles=condition_toggles,
+            show_before_widgets=show_before_widgets,
+            ring_toggles=ring_toggles,
+            icon_entries=icon_entries,
+            icon_choose_buttons=icon_choose_buttons,
+            icon_reset_buttons=icon_reset_buttons,
+        )
+        enabled.trace_add("write", lambda *_args: self._sync_visual_hud_state())
+        for variable in condition_enabled.values():
+            variable.trace_add("write", lambda *_args: self._sync_visual_hud_state())
+        self._sync_visual_hud_state()
+
+    def _build_other_skill_hud(self, parent: tk.Frame, row_index: int) -> None:
+        colors = self._colors()
+        item = find_or_create_other_skill_hud(self.data)
+        enabled = BooleanVar(value=bool(item.get("enabled", False)))
+        conditions = item["conditions"]
+        condition_enabled = {
+            key: BooleanVar(value=bool(conditions[key].get("enabled", False)))
+            for key in OTHER_SKILL_HUD_CONDITION_DEFAULTS
+        }
+        condition_icons = {
+            key: StringVar(value=other_skill_hud_icon(item, key))
+            for key in OTHER_SKILL_HUD_CONDITION_DEFAULTS
+        }
+
+        section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
+        section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 4))
+        section.columnconfigure(0, weight=0)
+        section.columnconfigure(1, weight=0)
+        section.columnconfigure(2, weight=1)
+        section.columnconfigure(3, weight=0)
+        section.columnconfigure(4, weight=0)
+
+        tk.Label(
+            section,
+            text="其他技能HUD提醒",
+            bg=colors["row"],
+            fg=colors["text"],
+            font=("Microsoft YaHei UI", 10, "bold"),
+            anchor="w",
+        ).grid(row=0, column=0, columnspan=3, sticky="ew", padx=12, pady=(9, 2))
+        master_toggle = tk.Checkbutton(
+            section,
+            variable=enabled,
+            text="启用其他技能HUD提醒",
+            bg=colors["row"],
+            fg=colors["text"],
+            selectcolor=colors["accent"],
+            activebackground=colors["row"],
+            bd=0,
+            highlightthickness=0,
+            font=("Microsoft YaHei UI", 9, "bold"),
+        )
+        master_toggle.grid(
+            row=0, column=3, columnspan=2, sticky="e", padx=12, pady=(9, 2)
+        )
+        for column, text in enumerate(("项目", "HUD", "图标", "", "")):
+            tk.Label(
+                section,
+                text=text,
+                bg=colors["row_alt"],
+                fg=colors["muted"],
+                font=("Microsoft YaHei UI", 9, "bold"),
+                anchor="w",
+            ).grid(row=1, column=column, sticky="ew", padx=5, pady=(6, 4))
+
+        condition_toggles: dict[str, tk.Checkbutton] = {}
+        icon_entries: dict[str, tk.Entry] = {}
+        icon_choose_buttons: dict[str, tk.Button] = {}
+        icon_reset_buttons: dict[str, tk.Button] = {}
+        for index, (key, defaults) in enumerate(
+            OTHER_SKILL_HUD_CONDITION_DEFAULTS.items(), start=2
+        ):
+            row_bg = colors["row"] if index % 2 else colors["row_alt"]
+            tk.Label(
+                section,
+                text=defaults["name"],
+                bg=row_bg,
+                fg=colors["text"],
+                font=("Microsoft YaHei UI", 9, "bold"),
+                anchor="w",
+            ).grid(row=index, column=0, sticky="ew", padx=(12, 5), pady=5)
+            toggle = tk.Checkbutton(
+                section,
+                variable=condition_enabled[key],
+                text="ON",
+                bg=row_bg,
+                fg=colors["text"],
+                selectcolor=colors["accent"],
+                activebackground=row_bg,
+                bd=0,
+                highlightthickness=0,
+            )
+            toggle.grid(row=index, column=1, sticky="ew", padx=5, pady=5)
+            entry = tk.Entry(
+                section,
+                textvariable=condition_icons[key],
+                bg=colors["input"],
+                fg=colors["text"],
+                relief="solid",
+                bd=1,
+            )
+            entry.grid(row=index, column=2, sticky="ew", padx=5, pady=5, ipady=5)
+            choose = self._button(
+                section,
+                "选择图片",
+                lambda condition_key=key: self.choose_other_skill_hud_icon(
+                    condition_key
+                ),
+            )
+            choose.grid(row=index, column=3, padx=5, pady=5)
+            reset = self._button(
+                section,
+                "恢复默认图标",
+                lambda condition_key=key: self.reset_other_skill_hud_icon(
+                    condition_key
+                ),
+            )
+            reset.grid(row=index, column=4, padx=(5, 12), pady=5)
+            condition_toggles[key] = toggle
+            icon_entries[key] = entry
+            icon_choose_buttons[key] = choose
+            icon_reset_buttons[key] = reset
+
+        self.other_skill_hud = OtherSkillHudRow(
+            item=item,
+            enabled=enabled,
+            condition_enabled=condition_enabled,
+            condition_icons=condition_icons,
+            condition_toggles=condition_toggles,
+            icon_entries=icon_entries,
+            icon_choose_buttons=icon_choose_buttons,
+            icon_reset_buttons=icon_reset_buttons,
+        )
+        enabled.trace_add("write", lambda *_args: self._sync_other_skill_hud_state())
+        for variable in condition_enabled.values():
+            variable.trace_add(
+                "write", lambda *_args: self._sync_other_skill_hud_state()
+            )
+        self._sync_other_skill_hud_state()
+
+    def _build_short_cooldown_hud(
+        self, parent: tk.Frame, row_index: int
+    ) -> None:
+        colors = self._colors()
+        item = find_or_create_short_cooldown_hud(self.data)
+        conditions = item["conditions"]
+        master_enabled = bool(item.get("enabled", True))
+        condition_enabled = {
+            key: BooleanVar(
+                value=master_enabled and bool(conditions[key].get("enabled", True))
+            )
+            for key in SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS
+        }
+        cooldown_seconds = {
+            key: StringVar(
+                value=f"{short_cooldown_hud_cooldown_seconds(self.data, key):g}"
+            )
+            for key in SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS
+        }
+        condition_icons = {
+            key: StringVar(value=short_cooldown_hud_icon(item, key))
+            for key in SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS
+        }
+
+        section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
+        section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 10))
+        section.columnconfigure(0, weight=0)
+        section.columnconfigure(1, weight=0)
+        section.columnconfigure(2, weight=0)
+        section.columnconfigure(3, weight=1)
+        section.columnconfigure(4, weight=0)
+        section.columnconfigure(5, weight=0)
+
+        tk.Label(
+            section,
+            text="短CD技能冷却提示",
+            bg=colors["row"],
+            fg=colors["text"],
+            font=("Microsoft YaHei UI", 10, "bold"),
+            anchor="w",
+        ).grid(row=0, column=0, columnspan=6, sticky="ew", padx=12, pady=(9, 2))
+        for column, text in enumerate(
+            ("项目", "HUD", "冷却时间（秒）", "图标", "", "")
+        ):
+            tk.Label(
+                section,
+                text=text,
+                bg=colors["row_alt"],
+                fg=colors["muted"],
+                font=("Microsoft YaHei UI", 9, "bold"),
+                anchor="w",
+            ).grid(row=1, column=column, sticky="ew", padx=5, pady=(6, 4))
+
+        condition_toggles: dict[str, tk.Checkbutton] = {}
+        cooldown_widgets: dict[str, tk.Spinbox] = {}
+        icon_entries: dict[str, tk.Entry] = {}
+        icon_choose_buttons: dict[str, tk.Button] = {}
+        icon_reset_buttons: dict[str, tk.Button] = {}
+        for row_offset, (key, defaults) in enumerate(
+            SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS.items(), start=2
+        ):
+            tk.Label(
+                section,
+                text=defaults["name"],
+                bg=colors["row"],
+                fg=colors["text"],
+                font=("Microsoft YaHei UI", 9, "bold"),
+                anchor="w",
+            ).grid(
+                row=row_offset,
+                column=0,
+                sticky="ew",
+                padx=(12, 5),
+                pady=5,
+            )
+            toggle = tk.Checkbutton(
+                section,
+                variable=condition_enabled[key],
+                text="ON",
+                bg=colors["row"],
+                fg=colors["text"],
+                selectcolor=colors["accent"],
+                activebackground=colors["row"],
+                bd=0,
+                highlightthickness=0,
+            )
+            toggle.grid(row=row_offset, column=1, sticky="ew", padx=5, pady=5)
+            cooldown_widget = tk.Spinbox(
+                section,
+                from_=0.1,
+                to=9999,
+                increment=1,
+                textvariable=cooldown_seconds[key],
+                width=10,
+                bg=colors["input"],
+                fg=colors["text"],
+                buttonbackground=colors["button"],
+                relief="solid",
+                bd=1,
+                justify="center",
+            )
+            cooldown_widget.grid(
+                row=row_offset, column=2, sticky="ew", padx=5, pady=5, ipady=4
+            )
+            icon_entry = tk.Entry(
+                section,
+                textvariable=condition_icons[key],
+                bg=colors["input"],
+                fg=colors["text"],
+                relief="solid",
+                bd=1,
+            )
+            icon_entry.grid(
+                row=row_offset, column=3, sticky="ew", padx=5, pady=5, ipady=5
+            )
+            choose = self._button(
+                section,
+                "选择图片",
+                lambda condition_key=key: self.choose_short_cooldown_hud_icon(
+                    condition_key
+                ),
+            )
+            choose.grid(row=row_offset, column=4, padx=5, pady=5)
+            reset = self._button(
+                section,
+                "恢复默认图标",
+                lambda condition_key=key: self.reset_short_cooldown_hud_icon(
+                    condition_key
+                ),
+            )
+            reset.grid(row=row_offset, column=5, padx=(5, 12), pady=5)
+            condition_toggles[key] = toggle
+            cooldown_widgets[key] = cooldown_widget
+            icon_entries[key] = icon_entry
+            icon_choose_buttons[key] = choose
+            icon_reset_buttons[key] = reset
+
+        self.short_cooldown_hud = ShortCooldownHudRow(
+            item=item,
+            condition_enabled=condition_enabled,
+            cooldown_seconds=cooldown_seconds,
+            condition_icons=condition_icons,
+            condition_toggles=condition_toggles,
+            cooldown_widgets=cooldown_widgets,
+            icon_entries=icon_entries,
+            icon_choose_buttons=icon_choose_buttons,
+            icon_reset_buttons=icon_reset_buttons,
+        )
+        for variable in condition_enabled.values():
+            variable.trace_add(
+                "write", lambda *_args: self._sync_short_cooldown_hud_state()
+            )
+        self._sync_short_cooldown_hud_state()
+
+    def _build_astrology_card_tracker(
+        self, parent: tk.Frame, row_index: int
+    ) -> None:
+        colors = self._colors()
+        item = ensure_astrology_card_tracker_config(self.data)
+        enabled_skills = {
+            skill_id: BooleanVar(
+                value=bool(item["tracked_skills"].get(str(skill_id), False))
+            )
+            for skill_id in ASTROLOGY_CORE_COOLDOWN_DEFAULTS
+        }
+        counter_threshold = StringVar(value=str(item["counter_threshold"]))
+        deck = [
+            StringVar(value=card or ASTROLOGY_UNSET_LABEL)
+            for card in item["deck"]
+        ]
+        skill_suits = {
+            int(skill_id): StringVar(value=suit or ASTROLOGY_UNSET_LABEL)
+            for skill_id, suit in item["skill_suits"].items()
+        }
+        base_cooldown_seconds = {
+            int(skill_id): StringVar(value=f"{float(seconds):g}")
+            for skill_id, seconds in item["base_cooldown_seconds"].items()
+        }
+
+        section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
+        section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 10))
+        section.columnconfigure(0, weight=0)
+        section.columnconfigure(1, weight=1)
+        section.columnconfigure(2, weight=0)
+        section.columnconfigure(3, weight=1)
+
+        tk.Label(
+            section,
+            text="战斗占星卡牌追踪",
+            bg=colors["row"],
+            fg=colors["text"],
+            font=("Microsoft YaHei UI", 10, "bold"),
+            anchor="w",
+        ).grid(row=0, column=0, columnspan=4, sticky="ew", padx=12, pady=(9, 2))
+        for column, skill_id, text in (
+            (0, 27202, "启用星辉领域冷却追踪"),
+            (2, 27203, "启用疾旋突袭冷却追踪"),
+        ):
+            tk.Checkbutton(
+                section,
+                variable=enabled_skills[skill_id],
+                text=text,
+                bg=colors["row_alt"],
+                fg=colors["text"],
+                selectcolor=colors["accent"],
+                activebackground=colors["row_alt"],
+                bd=0,
+                highlightthickness=0,
+                font=("Microsoft YaHei UI", 9, "bold"),
+                anchor="w",
+            ).grid(
+                row=1,
+                column=column,
+                columnspan=2,
+                sticky="ew",
+                padx=12,
+                pady=(4, 5),
+            )
+
+        tk.Label(
+            section,
+            text="获得每张牌所需计数",
+            bg=colors["row"],
+            fg=colors["text"],
+            font=("Microsoft YaHei UI", 9, "bold"),
+            anchor="w",
+        ).grid(row=2, column=0, sticky="w", padx=(12, 5), pady=5)
+        ttk.Combobox(
+            section,
+            textvariable=counter_threshold,
+            values=tuple(str(value) for value in ASTROLOGY_COUNTER_CHOICES),
+            state="readonly",
+            width=12,
+        ).grid(row=2, column=1, sticky="w", padx=5, pady=5)
+
+        core_skills = {
+            int(item["skill_id"]): item
+            for key, item in ASTROLOGY_SKILLS.items()
+            if key in ("starry_field", "whirling_assault")
+        }
+        for column, skill_id in ((0, 27202), (2, 27203)):
+            skill = core_skills[skill_id]
+            tk.Label(
+                section,
+                text=f"{skill['name']}基础冷却（秒）",
+                bg=colors["row"],
+                fg=colors["text"],
+                font=("Microsoft YaHei UI", 9, "bold"),
+                anchor="w",
+            ).grid(row=3, column=column, sticky="w", padx=(12, 5), pady=5)
+            tk.Spinbox(
+                section,
+                from_=ASTROLOGY_MIN_COOLDOWN_SECONDS,
+                to=ASTROLOGY_MAX_COOLDOWN_SECONDS,
+                increment=0.1,
+                textvariable=base_cooldown_seconds[skill_id],
+                width=12,
+                bg=colors["input"],
+                fg=colors["text"],
+                buttonbackground=colors["button"],
+                highlightthickness=0,
+                bd=1,
+            ).grid(row=3, column=column + 1, sticky="w", padx=5, pady=5)
+
+        for column, text in ((0, "卡组顺序"), (1, "卡牌"), (2, "技能"), (3, "当前花色")):
+            tk.Label(
+                section,
+                text=text,
+                bg=colors["row_alt"],
+                fg=colors["muted"],
+                font=("Microsoft YaHei UI", 9, "bold"),
+                anchor="w",
+            ).grid(row=4, column=column, sticky="ew", padx=5, pady=(6, 4))
+
+        card_values = (ASTROLOGY_UNSET_LABEL,) + ASTROLOGY_CARD_OPTIONS
+        suit_values = (ASTROLOGY_UNSET_LABEL,) + ASTROLOGY_SUIT_OPTIONS
+        skills = list(ASTROLOGY_SKILLS.values())
+        max_rows = max(len(deck), len(skills))
+        for index in range(max_rows):
+            grid_row = 5 + index
+            if index < len(deck):
+                tk.Label(
+                    section,
+                    text=f"{index + 1}号牌",
+                    bg=colors["row"],
+                    fg=colors["text"],
+                    font=("Microsoft YaHei UI", 9, "bold"),
+                    anchor="w",
+                ).grid(row=grid_row, column=0, sticky="ew", padx=(12, 5), pady=5)
+                ttk.Combobox(
+                    section,
+                    textvariable=deck[index],
+                    values=card_values,
+                    state="readonly",
+                    width=18,
+                ).grid(row=grid_row, column=1, sticky="ew", padx=5, pady=5)
+
+            if index < len(skills):
+                skill = skills[index]
+                skill_id = int(skill["skill_id"])
+                tk.Label(
+                    section,
+                    text=f"{skill['name']}  ({skill_id})",
+                    bg=colors["row"],
+                    fg=colors["text"],
+                    font=("Microsoft YaHei UI", 9, "bold"),
+                    anchor="w",
+                ).grid(row=grid_row, column=2, sticky="ew", padx=(16, 5), pady=5)
+                ttk.Combobox(
+                    section,
+                    textvariable=skill_suits[skill_id],
+                    values=suit_values,
+                    state="readonly",
+                    width=14,
+                ).grid(row=grid_row, column=3, sticky="ew", padx=(5, 12), pady=5)
+
+        self.astrology_card_tracker = AstrologyCardTrackerRow(
+            item=item,
+            enabled_skills=enabled_skills,
+            counter_threshold=counter_threshold,
+            deck=deck,
+            skill_suits=skill_suits,
+            base_cooldown_seconds=base_cooldown_seconds,
+        )
+
+    def _build_visual_debuff_expiry(
+        self,
+        parent: tk.Frame,
+        row_index: int,
+    ) -> None:
+        if self.key_enemy_debuff is None:
             return
-        width = max(self.scroll_canvas.winfo_width(), self.scroll_content.winfo_reqwidth())
-        self.scroll_canvas.itemconfigure(self.scroll_window, width=width)
-        self.scroll_canvas.configure(scrollregion=self.scroll_canvas.bbox("all"))
+        colors = self._colors()
+        row = self.key_enemy_debuff
+        section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
+        section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 10))
+        section.columnconfigure(0, weight=1)
+
+        tk.Label(
+            section,
+            text="可视化DEBUFF提醒",
+            bg=colors["row"],
+            fg=colors["text"],
+            font=("Microsoft YaHei UI", 10, "bold"),
+            anchor="w",
+        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(9, 3))
+        visual_hud_toggle = tk.Checkbutton(
+            section,
+            variable=row.visual_hud_enabled,
+            text="可视化DEBUFF上齐提醒",
+            bg=colors["row_alt"],
+            fg=colors["text"],
+            selectcolor=colors["accent"],
+            activebackground=colors["row_alt"],
+            bd=0,
+            highlightthickness=0,
+            font=("Microsoft YaHei UI", 9, "bold"),
+        )
+        visual_hud_toggle.grid(
+            row=1, column=0, sticky="ew", padx=12, pady=(5, 2)
+        )
+        row.visual_hud_toggle = visual_hud_toggle
+
+        toggle = tk.Checkbutton(
+            section,
+            variable=row.visual_expiry_enabled,
+            text="可视化DEBUFF到期提醒",
+            bg=colors["row_alt"],
+            fg=colors["text"],
+            selectcolor=colors["accent"],
+            activebackground=colors["row_alt"],
+            bd=0,
+            highlightthickness=0,
+            font=("Microsoft YaHei UI", 9, "bold"),
+        )
+        toggle.grid(row=2, column=0, sticky="ew", padx=12, pady=(2, 9))
+        row.visual_expiry_toggle = toggle
+
+    def _sync_scroll_region_for(
+        self,
+        canvas: tk.Canvas,
+        content: tk.Frame,
+        window_id: int,
+    ) -> None:
+        width = max(canvas.winfo_width(), content.winfo_reqwidth())
+        canvas.itemconfigure(window_id, width=width)
+        canvas.configure(scrollregion=canvas.bbox("all"))
+
+    def _on_notebook_tab_changed(self, _event: tk.Event | None = None) -> None:
+        if self.notebook is None:
+            return
+        tab_id = str(self.notebook.select())
+        canvas = self.tab_scroll_canvases.get(tab_id)
+        content = self.tab_scroll_contents.get(tab_id)
+        window_id = self.tab_scroll_windows.get(tab_id)
+        if canvas is None or content is None or window_id is None:
+            return
+        self.scroll_canvas = canvas
+        self.scroll_content = content
+        self.scroll_window = window_id
+        self._sync_scroll_region_for(canvas, content, window_id)
 
     def _on_mousewheel(self, event: tk.Event) -> None:
-        if self.scroll_canvas is None:
+        if self.notebook is not None:
+            selected = str(self.notebook.select())
+            canvas = self.tab_scroll_canvases.get(selected)
+        else:
+            canvas = self.scroll_canvas
+        if canvas is None:
             return
         delta = getattr(event, "delta", 0)
         if delta == 0:
@@ -1720,9 +3145,9 @@ class SettingsApp:
         if steps == 0:
             steps = -1 if delta > 0 else 1
         if getattr(event, "state", 0) & 0x0001:
-            self.scroll_canvas.xview_scroll(steps, "units")
+            canvas.xview_scroll(steps, "units")
         else:
-            self.scroll_canvas.yview_scroll(steps, "units")
+            canvas.yview_scroll(steps, "units")
 
     def _build_buff_group(
         self,
@@ -1774,16 +3199,14 @@ class SettingsApp:
             self.music_strong_enabled = BooleanVar(
                 value=bool(music_strong.get("enabled", False))
             )
-            tk.Label(
-                section,
-                text=MUSIC_BUFF_NOTICE,
-                bg=colors["row"],
-                fg=colors["accent_dark"],
-                font=("Microsoft YaHei UI", 9, "bold"),
-                anchor="w",
-                justify="left",
-                wraplength=460,
-            ).grid(row=0, column=1, columnspan=7, sticky="ew", padx=(0, 8), pady=(9, 6))
+            self.music_tuan_silence_enabled = BooleanVar(
+                value=bool(
+                    self.data.get(
+                        "music_tuan_silence_enabled",
+                        MUSIC_TUAN_SILENCE_DEFAULT,
+                    )
+                )
+            )
             tk.Checkbutton(
                 section,
                 variable=self.music_strong_enabled,
@@ -1795,13 +3218,34 @@ class SettingsApp:
                 bd=0,
                 highlightthickness=0,
                 font=("Microsoft YaHei UI", 9, "bold"),
-            ).grid(row=0, column=8, columnspan=2, sticky="e", padx=(0, 12), pady=(9, 6))
+            ).grid(row=0, column=0, columnspan=10, sticky="w", padx=12, pady=(9, 6))
+
+            tk.Checkbutton(
+                section,
+                variable=self.music_tuan_silence_enabled,
+                text=MUSIC_TUAN_SILENCE_LABEL,
+                bg=colors["row_alt"],
+                fg=colors["text"],
+                selectcolor=colors["accent"],
+                activebackground=colors["row_alt"],
+                bd=0,
+                highlightthickness=0,
+                font=("Microsoft YaHei UI", 9, "bold"),
+            ).grid(
+                row=1,
+                column=0,
+                columnspan=10,
+                sticky="w",
+                padx=12,
+                pady=(5, 4),
+            )
 
         headers = (
             ["项目", "", "剩余进度提醒", seconds_header, "提醒音源", "", "", "", "", ""]
             if progress_mode
             else ["项目", "结束提醒", "剩余提醒", seconds_header, "提醒音源", "", "", "结束音源", "", ""]
         )
+        header_row = 2 if is_music_group else 1
         for col, text in enumerate(headers):
             tk.Label(
                 section,
@@ -1809,25 +3253,31 @@ class SettingsApp:
                 bg=colors["row"],
                 fg=colors["muted"],
                 font=("Microsoft YaHei UI", 9, "bold"),
-            ).grid(row=1, column=col, sticky="w", padx=5, pady=(4, 8))
+            ).grid(row=header_row, column=col, sticky="w", padx=5, pady=(4, 8))
 
-        local_row = 2
+        local_row = header_row + 1
         for name in names:
             item = items_by_name.get(name)
             if item is None:
                 continue
-            self._add_buff_row(section, local_row, item)
-            local_row += 1
+            local_row += self._add_buff_row(section, local_row, item)
 
-    def _add_buff_row(self, parent: tk.Frame, row_index: int, item: dict) -> None:
+    def _add_buff_row(self, parent: tk.Frame, row_index: int, item: dict) -> int:
         colors = self._colors()
         name = item["name"]
         display_name = "托亚灵震爆" if name == "托亚灵进度" else name
+        if name == HAMSTER_SUPERCHARGED_NAME:
+            display_name = HAMSTER_SETTINGS_NAME
         is_progress = item_is_progress(item)
         enabled = BooleanVar(
-            value=True
-            if is_progress
-            else bool(item.get("enabled", True) and item.get("ended_alert", True))
+            value=(
+                True
+                if is_progress
+                else bool(
+                    item.get("enabled", True)
+                    and item.get("ended_alert", True)
+                )
+            )
         )
         remaining_enabled = BooleanVar(value=item_remaining_enabled(item))
         seconds = IntVar(value=max(0, item_seconds(item)))
@@ -1937,6 +3387,7 @@ class SettingsApp:
             self.gunner_eye_row = row
         remaining_enabled.trace_add("write", lambda *_args, buff_row=row: self._sync_seconds_state(buff_row))
         self._sync_seconds_state(row)
+        return 1
 
     def _build_magic_shield_delay(self, parent: tk.Frame, row_index: int) -> None:
         colors = self._colors()
@@ -2487,6 +3938,99 @@ class SettingsApp:
             enabled.trace_add("write", lambda *_args, boss_row=row: self._sync_boss_hp_state(boss_row))
             self._sync_boss_hp_state(row)
 
+    def _build_bronntanas_hp_hud(
+        self, parent: tk.Frame, row_index: int
+    ) -> None:
+        colors = self._colors()
+        item = find_or_create_bronntanas_hp_hud(self.data)
+        enabled = BooleanVar(value=bool(item.get("enabled", True)))
+        section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
+        section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 4))
+        section.columnconfigure(0, weight=1)
+        tk.Label(
+            section,
+            text=BRONNTANAS_HP_HUD_SECTION_NAME,
+            bg=colors["row"],
+            fg=colors["text"],
+            font=("Microsoft YaHei UI", 10, "bold"),
+            anchor="w",
+        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(9, 5))
+        tk.Checkbutton(
+            section,
+            variable=enabled,
+            text="启用布本二王50%机制血量监控",
+            bg=colors["row"],
+            fg=colors["text"],
+            selectcolor=colors["accent"],
+            activebackground=colors["row"],
+            bd=0,
+            highlightthickness=0,
+            anchor="w",
+        ).grid(row=1, column=0, sticky="w", padx=12, pady=(4, 9))
+        self.bronntanas_hp_hud_enabled = enabled
+
+    def _build_miracle_orb_hp_hud(
+        self, parent: tk.Frame, row_index: int
+    ) -> None:
+        colors = self._colors()
+        item = find_or_create_miracle_orb_hp_hud(self.data)
+        enabled = BooleanVar(value=bool(item.get("enabled", True)))
+        section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
+        section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 4))
+        section.columnconfigure(0, weight=1)
+        tk.Label(
+            section,
+            text=MIRACLE_ORB_HP_HUD_SECTION_NAME,
+            bg=colors["row"],
+            fg=colors["text"],
+            font=("Microsoft YaHei UI", 10, "bold"),
+            anchor="w",
+        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(9, 5))
+        tk.Checkbutton(
+            section,
+            variable=enabled,
+            text="启用布三60%神迹球血量追踪",
+            bg=colors["row"],
+            fg=colors["text"],
+            selectcolor=colors["accent"],
+            activebackground=colors["row"],
+            bd=0,
+            highlightthickness=0,
+            anchor="w",
+        ).grid(row=1, column=0, sticky="w", padx=12, pady=(4, 9))
+        self.miracle_orb_hp_hud_enabled = enabled
+
+    def _build_rotating_laser_countdown_hud(
+        self, parent: tk.Frame, row_index: int
+    ) -> None:
+        colors = self._colors()
+        item = find_or_create_rotating_laser_countdown_hud(self.data)
+        enabled = BooleanVar(value=bool(item.get("enabled", True)))
+        section = tk.Frame(parent, bg=colors["row"], bd=1, relief="solid")
+        section.grid(row=row_index, column=0, sticky="ew", padx=10, pady=(8, 4))
+        section.columnconfigure(0, weight=1)
+        tk.Label(
+            section,
+            text=ROTATING_LASER_COUNTDOWN_HUD_SECTION_NAME,
+            bg=colors["row"],
+            fg=colors["text"],
+            font=("Microsoft YaHei UI", 11, "bold"),
+            anchor="w",
+        ).grid(row=0, column=0, sticky="ew", padx=12, pady=(9, 4))
+        tk.Checkbutton(
+            section,
+            text="启用",
+            variable=enabled,
+            bg=colors["row"],
+            fg=colors["text"],
+            selectcolor=colors["accent"],
+            activebackground=colors["row"],
+            bd=0,
+            highlightthickness=0,
+            anchor="w",
+        ).grid(row=1, column=0, sticky="w", padx=12, pady=(2, 9))
+        self.rotating_laser_countdown_hud_enabled = enabled
+
     def _build_key_enemy_debuff_alert(self, parent: tk.Frame, row_index: int) -> None:
         colors = self._colors()
         item = find_or_create_key_enemy_debuff_alert(self.data)
@@ -2517,6 +4061,12 @@ class SettingsApp:
             value=bool(item.get("complete_enabled", item.get("enabled", False)))
         )
         expiry_enabled = BooleanVar(value=bool(item.get("expiry_enabled", True)))
+        visual_hud_enabled = BooleanVar(
+            value=bool(item.get("visual_hud_enabled", False))
+        )
+        visual_expiry_enabled = BooleanVar(
+            value=bool(item.get("visual_expiry_enabled", True))
+        )
         expiry_seconds = IntVar(
             value=int(
                 clamp_float(
@@ -2529,50 +4079,17 @@ class SettingsApp:
                 )
             )
         )
-        physical_break_min = IntVar(
-            value=int(
-                clamp_float(
-                    item.get(
-                        "physical_break_min",
-                        KEY_ENEMY_DEBUFF_PHYSICAL_BREAK_MIN,
-                    ),
-                    0,
-                    999,
-                )
-            )
+        physical_break_min = StringVar(
+            value=key_enemy_debuff_threshold_text(item.get("physical_break_min"))
         )
-        magic_break_min = IntVar(
-            value=int(
-                clamp_float(
-                    item.get("magic_break_min", KEY_ENEMY_DEBUFF_MAGIC_BREAK_MIN),
-                    0,
-                    999,
-                )
-            )
+        magic_break_min = StringVar(
+            value=key_enemy_debuff_threshold_text(item.get("magic_break_min"))
         )
-        damage_bonus_min = IntVar(
-            value=int(
-                clamp_float(
-                    item.get(
-                        "damage_bonus_min",
-                        KEY_ENEMY_DEBUFF_DAMAGE_BONUS_MIN,
-                    ),
-                    0,
-                    999,
-                )
-            )
+        damage_bonus_min = StringVar(
+            value=key_enemy_debuff_threshold_text(item.get("damage_bonus_min"))
         )
-        rabbit_stacks_min = IntVar(
-            value=int(
-                clamp_float(
-                    item.get(
-                        "rabbit_stacks_min",
-                        KEY_ENEMY_DEBUFF_RABBIT_STACKS_MIN,
-                    ),
-                    1,
-                    10,
-                )
-            )
+        rabbit_stacks_min = StringVar(
+            value=key_enemy_debuff_threshold_text(item.get("rabbit_stacks_min"))
         )
         complete_sound = StringVar(
             value=item.get("complete_sound", KEY_ENEMY_DEBUFF_COMPLETE_SOUND)
@@ -2710,8 +4227,8 @@ class SettingsApp:
             ("死亡锁定增伤 >=", damage_bonus_min, 0, 999),
             ("兔子层数 >=", rabbit_stacks_min, 1, 10),
         ]
-        widgets: list[tk.Spinbox] = []
-        for index, (label, variable, minimum, maximum) in enumerate(labels):
+        widgets: list[tk.Entry] = []
+        for index, (label, variable, _minimum, _maximum) in enumerate(labels):
             base_col = index * 2
             tk.Label(
                 threshold_row,
@@ -2720,15 +4237,12 @@ class SettingsApp:
                 fg=colors["text"],
                 font=("Microsoft YaHei UI", 9, "bold"),
             ).grid(row=0, column=base_col, sticky="w", padx=(8, 4), pady=7)
-            widget = tk.Spinbox(
+            widget = tk.Entry(
                 threshold_row,
-                from_=minimum,
-                to=maximum,
                 textvariable=variable,
                 width=6,
                 bg=colors["input"],
                 fg=colors["text"],
-                buttonbackground=colors["button"],
                 relief="solid",
                 bd=1,
                 justify="center",
@@ -2740,6 +4254,8 @@ class SettingsApp:
             item=item,
             complete_enabled=complete_enabled,
             expiry_enabled=expiry_enabled,
+            visual_hud_enabled=visual_hud_enabled,
+            visual_expiry_enabled=visual_expiry_enabled,
             expiry_seconds=expiry_seconds,
             physical_break_min=physical_break_min,
             magic_break_min=magic_break_min,
@@ -2749,6 +4265,8 @@ class SettingsApp:
             expiry_sound=expiry_sound,
             complete_toggle=complete_toggle,
             expiry_toggle=expiry_toggle,
+            visual_hud_toggle=None,
+            visual_expiry_toggle=None,
             expiry_seconds_widget=expiry_seconds_widget,
             physical_widget=widgets[0],
             magic_widget=widgets[1],
@@ -2761,8 +4279,22 @@ class SettingsApp:
             complete_test=complete_test,
             expiry_test=expiry_test,
         )
-        complete_enabled.trace_add("write", lambda *_args: self._sync_key_enemy_debuff_state())
+        complete_enabled.trace_add(
+            "write",
+            lambda *_args: self._on_key_enemy_debuff_activation_changed(
+                complete_enabled
+            ),
+        )
         expiry_enabled.trace_add("write", lambda *_args: self._sync_key_enemy_debuff_state())
+        visual_hud_enabled.trace_add(
+            "write",
+            lambda *_args: self._on_key_enemy_debuff_activation_changed(
+                visual_hud_enabled
+            ),
+        )
+        visual_expiry_enabled.trace_add(
+            "write", lambda *_args: self._sync_key_enemy_debuff_state()
+        )
         self._sync_key_enemy_debuff_state()
 
     def _build_boss_red_orb(self, parent: tk.Frame, row_index: int) -> None:
@@ -2850,15 +4382,6 @@ class SettingsApp:
             font=("Microsoft YaHei UI", 10, "bold"),
             anchor="w",
         ).grid(row=0, column=0, sticky="w", padx=(12, 8), pady=(9, 6))
-        tk.Label(
-            section,
-            text=BOSS_LASER_ALERT_NOTICE,
-            bg=colors["row"],
-            fg=colors["accent_dark"],
-            font=("Microsoft YaHei UI", 9, "bold"),
-            anchor="w",
-        ).grid(row=0, column=1, sticky="ew", padx=(0, 12), pady=(9, 6), columnspan=5)
-
         enabled = BooleanVar(value=bool(item.get("enabled", False)))
         sound = StringVar(value=item.get("sound", BOSS_LASER_ALERT_SOUND))
         tk.Label(
@@ -2947,7 +4470,7 @@ class SettingsApp:
             "",
             "",
             "冷却提醒",
-            "冷却秒数",
+            "冷却时长",
             "冷却音源",
             "",
             "",
@@ -2976,10 +4499,16 @@ class SettingsApp:
                 )
             except (TypeError, ValueError):
                 cooldown_value = int(rules["cooldown_seconds"])
-            cooldown_value = max(
-                int(rules["cooldown_min"]),
-                min(int(rules["cooldown_max"]), cooldown_value),
-            )
+            if rules.get("cooldown_fixed"):
+                cooldown_value = int(rules["cooldown_seconds"])
+            elif "cooldown_choices" in rules:
+                if cooldown_value not in rules["cooldown_choices"]:
+                    cooldown_value = int(rules["cooldown_seconds"])
+            else:
+                cooldown_value = max(
+                    int(rules["cooldown_min"]),
+                    min(int(rules["cooldown_max"]), cooldown_value),
+                )
             cooldown_seconds = IntVar(value=cooldown_value)
             cooldown_sound = StringVar(
                 value=item.get("cooldown_sound", rules["cooldown_sound"])
@@ -3054,19 +4583,50 @@ class SettingsApp:
                 highlightthickness=0,
             )
             cooldown_toggle.grid(row=offset, column=6, sticky="ew", padx=5, pady=3)
-            cooldown_widget = tk.Spinbox(
-                section,
-                from_=rules["cooldown_min"],
-                to=rules["cooldown_max"],
-                textvariable=cooldown_seconds,
-                width=7,
-                bg=colors["input"],
-                fg=colors["text"],
-                buttonbackground=colors["button"],
-                relief="solid",
-                bd=1,
-                justify="center",
-            )
+            if rules.get("cooldown_fixed"):
+                cooldown_widget = tk.Label(
+                    section,
+                    text=f"{rules['cooldown_seconds']} 秒（固定）",
+                    bg=row_bg,
+                    fg=colors["text"],
+                    font=("Microsoft YaHei UI", 9),
+                    anchor="center",
+                )
+            elif "cooldown_choices" in rules:
+                cooldown_widget = tk.OptionMenu(
+                    section,
+                    cooldown_seconds,
+                    *rules["cooldown_choices"],
+                )
+                cooldown_widget.configure(
+                    width=7,
+                    bg=colors["input"],
+                    fg=colors["text"],
+                    activebackground=colors["button"],
+                    activeforeground=colors["text"],
+                    relief="solid",
+                    bd=1,
+                    highlightthickness=0,
+                )
+                cooldown_widget["menu"].configure(
+                    bg=colors["input"],
+                    fg=colors["text"],
+                    activebackground=colors["accent"],
+                )
+            else:
+                cooldown_widget = tk.Spinbox(
+                    section,
+                    from_=rules["cooldown_min"],
+                    to=rules["cooldown_max"],
+                    textvariable=cooldown_seconds,
+                    width=7,
+                    bg=colors["input"],
+                    fg=colors["text"],
+                    buttonbackground=colors["button"],
+                    relief="solid",
+                    bd=1,
+                    justify="center",
+                )
             cooldown_widget.grid(row=offset, column=7, sticky="ew", padx=5, pady=3, ipady=4)
             cooldown_entry = tk.Entry(
                 section,
@@ -3265,6 +4825,63 @@ class SettingsApp:
     def _sync_volume_label(self) -> None:
         self.volume_label.configure(text=f"{self.volume.get()}%")
 
+    def _sync_visual_hud_state(self) -> None:
+        if self.visual_hud is None:
+            return
+        row = self.visual_hud
+        master_enabled = bool(row.enabled.get())
+        for ccid, toggle in row.condition_toggles.items():
+            toggle.configure(state="normal" if master_enabled else "disabled")
+            detail_state = (
+                "normal"
+                if master_enabled and row.condition_enabled[ccid].get()
+                else "disabled"
+            )
+            for widget in (
+                row.show_before_widgets[ccid],
+                row.ring_toggles[ccid],
+                row.icon_entries[ccid],
+                row.icon_choose_buttons[ccid],
+                row.icon_reset_buttons[ccid],
+            ):
+                widget.configure(state=detail_state)
+
+    def _sync_other_skill_hud_state(self) -> None:
+        if self.other_skill_hud is None:
+            return
+        row = self.other_skill_hud
+        master_enabled = bool(row.enabled.get())
+        for key, toggle in row.condition_toggles.items():
+            toggle.configure(state="normal" if master_enabled else "disabled")
+            detail_state = (
+                "normal"
+                if master_enabled and row.condition_enabled[key].get()
+                else "disabled"
+            )
+            for widget in (
+                row.icon_entries[key],
+                row.icon_choose_buttons[key],
+                row.icon_reset_buttons[key],
+            ):
+                widget.configure(state=detail_state)
+
+    def _sync_short_cooldown_hud_state(self) -> None:
+        if self.short_cooldown_hud is None:
+            return
+        row = self.short_cooldown_hud
+        for key, toggle in row.condition_toggles.items():
+            toggle.configure(state="normal")
+            detail_state = (
+                "normal" if row.condition_enabled[key].get() else "disabled"
+            )
+            for widget in (
+                row.cooldown_widgets[key],
+                row.icon_entries[key],
+                row.icon_choose_buttons[key],
+                row.icon_reset_buttons[key],
+            ):
+                widget.configure(state=detail_state)
+
     def _sync_seconds_state(self, row: BuffRow) -> None:
         if item_remaining_locked(row.item):
             if row.remaining_enabled.get():
@@ -3364,16 +4981,48 @@ class SettingsApp:
         self.boss_laser.test.configure(state="normal")
         self.boss_laser.voice_pack.configure(state="normal")
 
+    def _key_enemy_debuff_threshold_values(self) -> dict[str, object]:
+        if self.key_enemy_debuff is None:
+            return {}
+        row = self.key_enemy_debuff
+        return {
+            "physical_break_min": row.physical_break_min.get(),
+            "magic_break_min": row.magic_break_min.get(),
+            "damage_bonus_min": row.damage_bonus_min.get(),
+            "rabbit_stacks_min": row.rabbit_stacks_min.get(),
+        }
+
+    def _on_key_enemy_debuff_activation_changed(
+        self,
+        variable: BooleanVar,
+    ) -> None:
+        if variable.get():
+            try:
+                parse_key_enemy_debuff_threshold_values(
+                    self._key_enemy_debuff_threshold_values(),
+                    require_complete=True,
+                )
+            except ValueError as exc:
+                messagebox.showerror("无法启用破防上齐提醒", str(exc))
+                variable.set(False)
+                return
+        self._sync_key_enemy_debuff_state()
+
     def _sync_key_enemy_debuff_state(self) -> None:
         if self.key_enemy_debuff is None:
             return
         row = self.key_enemy_debuff
         complete_state = "normal" if row.complete_enabled.get() else "disabled"
         expiry_state = "normal" if row.expiry_enabled.get() else "disabled"
+        expiry_seconds_state = (
+            "normal"
+            if row.expiry_enabled.get() or row.visual_expiry_enabled.get()
+            else "disabled"
+        )
         row.complete_sound_entry.configure(state=complete_state)
         row.complete_choose.configure(state=complete_state)
         row.complete_test.configure(state=complete_state)
-        row.expiry_seconds_widget.configure(state=expiry_state)
+        row.expiry_seconds_widget.configure(state=expiry_seconds_state)
         row.expiry_sound_entry.configure(state=expiry_state)
         row.expiry_choose.configure(state=expiry_state)
         row.expiry_test.configure(state=expiry_state)
@@ -3402,19 +5051,7 @@ class SettingsApp:
         row.cooldown_test.configure(state=cooldown_state)
 
     def _colors(self) -> dict[str, str]:
-        return {
-            "panel": "#e7e1d6",
-            "title": "#d4c4ad",
-            "content": "#efeee8",
-            "row": "#ece9df",
-            "row_alt": "#e3e0d5",
-            "input": "#b8aa98",
-            "button": "#d8c9b8",
-            "accent": "#f1aa57",
-            "accent_dark": "#d28d3e",
-            "text": "#5b4736",
-            "muted": "#8a7a68",
-        }
+        return dict(SETTINGS_COLORS)
 
     def _set_window_icon(self) -> None:
         image_candidates = [
@@ -3785,6 +5422,115 @@ class SettingsApp:
         else:
             row.ended_sound.set(value)
 
+    def choose_visual_hud_icon(self, ccid: int) -> None:
+        if self.visual_hud is None or ccid not in VISUAL_HUD_CONDITION_DEFAULTS:
+            return
+        label = VISUAL_HUD_CONDITION_DEFAULTS[ccid]["name"]
+        selected = filedialog.askopenfilename(
+            title=f"选择 {label} 的 HUD 图标",
+            filetypes=[
+                ("支持的图片", "*.png *.gif"),
+                ("PNG 图片", "*.png"),
+                ("GIF 图片", "*.gif"),
+            ],
+        )
+        if not selected:
+            return
+        value = self._import_visual_hud_icon(Path(selected), ccid)
+        self.visual_hud.condition_icons[ccid].set(value)
+
+    def reset_visual_hud_icon(self, ccid: int) -> None:
+        if self.visual_hud is None or ccid not in VISUAL_HUD_DEFAULT_ICONS:
+            return
+        self.visual_hud.condition_icons[ccid].set(VISUAL_HUD_DEFAULT_ICONS[ccid])
+
+    def _import_visual_hud_icon(self, source: Path, ccid: int) -> str:
+        custom_dir = self.config_dir / "assets" / "custom" / "visual_hud"
+        custom_dir.mkdir(parents=True, exist_ok=True)
+        suffix = source.suffix.lower()
+        target = custom_dir / f"{ccid}{suffix}"
+        if source.resolve() != target.resolve():
+            shutil.copy2(source, target)
+        return relpath(target, self.config_dir)
+
+    def choose_other_skill_hud_icon(self, key: str) -> None:
+        if (
+            self.other_skill_hud is None
+            or key not in OTHER_SKILL_HUD_CONDITION_DEFAULTS
+        ):
+            return
+        label = OTHER_SKILL_HUD_CONDITION_DEFAULTS[key]["name"]
+        selected = filedialog.askopenfilename(
+            title=f"选择 {label} 的 HUD 图标",
+            filetypes=[
+                ("支持的图片", "*.png *.gif"),
+                ("PNG 图片", "*.png"),
+                ("GIF 图片", "*.gif"),
+            ],
+        )
+        if not selected:
+            return
+        value = self._import_other_skill_hud_icon(Path(selected), key)
+        self.other_skill_hud.condition_icons[key].set(value)
+
+    def reset_other_skill_hud_icon(self, key: str) -> None:
+        if (
+            self.other_skill_hud is None
+            or key not in OTHER_SKILL_HUD_CONDITION_DEFAULTS
+        ):
+            return
+        self.other_skill_hud.condition_icons[key].set(
+            OTHER_SKILL_HUD_CONDITION_DEFAULTS[key]["icon"]
+        )
+
+    def _import_other_skill_hud_icon(self, source: Path, key: str) -> str:
+        custom_dir = self.config_dir / "assets" / "custom" / "other_skill_hud"
+        custom_dir.mkdir(parents=True, exist_ok=True)
+        suffix = source.suffix.lower()
+        target = custom_dir / f"{key}{suffix}"
+        if source.resolve() != target.resolve():
+            shutil.copy2(source, target)
+        return relpath(target, self.config_dir)
+
+    def choose_short_cooldown_hud_icon(self, key: str) -> None:
+        if (
+            self.short_cooldown_hud is None
+            or key not in SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS
+        ):
+            return
+        name = SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS[key]["name"]
+        selected = filedialog.askopenfilename(
+            title=f"选择{name}的 HUD 图标",
+            filetypes=[
+                ("支持的图片", "*.png *.gif"),
+                ("PNG 图片", "*.png"),
+                ("GIF 图片", "*.gif"),
+            ],
+        )
+        if not selected:
+            return
+        value = self._import_short_cooldown_hud_icon(Path(selected), key)
+        self.short_cooldown_hud.condition_icons[key].set(value)
+
+    def reset_short_cooldown_hud_icon(self, key: str) -> None:
+        if (
+            self.short_cooldown_hud is None
+            or key not in SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS
+        ):
+            return
+        self.short_cooldown_hud.condition_icons[key].set(
+            SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS[key]["icon"]
+        )
+
+    def _import_short_cooldown_hud_icon(self, source: Path, key: str) -> str:
+        custom_dir = self.config_dir / "assets" / "custom" / "short_cooldown_hud"
+        custom_dir.mkdir(parents=True, exist_ok=True)
+        suffix = source.suffix.lower()
+        target = custom_dir / f"{key}{suffix}"
+        if source.resolve() != target.resolve():
+            shutil.copy2(source, target)
+        return relpath(target, self.config_dir)
+
     def _import_sound(self, source: Path, identifier: object, kind: str) -> str:
         custom_dir = self.config_dir / "assets" / "custom"
         custom_dir.mkdir(parents=True, exist_ok=True)
@@ -3948,6 +5694,62 @@ class SettingsApp:
     def restore_defaults(self) -> None:
         if not messagebox.askyesno("恢复默认规则", "要把当前项目的提醒规则恢复到测试默认值吗？"):
             return
+        if self.visual_hud is not None:
+            self.visual_hud.enabled.set(True)
+            self.visual_hud.tuan_silence_enabled.set(False)
+            for ccid, defaults in VISUAL_HUD_CONDITION_DEFAULTS.items():
+                self.visual_hud.condition_enabled[ccid].set(defaults["enabled"])
+                self.visual_hud.condition_show_before_seconds[ccid].set(
+                    defaults["show_before_seconds"]
+                )
+                self.visual_hud.condition_ring_sound_enabled[ccid].set(
+                    defaults["ring_sound_enabled"]
+                )
+            for ccid, icon in VISUAL_HUD_DEFAULT_ICONS.items():
+                self.visual_hud.condition_icons[ccid].set(icon)
+            self._sync_visual_hud_state()
+        if self.other_skill_hud is not None:
+            self.other_skill_hud.enabled.set(False)
+            for key, defaults in OTHER_SKILL_HUD_CONDITION_DEFAULTS.items():
+                self.other_skill_hud.condition_enabled[key].set(
+                    defaults["enabled"]
+                )
+                self.other_skill_hud.condition_icons[key].set(defaults["icon"])
+            self._sync_other_skill_hud_state()
+        if self.short_cooldown_hud is not None:
+            for key, defaults in SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS.items():
+                self.short_cooldown_hud.condition_enabled[key].set(
+                    defaults["enabled"]
+                )
+                self.short_cooldown_hud.cooldown_seconds[key].set(
+                    f"{float(defaults['cooldown_seconds']):g}"
+                )
+                self.short_cooldown_hud.condition_icons[key].set(defaults["icon"])
+            self._sync_short_cooldown_hud_state()
+        if self.astrology_card_tracker is not None:
+            defaults = default_astrology_card_tracker_config()
+            for skill_id, variable in (
+                self.astrology_card_tracker.enabled_skills.items()
+            ):
+                variable.set(
+                    bool(defaults["tracked_skills"].get(str(skill_id), False))
+                )
+            self.astrology_card_tracker.counter_threshold.set(
+                str(ASTROLOGY_DEFAULT_COUNTER_THRESHOLD)
+            )
+            for variable, card in zip(
+                self.astrology_card_tracker.deck,
+                defaults["deck"],
+            ):
+                variable.set(card or ASTROLOGY_UNSET_LABEL)
+            for skill_id, variable in self.astrology_card_tracker.skill_suits.items():
+                suit = defaults["skill_suits"].get(str(skill_id), "")
+                variable.set(suit or ASTROLOGY_UNSET_LABEL)
+            for skill_id, variable in (
+                self.astrology_card_tracker.base_cooldown_seconds.items()
+            ):
+                seconds = defaults["base_cooldown_seconds"][str(skill_id)]
+                variable.set(f"{float(seconds):g}")
         for row in self.rows:
             rule = DEFAULT_RULES.get(row.item["name"])
             if rule is None:
@@ -3988,6 +5790,12 @@ class SettingsApp:
             self.safehouse.lead_seconds.set(SAFEHOUSE_DEFAULT_LEAD_SECONDS)
             self.safehouse.warning_sound.set(SAFEHOUSE_DEFAULT_SOUND)
             self._sync_safehouse_state()
+        if self.bronntanas_hp_hud_enabled is not None:
+            self.bronntanas_hp_hud_enabled.set(True)
+        if self.miracle_orb_hp_hud_enabled is not None:
+            self.miracle_orb_hp_hud_enabled.set(True)
+        if self.rotating_laser_countdown_hud_enabled is not None:
+            self.rotating_laser_countdown_hud_enabled.set(True)
         boss_defaults = {item["short_name"]: item for item in BOSS_HP_DEFAULTS}
         for row in self.boss_hp_rows:
             defaults = boss_defaults.get(row.item.get("short_name"))
@@ -4000,21 +5808,15 @@ class SettingsApp:
         if self.key_enemy_debuff is not None:
             self.key_enemy_debuff.complete_enabled.set(False)
             self.key_enemy_debuff.expiry_enabled.set(True)
+            self.key_enemy_debuff.visual_hud_enabled.set(False)
+            self.key_enemy_debuff.visual_expiry_enabled.set(True)
             self.key_enemy_debuff.expiry_seconds.set(
                 KEY_ENEMY_DEBUFF_DEFAULT_EXPIRY_SECONDS
             )
-            self.key_enemy_debuff.physical_break_min.set(
-                KEY_ENEMY_DEBUFF_PHYSICAL_BREAK_MIN
-            )
-            self.key_enemy_debuff.magic_break_min.set(
-                KEY_ENEMY_DEBUFF_MAGIC_BREAK_MIN
-            )
-            self.key_enemy_debuff.damage_bonus_min.set(
-                KEY_ENEMY_DEBUFF_DAMAGE_BONUS_MIN
-            )
-            self.key_enemy_debuff.rabbit_stacks_min.set(
-                KEY_ENEMY_DEBUFF_RABBIT_STACKS_MIN
-            )
+            self.key_enemy_debuff.physical_break_min.set("")
+            self.key_enemy_debuff.magic_break_min.set("")
+            self.key_enemy_debuff.damage_bonus_min.set("")
+            self.key_enemy_debuff.rabbit_stacks_min.set("")
             self.key_enemy_debuff.complete_sound.set(KEY_ENEMY_DEBUFF_COMPLETE_SOUND)
             self.key_enemy_debuff.expiry_sound.set(KEY_ENEMY_DEBUFF_EXPIRY_SOUND)
             self._sync_key_enemy_debuff_state()
@@ -4027,6 +5829,8 @@ class SettingsApp:
             self._sync_seconds_state(self.gunner_eye_row)
         if self.music_strong_enabled is not None:
             self.music_strong_enabled.set(MUSIC_STRONG_REMINDER_ENABLED)
+        if self.music_tuan_silence_enabled is not None:
+            self.music_tuan_silence_enabled.set(MUSIC_TUAN_SILENCE_DEFAULT)
         if self.boss_red_orb is not None:
             self.boss_red_orb.enabled.set(True)
             self.boss_red_orb.sound.set(BOSS_RED_ORB_SOUND)
@@ -4054,10 +5858,18 @@ class SettingsApp:
 
     def apply_to_data(self) -> None:
         self.data["audio_volume"] = normalize_volume(self.volume.get())
+        self.apply_visual_hud_to_data()
+        self.apply_other_skill_hud_to_data()
+        self.apply_short_cooldown_hud_to_data()
+        self.apply_astrology_card_tracker_to_data()
         music_strong = find_or_create_music_strong_reminder(self.data)
         if self.music_strong_enabled is not None:
             music_strong["enabled"] = bool(self.music_strong_enabled.get())
         self.data["music_strong_reminder"] = music_strong
+        if self.music_tuan_silence_enabled is not None:
+            self.data["music_tuan_silence_enabled"] = bool(
+                self.music_tuan_silence_enabled.get()
+            )
         for row in self.rows:
             item = row.item
             name = item["name"]
@@ -4100,6 +5912,12 @@ class SettingsApp:
                 item["use_dynamic_sbt_adjust"] = False
             if name == "状态支援":
                 item["prefer_sbt_when_duration_present"] = False
+            if name in HAMSTER_BUFF_NAMES:
+                item["duration_seconds"] = HAMSTER_BUFF_DURATION_SECONDS
+                item["ended_on_remove_only"] = True
+                item["ended_grace_seconds"] = 0
+                item["sbt_ended_lead_seconds"] = 0
+                item["use_dynamic_sbt_adjust"] = False
             item["warn_sound"] = remaining_sound or DEFAULT_WARN_SOUND
             if name == MAGIC_SHIELD_NAME and self.magic_shield_delay is not None:
                 try:
@@ -4133,12 +5951,165 @@ class SettingsApp:
         self.apply_azure_wound_to_data()
         self.apply_safehouse_to_data()
         self.apply_boss_hp_alerts_to_data()
+        self.apply_bronntanas_hp_hud_to_data()
+        self.apply_miracle_orb_hp_hud_to_data()
+        self.apply_rotating_laser_countdown_hud_to_data()
         self.apply_key_enemy_debuff_to_data()
         self.data.pop("boss_skill_burst_alerts", None)
         self.apply_boss_red_orb_to_data()
         self.apply_boss_laser_to_data()
         self.apply_special_end_only_to_data()
         self.apply_food_timer_to_data()
+
+    def apply_visual_hud_to_data(self) -> None:
+        if self.visual_hud is None:
+            return
+        row = self.visual_hud
+        item = find_or_create_visual_hud(self.data)
+        item["enabled"] = bool(row.enabled.get())
+        item["ring_sound_enabled"] = False
+        item["muted"] = False
+        item["condition_controls_version"] = 1
+        item["tuan_silence_enabled"] = bool(row.tuan_silence_enabled.get())
+
+        conditions = item["conditions"]
+        for ccid, icon_variable in row.condition_icons.items():
+            condition = conditions[str(ccid)]
+            condition["enabled"] = bool(row.condition_enabled[ccid].get())
+            condition["ring_sound_enabled"] = bool(
+                row.condition_ring_sound_enabled[ccid].get()
+            )
+            try:
+                show_before_seconds = row.condition_show_before_seconds[ccid].get()
+            except tk.TclError:
+                show_before_seconds = VISUAL_HUD_DEFAULT_SHOW_BEFORE_SECONDS
+            condition["show_before_seconds"] = clamp_float(
+                show_before_seconds,
+                VISUAL_HUD_MIN_SHOW_BEFORE_SECONDS,
+                VISUAL_HUD_MAX_SHOW_BEFORE_SECONDS,
+            )
+            condition["icon"] = icon_variable.get().strip()
+        item["default_icons_version"] = VISUAL_HUD_DEFAULT_ICONS_VERSION
+        self.data[VISUAL_HUD_CONFIG_KEY] = item
+
+    def apply_bronntanas_hp_hud_to_data(self) -> None:
+        if self.bronntanas_hp_hud_enabled is None:
+            return
+        item = find_or_create_bronntanas_hp_hud(self.data)
+        item["enabled"] = bool(self.bronntanas_hp_hud_enabled.get())
+        self.data[BRONNTANAS_HP_HUD_CONFIG_KEY] = item
+
+    def apply_miracle_orb_hp_hud_to_data(self) -> None:
+        if self.miracle_orb_hp_hud_enabled is None:
+            return
+        item = find_or_create_miracle_orb_hp_hud(self.data)
+        item["enabled"] = bool(self.miracle_orb_hp_hud_enabled.get())
+        self.data[MIRACLE_ORB_HP_HUD_CONFIG_KEY] = item
+
+    def apply_rotating_laser_countdown_hud_to_data(self) -> None:
+        if self.rotating_laser_countdown_hud_enabled is None:
+            return
+        item = find_or_create_rotating_laser_countdown_hud(self.data)
+        item["enabled"] = bool(self.rotating_laser_countdown_hud_enabled.get())
+        self.data[ROTATING_LASER_COUNTDOWN_HUD_CONFIG_KEY] = item
+
+    def apply_other_skill_hud_to_data(self) -> None:
+        if self.other_skill_hud is None:
+            return
+        row = self.other_skill_hud
+        item = find_or_create_other_skill_hud(self.data)
+        item["enabled"] = bool(row.enabled.get())
+        item["left_offset_px"] = 8
+        item["center_y_ratio"] = 0.28
+        item["gap_px"] = 6
+        conditions = item["conditions"]
+        for key, icon_variable in row.condition_icons.items():
+            condition = conditions[key]
+            condition["enabled"] = bool(row.condition_enabled[key].get())
+            condition["name"] = OTHER_SKILL_HUD_CONDITION_DEFAULTS[key]["name"]
+            condition["icon"] = icon_variable.get().strip()
+        item["default_icons_version"] = OTHER_SKILL_HUD_DEFAULT_ICONS_VERSION
+        self.data[OTHER_SKILL_HUD_CONFIG_KEY] = item
+
+    def apply_short_cooldown_hud_to_data(self) -> None:
+        if self.short_cooldown_hud is None:
+            return
+        row = self.short_cooldown_hud
+        item = find_or_create_short_cooldown_hud(self.data)
+        item["enabled"] = any(
+            variable.get() for variable in row.condition_enabled.values()
+        )
+        item["center_y_ratio"] = 0.715
+        item["gap_px"] = 6
+        for key, defaults in SHORT_COOLDOWN_HUD_CONDITION_DEFAULTS.items():
+            condition = item["conditions"][key]
+            condition["enabled"] = bool(row.condition_enabled[key].get())
+            condition["name"] = defaults["name"]
+            condition["icon"] = row.condition_icons[key].get().strip()
+            cooldown_seconds = clamp_float(
+                row.cooldown_seconds[key].get(),
+                0.1,
+                9999.0,
+            )
+            tracker = find_or_create_short_cooldown_tracker(self.data, key)
+            tracker["cooldown_delay_seconds"] = (
+                int(cooldown_seconds)
+                if cooldown_seconds.is_integer()
+                else cooldown_seconds
+            )
+        item["default_icons_version"] = SHORT_COOLDOWN_HUD_DEFAULT_ICONS_VERSION
+        self.data[SHORT_COOLDOWN_HUD_CONFIG_KEY] = item
+
+    def apply_astrology_card_tracker_to_data(self) -> None:
+        if self.astrology_card_tracker is None:
+            return
+        row = self.astrology_card_tracker
+        item = ensure_astrology_card_tracker_config(self.data)
+        try:
+            threshold = int(row.counter_threshold.get())
+        except (TypeError, ValueError):
+            threshold = ASTROLOGY_DEFAULT_COUNTER_THRESHOLD
+        item["tracked_skills"] = {
+            str(skill_id): bool(variable.get())
+            for skill_id, variable in row.enabled_skills.items()
+        }
+        item["counter_threshold"] = (
+            threshold
+            if threshold in ASTROLOGY_COUNTER_CHOICES
+            else ASTROLOGY_DEFAULT_COUNTER_THRESHOLD
+        )
+        deck: list[str] = []
+        deck_ended = False
+        for variable in row.deck:
+            value = variable.get()
+            if deck_ended or value == ASTROLOGY_UNSET_LABEL:
+                deck_ended = True
+                deck.append("")
+            else:
+                deck.append(value)
+        item["deck"] = deck
+        item["skill_suits"] = {
+            str(skill_id): (
+                "" if variable.get() == ASTROLOGY_UNSET_LABEL else variable.get()
+            )
+            for skill_id, variable in row.skill_suits.items()
+        }
+        base_cooldown_seconds: dict[str, float | int] = {}
+        for skill_id, variable in row.base_cooldown_seconds.items():
+            default = ASTROLOGY_CORE_COOLDOWN_DEFAULTS[skill_id]
+            try:
+                seconds = float(variable.get())
+            except (TypeError, ValueError, tk.TclError):
+                seconds = default
+            seconds = max(
+                ASTROLOGY_MIN_COOLDOWN_SECONDS,
+                min(ASTROLOGY_MAX_COOLDOWN_SECONDS, seconds),
+            )
+            base_cooldown_seconds[str(skill_id)] = (
+                int(seconds) if seconds.is_integer() else seconds
+            )
+        item["base_cooldown_seconds"] = base_cooldown_seconds
+        self.data[ASTROLOGY_CARD_TRACKER_CONFIG_KEY] = item
 
     def apply_magic_shield_to_data(self) -> None:
         if self.magic_shield_delay is None:
@@ -4347,9 +6318,17 @@ class SettingsApp:
             return
         row = self.key_enemy_debuff
         item = row.item
+        complete_enabled = bool(row.complete_enabled.get())
+        visual_hud_enabled = bool(row.visual_hud_enabled.get())
+        threshold_values = parse_key_enemy_debuff_threshold_values(
+            self._key_enemy_debuff_threshold_values(),
+            require_complete=complete_enabled or visual_hud_enabled,
+        )
         item["name"] = KEY_ENEMY_DEBUFF_SECTION_NAME
-        item["complete_enabled"] = bool(row.complete_enabled.get())
+        item["complete_enabled"] = complete_enabled
         item["expiry_enabled"] = bool(row.expiry_enabled.get())
+        item["visual_hud_enabled"] = visual_hud_enabled
+        item["visual_expiry_enabled"] = bool(row.visual_expiry_enabled.get())
         item["audio_volume"] = self.data["audio_volume"]
         item["max_hp_values"] = list(KEY_ENEMY_DEBUFF_BOSS_MAX_HP_VALUES)
         item["current_hp_stat_id"] = BOSS_HP_CURRENT_STAT_ID
@@ -4369,27 +6348,8 @@ class SettingsApp:
             expiry_seconds = KEY_ENEMY_DEBUFF_DEFAULT_EXPIRY_SECONDS
         item["expiry_seconds"] = max(0, min(600, expiry_seconds))
 
-        try:
-            physical_break_min = int(row.physical_break_min.get())
-        except (TypeError, ValueError, tk.TclError):
-            physical_break_min = KEY_ENEMY_DEBUFF_PHYSICAL_BREAK_MIN
-        try:
-            magic_break_min = int(row.magic_break_min.get())
-        except (TypeError, ValueError, tk.TclError):
-            magic_break_min = KEY_ENEMY_DEBUFF_MAGIC_BREAK_MIN
-        try:
-            damage_bonus_min = int(row.damage_bonus_min.get())
-        except (TypeError, ValueError, tk.TclError):
-            damage_bonus_min = KEY_ENEMY_DEBUFF_DAMAGE_BONUS_MIN
-        try:
-            rabbit_stacks_min = int(row.rabbit_stacks_min.get())
-        except (TypeError, ValueError, tk.TclError):
-            rabbit_stacks_min = KEY_ENEMY_DEBUFF_RABBIT_STACKS_MIN
-
-        item["physical_break_min"] = max(0, min(999, physical_break_min))
-        item["magic_break_min"] = max(0, min(999, magic_break_min))
-        item["damage_bonus_min"] = max(0, min(999, damage_bonus_min))
-        item["rabbit_stacks_min"] = max(1, min(10, rabbit_stacks_min))
+        for key, _label, _minimum, _maximum in KEY_ENEMY_DEBUFF_THRESHOLD_FIELDS:
+            item[key] = threshold_values[key]
         gunner_eye = key_enemy_gunner_eye_defaults()
         if self.gunner_eye_row is not None:
             gunner_row = self.gunner_eye_row
@@ -4485,10 +6445,25 @@ class SettingsApp:
                 cooldown_seconds = int(row.cooldown_seconds.get())
             except (TypeError, ValueError, tk.TclError):
                 cooldown_seconds = int(rules["cooldown_seconds"])
-            item["cooldown_delay_seconds"] = max(
-                int(rules["cooldown_min"]),
-                min(int(rules["cooldown_max"]), cooldown_seconds),
-            )
+            if rules.get("cooldown_fixed"):
+                item["cooldown_delay_seconds"] = int(rules["cooldown_seconds"])
+            elif "cooldown_choices" in rules:
+                if cooldown_seconds not in rules["cooldown_choices"]:
+                    cooldown_seconds = int(rules["cooldown_seconds"])
+                item["cooldown_delay_seconds"] = cooldown_seconds
+            else:
+                item["cooldown_delay_seconds"] = max(
+                    int(rules["cooldown_min"]),
+                    min(int(rules["cooldown_max"]), cooldown_seconds),
+                )
+            if rules.get("cooldown_from_apply"):
+                item["cooldown_from_apply"] = True
+            else:
+                item.pop("cooldown_from_apply", None)
+            if rules.get("cooldown_from_skill_use"):
+                item["cooldown_from_skill_use"] = True
+            else:
+                item.pop("cooldown_from_skill_use", None)
             item["cooldown_sound"] = (
                 row.cooldown_sound.get().strip() or rules["cooldown_sound"]
             )
@@ -4552,8 +6527,12 @@ class SettingsApp:
         messagebox.showinfo("已保存", "设置已保存。下次启动提醒器时生效。")
 
     def save_and_close(self) -> None:
-        self.apply_to_data()
-        save_config(self.config_path, self.data)
+        try:
+            self.apply_to_data()
+            save_config(self.config_path, self.data)
+        except Exception as exc:
+            messagebox.showerror("保存失败", str(exc))
+            return
         self.root.destroy()
 
 

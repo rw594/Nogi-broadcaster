@@ -18,11 +18,18 @@ from .alerting import (
     AlertEngine,
     FiredAlert,
     MAGIC_SHIELD_CCID,
+    MUSIC_BUFF_CCIDS,
     load_all_specs,
     play_sound,
     print_alert,
 )
 from .events import DEFAULT_TZ_OFFSET_HOURS, sbt_to_unix_ms
+from .overlay_bridge import MusicOverlayPublisher
+from .server_clock import (
+    ServerClockCalibrator,
+    ServerClockDiagnosticRecorder,
+    load_server_clock_settings,
+)
 
 
 DEFAULT_HISTORIES = r"C:\Users\rw594\Desktop\MicoPunch\histories"
@@ -708,7 +715,50 @@ def process_event(
     allow_learning: bool,
     verbose_events: bool,
     alert_recorder: AlertRecorder | None = None,
+    server_clock: ServerClockCalibrator | None = None,
+    server_clock_recorder: ServerClockDiagnosticRecorder | None = None,
+    music_overlay: MusicOverlayPublisher | None = None,
 ) -> None:
+    if server_clock is not None:
+        calibration = server_clock.observe(event)
+        if calibration is not None:
+            print(
+                "[live] login server clock: "
+                f"character={calibration.character_id} "
+                f"skew={calibration.wall_clock_skew_ms / 1000:+.3f}s"
+            )
+            if server_clock_recorder is not None:
+                server_clock_recorder.write_login(calibration)
+        entity_server_time = server_clock.observe_entity_server_time(event)
+        if entity_server_time is not None:
+            if server_clock.entity_server_time_samples_seen == 1:
+                print(
+                    "[live] server clock diagnostic: op=0x659c "
+                    f"entity={entity_server_time.entity_id} "
+                    f"skew={entity_server_time.wall_clock_skew_ms / 1000:+.3f}s "
+                    "applied=false"
+                )
+            if server_clock_recorder is not None:
+                server_clock_recorder.write_entity_server_time(
+                    entity_server_time,
+                    self_id=self_filter.self_id,
+                )
+        ccid = event.get("CCId")
+        try:
+            is_music_event = int(ccid) in MUSIC_BUFF_CCIDS
+        except (TypeError, ValueError):
+            is_music_event = False
+        comparison = (
+            server_clock.music_timing_comparison(event)
+            if is_music_event
+            else None
+        )
+        if comparison is not None and server_clock_recorder is not None:
+            server_clock_recorder.write_music(
+                comparison,
+                self_id=self_filter.self_id,
+            )
+
     self_filter.observe(event)
 
     ccid = event.get("CCId")
@@ -726,19 +776,29 @@ def process_event(
         engine.is_unfiltered_stat_drop_effect_event(event)
     )
     is_boss_hp_event = engine.is_boss_hp_event(event)
+    is_miracle_orb_hp_event = engine.is_miracle_orb_hp_event(event)
     is_boss_red_orb_event = engine.is_boss_red_orb_event(event)
     is_boss_laser_event = engine.is_boss_laser_event(event)
     is_key_enemy_debuff_event = engine.is_key_enemy_debuff_event(event)
     is_death_signal_event = engine.is_death_signal_event(event)
     is_battle_timer_event = engine.is_battle_timer_event(event)
+    is_skill_cooldown_anchor_event = engine.is_skill_cooldown_anchor_event(event)
+    is_astrology_card_tracker_event = (
+        engine.astrology_card_tracker.is_relevant_event(event)
+    )
+    is_short_cooldown_test_target_event = (
+        engine.is_short_cooldown_test_target_event(event)
+    )
     is_self_stats_event = (
         event.get("EventId") == 17 and self_filter.allow_self_event(event)
     )
     if (
         is_boss_hp_event
+        or is_miracle_orb_hp_event
         or is_boss_red_orb_event
         or is_boss_laser_event
         or is_key_enemy_debuff_event
+        or is_short_cooldown_test_target_event
         or (is_stat_drop_effect_event and is_unfiltered_stat_drop_effect_event)
     ):
         pass
@@ -747,6 +807,8 @@ def process_event(
         or is_self_stats_event
         or is_death_signal_event
         or is_battle_timer_event
+        or is_skill_cooldown_anchor_event
+        or is_astrology_card_tracker_event
         or (is_stat_drop_effect_event and not is_unfiltered_stat_drop_effect_event)
     ):
         if not self_filter.allow_self_event(event):
@@ -755,7 +817,44 @@ def process_event(
         return
 
     primary = engine.ccid_to_primary.get(int(ccid)) if ccid is not None else None
+    astrology_revision_before = engine.astrology_card_tracker.revision
     alerts = engine.process_event(event)
+    if engine.astrology_card_tracker.revision != astrology_revision_before:
+        update = engine.astrology_card_tracker.last_update
+        if update is not None:
+            print(
+                "[live] astrology cards: "
+                f"action={update.action} skill={update.skill_id} "
+                f"suit={update.skill_suit} card={update.card or '-'} "
+                f"held={engine.astrology_card_tracker.held_card or '-'} "
+                f"count={engine.astrology_card_tracker.counter}/"
+                f"{engine.astrology_card_tracker.settings.counter_threshold} "
+                f"next={engine.astrology_card_tracker.next_card_number}"
+            )
+    if music_overlay is not None:
+        music_overlay.sync_states(
+            engine.states,
+            key_enemy_debuff_alert=engine.key_enemy_debuff_alert,
+            key_enemy_debuff_states=engine.key_enemy_debuff_entity_states,
+            short_cooldown_test_target_active=(
+                engine.short_cooldown_test_target_active
+            ),
+            astrology_tracking_active=(
+                engine.astrology_tracking_context_active
+            ),
+            self_identity_confirmed=engine.self_entity_id is not None,
+            astrology_card_tracker=engine.astrology_card_tracker,
+            boss_hp_states_by_max_hp=getattr(
+                engine, "boss_hp_alert_states_by_max_hp", None
+            ),
+            miracle_orb_hp_states=getattr(engine, "miracle_orb_hp_states", None),
+            miracle_orb_selected_entity_id=getattr(
+                engine, "miracle_orb_selected_entity_id", None
+            ),
+            boss_laser_states_by_max_hp=getattr(
+                engine, "boss_laser_alert_states_by_max_hp", None
+            ),
+        )
     if suppress_alerts:
         return
 
@@ -825,8 +924,33 @@ def advance_live_time(
     suppress_alerts: bool,
     alert_recorder: AlertRecorder | None = None,
     self_filter: SelfFilter | None = None,
+    music_overlay: MusicOverlayPublisher | None = None,
 ) -> None:
     alerts = engine.advance_time(now_ms())
+    if music_overlay is not None:
+        music_overlay.sync_states(
+            engine.states,
+            key_enemy_debuff_alert=engine.key_enemy_debuff_alert,
+            key_enemy_debuff_states=engine.key_enemy_debuff_entity_states,
+            short_cooldown_test_target_active=(
+                engine.short_cooldown_test_target_active
+            ),
+            astrology_tracking_active=(
+                engine.astrology_tracking_context_active
+            ),
+            self_identity_confirmed=engine.self_entity_id is not None,
+            astrology_card_tracker=engine.astrology_card_tracker,
+            boss_hp_states_by_max_hp=getattr(
+                engine, "boss_hp_alert_states_by_max_hp", None
+            ),
+            miracle_orb_hp_states=getattr(engine, "miracle_orb_hp_states", None),
+            miracle_orb_selected_entity_id=getattr(
+                engine, "miracle_orb_selected_entity_id", None
+            ),
+            boss_laser_states_by_max_hp=getattr(
+                engine, "boss_laser_alert_states_by_max_hp", None
+            ),
+        )
     if suppress_alerts:
         return
 
@@ -869,8 +993,16 @@ def print_status(engine: AlertEngine) -> None:
         print("[live] active -")
 
 
-def make_engine(args: argparse.Namespace) -> tuple[AlertEngine, SelfFilter]:
+def make_engine(
+    args: argparse.Namespace,
+) -> tuple[AlertEngine, SelfFilter, ServerClockCalibrator]:
     loaded = load_all_specs(args.config)
+    server_clock = ServerClockCalibrator(
+        load_server_clock_settings(
+            args.config,
+            fallback_tz_offset_hours=args.tz_offset_hours,
+        )
+    )
     engine = AlertEngine(
         loaded.buffs,
         progress_specs=loaded.progresses,
@@ -889,13 +1021,16 @@ def make_engine(args: argparse.Namespace) -> tuple[AlertEngine, SelfFilter]:
         music_strong_reminder_enabled=loaded.music_strong_reminder_enabled,
         music_strong_reminder_repeat_seconds=loaded.music_strong_reminder_repeat_seconds,
         music_strong_reminder_prefix_sound=loaded.music_strong_reminder_prefix_sound,
+        music_tuan_silence_enabled=loaded.music_tuan_silence_enabled,
+        astrology_card_tracker_settings=loaded.astrology_card_tracker_settings,
+        server_clock_calibrator=server_clock,
     )
     self_filter = SelfFilter(
         engine,
         self_id=args.self_id,
         disabled=args.no_self_filter,
     )
-    return engine, self_filter
+    return engine, self_filter, server_clock
 
 
 def print_common_start(args: argparse.Namespace) -> None:
@@ -912,9 +1047,12 @@ def print_common_start(args: argparse.Namespace) -> None:
 
 
 def cmd_watch_file(args: argparse.Namespace) -> int:
-    engine, self_filter = make_engine(args)
+    engine, self_filter, server_clock = make_engine(args)
+    music_overlay = MusicOverlayPublisher(args.config)
+    music_overlay.start()
     recorder = EventRecorder(getattr(args, "record_events", ""))
     alert_recorder = AlertRecorder(getattr(args, "record_alerts", ""))
+    server_clock_recorder = ServerClockDiagnosticRecorder(server_clock.settings)
 
     histories = Path(args.histories)
     current_file: Path | None = None
@@ -930,6 +1068,10 @@ def cmd_watch_file(args: argparse.Namespace) -> int:
         print(f"[live] recording events: {recorder.path}")
     if alert_recorder.path is not None:
         print(f"[live] recording alert timing: {alert_recorder.path}")
+    if server_clock.settings.enabled:
+        print(f"[live] server clock diagnostics: {server_clock.settings.mode}")
+        if server_clock_recorder.path is not None:
+            print(f"[live] recording clock diagnostics: {server_clock_recorder.path}")
     print_common_start(args)
 
     deadline = time.monotonic() + args.max_seconds if args.max_seconds > 0 else None
@@ -980,6 +1122,9 @@ def cmd_watch_file(args: argparse.Namespace) -> int:
                     allow_learning=not suppress_initial_events,
                     verbose_events=args.verbose_events,
                     alert_recorder=alert_recorder,
+                    server_clock=server_clock,
+                    server_clock_recorder=server_clock_recorder,
+                    music_overlay=music_overlay,
                 )
 
             if new_items and suppress_initial_events:
@@ -996,6 +1141,7 @@ def cmd_watch_file(args: argparse.Namespace) -> int:
                 suppress_alerts=False,
                 alert_recorder=alert_recorder,
                 self_filter=self_filter,
+                music_overlay=music_overlay,
             )
 
             if (
@@ -1013,23 +1159,22 @@ def cmd_watch_file(args: argparse.Namespace) -> int:
     finally:
         recorder.close()
         alert_recorder.close()
+        server_clock_recorder.close()
+        music_overlay.close()
 
 
 def cmd_watch_ws(args: argparse.Namespace) -> int:
-    engine, self_filter = make_engine(args)
+    engine, self_filter, server_clock = make_engine(args)
+    music_overlay = MusicOverlayPublisher(args.config)
+    music_overlay.start()
     client = LocalWebSocket(host=args.host, port=args.port, path=args.path)
     recorder = EventRecorder(getattr(args, "record_events", ""))
     alert_recorder = AlertRecorder(getattr(args, "record_alerts", ""))
+    server_clock_recorder = ServerClockDiagnosticRecorder(server_clock.settings)
     last_status_at = 0.0
     deadline = time.monotonic() + args.max_seconds if args.max_seconds > 0 else None
-    idle_reconnects = 0
+    backend_is_alive = getattr(args, "backend_is_alive", None)
     restart_backend = getattr(args, "restart_backend", None)
-    backend_restart_after_idle_reconnects = max(
-        0, int(getattr(args, "backend_restart_after_idle_reconnects", 0) or 0)
-    )
-    reset_self_on_backend_restart = bool(
-        getattr(args, "reset_self_on_backend_restart", True)
-    )
 
     print("[live] Buff watcher is running in WebSocket mode.")
     print(f"[live] websocket: {client.url}")
@@ -1037,6 +1182,10 @@ def cmd_watch_ws(args: argparse.Namespace) -> int:
         print(f"[live] recording events: {recorder.path}")
     if alert_recorder.path is not None:
         print(f"[live] recording alert timing: {alert_recorder.path}")
+    if server_clock.settings.enabled:
+        print(f"[live] server clock diagnostics: {server_clock.settings.mode}")
+        if server_clock_recorder.path is not None:
+            print(f"[live] recording clock diagnostics: {server_clock_recorder.path}")
     print_common_start(args)
 
     try:
@@ -1048,7 +1197,6 @@ def cmd_watch_ws(args: argparse.Namespace) -> int:
             try:
                 client.connect()
                 print("[live] websocket connected")
-                last_message_at = time.monotonic()
                 while True:
                     if deadline is not None and time.monotonic() >= deadline:
                         print("[live] max seconds reached")
@@ -1059,14 +1207,15 @@ def cmd_watch_ws(args: argparse.Namespace) -> int:
                     except socket.timeout:
                         text = None
 
+                    if callable(backend_is_alive) and not backend_is_alive():
+                        raise ConnectionError("packet backend process exited")
+
                     if text:
                         try:
                             event = json.loads(text)
                         except json.JSONDecodeError:
                             event = None
                         if isinstance(event, dict):
-                            last_message_at = time.monotonic()
-                            idle_reconnects = 0
                             recorder.write_event(event)
                             process_event(
                                 engine,
@@ -1078,6 +1227,9 @@ def cmd_watch_ws(args: argparse.Namespace) -> int:
                                 allow_learning=True,
                                 verbose_events=args.verbose_events,
                                 alert_recorder=alert_recorder,
+                                server_clock=server_clock,
+                                server_clock_recorder=server_clock_recorder,
+                                music_overlay=music_overlay,
                             )
 
                     advance_live_time(
@@ -1087,6 +1239,7 @@ def cmd_watch_ws(args: argparse.Namespace) -> int:
                         suppress_alerts=False,
                         alert_recorder=alert_recorder,
                         self_filter=self_filter,
+                        music_overlay=music_overlay,
                     )
 
                     if (
@@ -1096,36 +1249,22 @@ def cmd_watch_ws(args: argparse.Namespace) -> int:
                         print_status(engine)
                         last_status_at = time.monotonic()
 
-                    if (
-                        args.idle_reconnect_seconds > 0
-                        and time.monotonic() - last_message_at
-                        >= args.idle_reconnect_seconds
-                    ):
-                        idle_reconnects += 1
-                        if (
-                            backend_restart_after_idle_reconnects > 0
-                            and idle_reconnects
-                            >= backend_restart_after_idle_reconnects
-                            and callable(restart_backend)
-                        ):
-                            print(
-                                "[live] websocket idle, restarting packet backend"
-                            )
-                            client.close()
-                            new_port = int(restart_backend())
-                            if new_port != client.port:
-                                client.port = new_port
-                                print(f"[live] websocket: {client.url}")
-                            if reset_self_on_backend_restart:
-                                self_filter.reset_auto("backend restarted")
-                            idle_reconnects = 0
-                        else:
-                            print("[live] websocket idle, reconnecting")
-                        raise ConnectionError("idle reconnect")
-
             except (ConnectionError, OSError) as exc:
                 print(f"[live] websocket disconnected: {exc}")
                 client.close()
+                if (
+                    callable(backend_is_alive)
+                    and not backend_is_alive()
+                    and callable(restart_backend)
+                ):
+                    print(
+                        "[live] packet backend process exited; restarting "
+                        "without clearing the confirmed self id"
+                    )
+                    new_port = int(restart_backend())
+                    if new_port != client.port:
+                        client.port = new_port
+                        print(f"[live] websocket: {client.url}")
                 time.sleep(args.reconnect_seconds)
     except KeyboardInterrupt:
         client.close()
@@ -1135,6 +1274,8 @@ def cmd_watch_ws(args: argparse.Namespace) -> int:
         client.close()
         recorder.close()
         alert_recorder.close()
+        server_clock_recorder.close()
+        music_overlay.close()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1148,7 +1289,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--tz-offset-hours", type=int, default=DEFAULT_TZ_OFFSET_HOURS)
     parser.add_argument("--poll-seconds", type=float, default=0.1)
     parser.add_argument("--reconnect-seconds", type=float, default=3)
-    parser.add_argument("--idle-reconnect-seconds", type=float, default=20)
+    parser.add_argument(
+        "--idle-reconnect-seconds",
+        type=float,
+        default=0,
+        help="Deprecated compatibility option; quiet traffic never forces reconnects.",
+    )
     parser.add_argument("--status-interval", type=float, default=30.0)
     parser.add_argument("--self-id", help="Only accept buff events whose target Id matches this value.")
     parser.add_argument("--no-self-filter", action="store_true")

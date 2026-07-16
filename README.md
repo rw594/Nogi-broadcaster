@@ -77,13 +77,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build_release.ps1 
 
 ## 更新清单
 
-`latest.json` 用于后续客户端联网检查更新。建议将它随每个 GitHub Release 一起上传，客户端读取：
+V1.25e 及更早客户端使用过的更新清单已经永久停用。V1.3 从全新且严格隔离的更新通道开始：
 
 ```text
-https://github.com/rw594/Nogi-broadcaster/releases/latest/download/latest.json
+https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/public/latest.json
+https://raw.githubusercontent.com/rw594/Nogi-broadcaster/main/update-channels/v13/public/latest.json
 ```
 
-仓库根目录也保留一份 `latest.json` 作为可读版本记录。每次发布新版本时，需要同步更新：
+新通道的仓库清单位于 `update-channels/v13/public/latest.json`。每次发布新版本时，需要同步更新：
 
 - `version`
 - `versionCode`
@@ -91,6 +92,9 @@ https://github.com/rw594/Nogi-broadcaster/releases/latest/download/latest.json
 - `downloadUrl`
 - `sha256`
 - `notes`
+
+旧 `latest.json`、`latest-v2.json`、GitHub Latest Release 和 OSS legacy/v2 路径只能保留停用占位，
+不得重定向到 V1.3。完整操作与安全约束见 `docs/ALIYUN_UPDATE_MIRROR.md`。
 
 发布新版本前，应先请项目维护者手写一段面向用户的版本更新日志；除非维护者已经主动提供，否则不要自行直接生成最终发布说明。
 
