@@ -1,0 +1,30 @@
+{
+  "app": "洛奇播报小助手",
+  "channel": "nogi-v13-visual",
+  "version": "1.7-visual.1",
+  "baseVersion": "1.7",
+  "visualRevision": 1,
+  "versionCode": 1070001,
+  "releaseName": "洛奇播报小助手 V1.7 HUD",
+  "publishedAt": "2026-08-09",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7/r1/V1.7-visual-r1.zip",
+  "sha256": "b4b5aadfd2df936f873a93e887af0a5c3e7dc153ef2b4e91df1ea489f202c118",
+  "size": 107428511,
+  "mandatory": false,
+  "notes": [
+    "一次比较大的更新！",
+    "①重新设计了主界面。依然是原来的温暖风格，但应该会稍微现代一点点",
+    "②重新设计了【破防DEBUFF】达标数值的申报方式。现在只需申报相关鉴定配置，系统会自动计算预期破防数值",
+    "③增加了魔剑和黑魔的技能CD追踪（注意黑魔需要手填龙炎闪电链的冷却时间）",
+    "④增加了愤怒狂暴的CD追踪（需要手填一个基础冷却时间；系统会自动检测双手武器暴击的CD重置）",
+    "⑤优化了【骑士枪骑乘冲刺】HUD状态条的设计",
+    "⑥现在插件成功连接后，会显示当前用户角色的名字**，以帮助避免【角色识别错误】的尴尬情况",
+    "**注：播报小助手不会主动收集任何与用户相关的信息，请放心！0w0"
+  ],
+  "downloadUrls": [
+    {
+      "name": "阿里云镜像",
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7/r1/V1.7-visual-r1.zip"
+    }
+  ]
+}
