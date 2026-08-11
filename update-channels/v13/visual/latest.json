@@ -1,26 +1,27 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.7a-visual.1",
-  "baseVersion": "1.7a",
+  "version": "1.7k-visual.1",
+  "baseVersion": "1.7k",
   "visualRevision": 1,
-  "versionCode": 1070101,
-  "releaseName": "洛奇播报小助手 V1.7a HUD",
-  "publishedAt": "2026-08-09",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7a/r1/V1.7a-visual-r1.zip",
-  "sha256": "d00d164e872d66f896b2da4da07ecbe88c3f63cefe9bdabcd7eab0859a10eb4c",
-  "size": 107437927,
+  "versionCode": 1070111,
+  "releaseName": "洛奇播报小助手 V1.7k HUD",
+  "publishedAt": "2026-08-12",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7k/r1/V1.7k-visual-r1.zip",
+  "sha256": "bd86087f3ce9674d7c38d9ac681a24d577451ee0c5af18d14cfee61b66aadc26",
+  "size": 68421325,
   "mandatory": false,
   "notes": [
-    "一次小型界面修正：",
-    "①移除了启动器中不适用于公开发布版本的本地测试说明",
-    "②没有可用更新时，版本状态现在显示为【已是最新版本】",
-    "③修复【破防 DEBUFF】设置区回退显示内部阈值的问题；恢复为申报装备鉴定、套装与兔子层数，并自动计算预期阈值"
+    "① 新增【战场震慑】【崩坏波动】【万钧之力】相关HUD显示功能",
+    "②修复了特定情况下，死亡之后魔法盾仍不停播报漏开提醒的问题",
+    "③优化了一些圣歌相关的提醒功能逻辑",
+    "④修复了多个语音同时播报时，偶尔会互相打断或造成延迟的问题",
+    "⑤优化了安装包的尺寸，减少体积"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7a/r1/V1.7a-visual-r1.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7k/r1/V1.7k-visual-r1.zip"
     }
   ]
 }
