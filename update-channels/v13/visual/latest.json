@@ -1,27 +1,23 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.7k-visual.1",
+  "version": "1.7k-visual.2",
   "baseVersion": "1.7k",
-  "visualRevision": 1,
-  "versionCode": 1070111,
-  "releaseName": "洛奇播报小助手 V1.7k HUD",
+  "visualRevision": 2,
+  "versionCode": 1070112,
+  "releaseName": "洛奇播报小助手 V1.7k Fix",
   "publishedAt": "2026-08-12",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7k/r1/V1.7k-visual-r1.zip",
-  "sha256": "bd86087f3ce9674d7c38d9ac681a24d577451ee0c5af18d14cfee61b66aadc26",
-  "size": 68421325,
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7k/r2/V1.7k-visual-r2.zip",
+  "sha256": "56b511b7577c1e923c026f68408740d780117199106c8dd059406daaa8492991",
+  "size": 68420509,
   "mandatory": false,
   "notes": [
-    "① 新增【战场震慑】【崩坏波动】【万钧之力】相关HUD显示功能",
-    "②修复了特定情况下，死亡之后魔法盾仍不停播报漏开提醒的问题",
-    "③优化了一些圣歌相关的提醒功能逻辑",
-    "④修复了多个语音同时播报时，偶尔会互相打断或造成延迟的问题",
-    "⑤优化了安装包的尺寸，减少体积"
+    "①因为客户端更新导致的激光播报失效问题=-="
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7k/r1/V1.7k-visual-r1.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.7k/r2/V1.7k-visual-r2.zip"
     }
   ]
 }
