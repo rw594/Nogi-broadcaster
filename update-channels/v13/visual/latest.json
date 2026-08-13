@@ -1,24 +1,23 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.5l-visual.1",
+  "version": "1.5l-visual.2",
   "baseVersion": "1.5l",
-  "visualRevision": 1,
-  "versionCode": 1070113,
-  "releaseName": "洛奇播报小助手 V1.5l",
+  "visualRevision": 2,
+  "versionCode": 1070114,
+  "releaseName": "洛奇播报小助手 V1.5l FIX",
   "publishedAt": "2026-08-13",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.5l/r1/V1.5l-visual-r1.zip",
-  "sha256": "1a457de0c625d1cbcee3d5d9163e1ff3a59d06dd4a930ce54a14872c41cf7fb3",
-  "size": 69321569,
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.5l/r2/V1.5l-visual-r2.zip",
+  "sha256": "ff0bc84d92b22295bd1e1ddc15677612ca9ad8d3187e0d51118ffd54cc21cc0e",
+  "size": 69324607,
   "mandatory": false,
   "notes": [
-    "①缩小了布四-分裂的能量计数器的尺寸，以避免遮挡视线",
-    "②新增了针对神迹环绕红球爆炸的视觉提醒（默认关闭，需手动开启）"
+    "①修复了【愤怒狂暴】监测功能，现在魔剑大佬们可以更精准地压力自己家T了（恶魔低语"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.5l/r1/V1.5l-visual-r1.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.5l/r2/V1.5l-visual-r2.zip"
     }
   ]
 }
