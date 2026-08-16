@@ -1,23 +1,25 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.5l-visual.2",
-  "baseVersion": "1.5l",
-  "visualRevision": 2,
-  "versionCode": 1070114,
-  "releaseName": "洛奇播报小助手 V1.5l FIX",
-  "publishedAt": "2026-08-13",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.5l/r2/V1.5l-visual-r2.zip",
-  "sha256": "ff0bc84d92b22295bd1e1ddc15677612ca9ad8d3187e0d51118ffd54cc21cc0e",
-  "size": 69324607,
+  "version": "1.5m-visual.1",
+  "baseVersion": "1.5m",
+  "visualRevision": 1,
+  "versionCode": 1070115,
+  "releaseName": "洛奇播报小助手 V1.5m",
+  "publishedAt": "2026-08-16",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.5m/r1/V1.5m-visual-r1.zip",
+  "sha256": "368c3ff790e4e4ce83e8b1c265d0bb5a83763a1232c5b273a3300cfb966df0df",
+  "size": 69491624,
   "mandatory": false,
   "notes": [
-    "①修复了【愤怒狂暴】监测功能，现在魔剑大佬们可以更精准地压力自己家T了（恶魔低语"
+    "①新增【布三布四招式预警】 - 目前只支持爆炸圈，挥击和大跳（布四羽毛之舞尚在开发）",
+    "②修复了一些组队情况下，音乐buff可能误报的情况",
+    "③修复了一些庆典料理相关的误报（庆典料理追踪功能尚不完善，慎用）"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.5l/r2/V1.5l-visual-r2.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.5m/r1/V1.5m-visual-r1.zip"
     }
   ]
 }
