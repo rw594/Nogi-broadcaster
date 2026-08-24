@@ -1,23 +1,24 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.8-visual.2",
+  "version": "1.8-visual.3",
   "baseVersion": "1.8",
-  "visualRevision": 2,
-  "versionCode": 1080002,
-  "releaseName": "洛奇播报小助手 V1.8 fix1",
-  "publishedAt": "2026-08-22",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.8/r2/V1.8-visual-r2.zip",
-  "sha256": "6833b8a89342c41dae5677d55659b54fa80c3f2a1d43fb453373680402db950e",
-  "size": 72336608,
+  "visualRevision": 3,
+  "versionCode": 1080003,
+  "releaseName": "洛奇播报小助手 V1.8 fix2",
+  "publishedAt": "2026-08-25",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.8/r3/V1.8-visual-r3.zip",
+  "sha256": "60d6b5798937904336f5a2aaafc08fa291782222b377066c832a1c96efeab61c",
+  "size": 71753427,
   "mandatory": false,
   "notes": [
-    "修复V1.8部分界面元素异常显示的问题。"
+    "①修复了布三布四激光倒计时有时会错误地提前结束的问题",
+    "②修复了战斗占星cd追踪有时因为服务器网络抖动而偏移不准的问题"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.8/r2/V1.8-visual-r2.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.8/r3/V1.8-visual-r3.zip"
     }
   ]
 }
