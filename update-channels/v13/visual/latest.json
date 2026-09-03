@@ -1,24 +1,29 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.8-visual.3",
-  "baseVersion": "1.8",
-  "visualRevision": 3,
-  "versionCode": 1080003,
-  "releaseName": "洛奇播报小助手 V1.8 fix2",
-  "publishedAt": "2026-08-25",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.8/r3/V1.8-visual-r3.zip",
-  "sha256": "60d6b5798937904336f5a2aaafc08fa291782222b377066c832a1c96efeab61c",
-  "size": 71753427,
+  "version": "1.9-visual.1",
+  "baseVersion": "1.9",
+  "visualRevision": 1,
+  "versionCode": 1090001,
+  "releaseName": "洛奇播报小助手 V1.9",
+  "publishedAt": "2026-09-04",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r1/V1.9-visual-r1.zip",
+  "sha256": "41e64977bb0b8c1ceab520497bbf2d0bb224fcff7945186a6976ea28d33a2477",
+  "size": 85200042,
   "mandatory": false,
   "notes": [
-    "①修复了布三布四激光倒计时有时会错误地提前结束的问题",
-    "②修复了战斗占星cd追踪有时因为服务器网络抖动而偏移不准的问题"
+    "***重要***：本次更新调整了【布三30%/布四35%偏爱的行迹 - 旋转激光倒计时】的播报零点。现在倒计时的【零】将落在boss对玩家进行锁定的瞬间，而不再是激光停止移动的瞬间。请务必在倒计时数到零之前跳出！",
+    "①现在可以自定义技能冷却追踪HUD的布局了！",
+    "②增加了对犬灵，雪人，凯特西，倒吊，三眼这五项增伤效果的监控功能",
+    "③布三15%，出现远位安全屋时将会报警",
+    "④进布本时，如果发现多尔卡不足，将会报警",
+    "⑤修复了一些布本相关信号的准确性问题",
+    "⑥在战斗中途打开插件时，将不再会显示待补DEBUFF的追踪图标"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.8/r3/V1.8-visual-r3.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r1/V1.9-visual-r1.zip"
     }
   ]
 }
