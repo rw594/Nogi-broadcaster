@@ -8,8 +8,8 @@
   "releaseName": "洛奇播报小助手 V1.9 fix 3",
   "publishedAt": "2026-09-05",
   "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r5/V1.9-visual-r5.zip",
-  "sha256": "c469db59864b78e4d967e7035cd36e576d1efd394c134ee5c9eb7118d240842c",
-  "size": 85975666,
+  "sha256": "ba64fe106df961c2310c48f1d32439beb27009ed7ea7c87f6bc5f7f190e93bea",
+  "size": 85846137,
   "mandatory": false,
   "notes": [
     "稳定性优化"
