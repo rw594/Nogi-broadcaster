@@ -1,25 +1,24 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.9-visual.2",
-  "baseVersion": "1.9",
-  "visualRevision": 2,
-  "versionCode": 1090002,
-  "releaseName": "洛奇播报小助手 V1.9 fix 1",
-  "publishedAt": "2026-09-04",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r2/V1.9-visual-r2.zip",
-  "sha256": "085f92fa44c46598f72b6e1814f71c3ee07daeb85ef0f0714e2d83a539dfd932",
-  "size": 84330004,
+  "version": "1.8-visual.3",
+  "baseVersion": "1.8",
+  "visualRevision": 3,
+  "versionCode": 1080003,
+  "releaseName": "洛奇播报小助手 V1.8 fix2",
+  "publishedAt": "2026-08-25",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.8/r3/V1.8-visual-r3.zip",
+  "sha256": "60d6b5798937904336f5a2aaafc08fa291782222b377066c832a1c96efeab61c",
+  "size": 71753427,
   "mandatory": false,
   "notes": [
-    "①修复屏幕左下角误发布的精灵实体化测试 HUD；原有实体化语音提醒不受影响",
-    "②所有未明确指定为默认开启的 V1.9 新功能均改为默认关闭；已有 V1.9 用户首次启动 fix 1 时会执行一次默认值修正，之后仍可自行开启",
-    "③移除昨晚发布范围之外的布二月石缺位 HUD、致命坠击充能 HUD、3 个未宣布短冷却技能槽，以及队友音乐到期测试提醒"
+    "①修复了布三布四激光倒计时有时会错误地提前结束的问题",
+    "②修复了战斗占星cd追踪有时因为服务器网络抖动而偏移不准的问题"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r2/V1.9-visual-r2.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.8/r3/V1.8-visual-r3.zip"
     }
   ]
 }
