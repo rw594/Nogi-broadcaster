@@ -1,23 +1,25 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.9-visual.4",
+  "version": "1.9-visual.5",
   "baseVersion": "1.9",
-  "visualRevision": 4,
-  "versionCode": 1090004,
-  "releaseName": "洛奇播报小助手 V1.9 fix 2",
+  "visualRevision": 5,
+  "versionCode": 1090005,
+  "releaseName": "洛奇播报小助手 V1.9 fix 3",
   "publishedAt": "2026-09-05",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r4/V1.9-visual-r4.zip",
-  "sha256": "4747b90d91938c1433ab769c7f9787e8706d8f0fe11ababced644abce251cd5e",
-  "size": 85949052,
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r5/V1.9-visual-r5.zip",
+  "sha256": "c469db59864b78e4d967e7035cd36e576d1efd394c134ee5c9eb7118d240842c",
+  "size": 85975666,
   "mandatory": false,
   "notes": [
-    "【=-=紧急修复了刚才那个版本的一些问题（由于问题过多，不一一赘述了orz）】"
+    "【修复额外抓包端健康检测，并在故障时自动执行安全降级。】",
+    "【红球安全结束和激光碎片中止在故障时暂用旧规则；激光零点倒计时、羽毛之舞、第三只眼目标识别及布三远距离安全屋提示会暂停。】",
+    "【占星追踪现需完整配置（包括致命坠击花色）；若上次更新后该项为空，请重新填写。致命坠击 HUD 仍保留并默认关闭。】"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r4/V1.9-visual-r4.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r5/V1.9-visual-r5.zip"
     }
   ]
 }
