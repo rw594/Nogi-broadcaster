@@ -1,24 +1,23 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.9-visual.6",
+  "version": "1.9-visual.5",
   "baseVersion": "1.9",
-  "visualRevision": 6,
-  "versionCode": 1090006,
-  "releaseName": "洛奇播报小助手 V1.9 fix4",
-  "publishedAt": "2026-09-06",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r6/V1.9-visual-r6.zip",
-  "sha256": "36da269f5520109da3b0173c9160e6aa2a13a000414309933f97123c0eb66353",
-  "size": 85972285,
+  "visualRevision": 5,
+  "versionCode": 1090005,
+  "releaseName": "洛奇播报小助手 V1.9 fix 3",
+  "publishedAt": "2026-09-05",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r5/V1.9-visual-r5.zip",
+  "sha256": "ba64fe106df961c2310c48f1d32439beb27009ed7ea7c87f6bc5f7f190e93bea",
+  "size": 85846137,
   "mandatory": false,
   "notes": [
-    "①修复了一些后台稳定性相关的问题",
-    "②修复了部分HUD元素位置偏移的问题"
+    "稳定性优化"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r6/V1.9-visual-r6.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r5/V1.9-visual-r5.zip"
     }
   ]
 }
