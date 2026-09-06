@@ -1,24 +1,23 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.9-visual.6",
+  "version": "1.9-visual.7",
   "baseVersion": "1.9",
-  "visualRevision": 6,
-  "versionCode": 1090006,
-  "releaseName": "洛奇播报小助手 V1.9 fix4",
-  "publishedAt": "2026-09-06",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r6/V1.9-visual-r6.zip",
-  "sha256": "36da269f5520109da3b0173c9160e6aa2a13a000414309933f97123c0eb66353",
-  "size": 85972285,
+  "visualRevision": 7,
+  "versionCode": 1090007,
+  "releaseName": "洛奇播报小助手 V1.9 回退版",
+  "publishedAt": "2026-09-07",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r7/V1.9-visual-r7.zip",
+  "sha256": "771186bf1db84317400b83225677579e745e24e98d421b6997b9555820389662",
+  "size": 71699886,
   "mandatory": false,
   "notes": [
-    "①修复了一些后台稳定性相关的问题",
-    "②修复了部分HUD元素位置偏移的问题"
+    "重要通知：由于新版后端存在稳定性问题，暂时将大家退回到V1.8 fix2版本状态。所有V1.9新功能暂时删除，只保留技能冷却图标自定义布局的功能。新版将在本地稳定性测试后再发布。。。给大家添麻烦了，非常抱歉=-=！"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r6/V1.9-visual-r6.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r7/V1.9-visual-r7.zip"
     }
   ]
 }
