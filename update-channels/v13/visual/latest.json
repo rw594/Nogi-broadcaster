@@ -1,23 +1,27 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.9-visual.7",
-  "baseVersion": "1.9",
-  "visualRevision": 7,
-  "versionCode": 1090007,
-  "releaseName": "洛奇播报小助手 V1.9 回退版",
-  "publishedAt": "2026-09-07",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r7/V1.9-visual-r7.zip",
-  "sha256": "771186bf1db84317400b83225677579e745e24e98d421b6997b9555820389662",
-  "size": 71699886,
+  "version": "1.9a-visual.1",
+  "baseVersion": "1.9a",
+  "visualRevision": 1,
+  "versionCode": 1090101,
+  "releaseName": "洛奇播报小助手 V1.9a 双圣版",
+  "publishedAt": "2026-09-10",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9a/r1/V1.9a-visual-r1.zip",
+  "sha256": "7ecf2f54d05ba8597f6e3a57170fc2ae2b687b1b4459fc0cbc83c117b4c9e520",
+  "size": 86474856,
   "mandatory": false,
   "notes": [
-    "重要通知：由于新版后端存在稳定性问题，暂时将大家退回到V1.8 fix2版本状态。所有V1.9新功能暂时删除，只保留技能冷却图标自定义布局的功能。新版将在本地稳定性测试后再发布。。。给大家添麻烦了，非常抱歉=-=！"
+    "①适配最新双圣版",
+    "②增加了进本时的多尔卡不足提醒",
+    "③现在可以监控犬灵，凯特西，雪人的在场和debuff存续状态",
+    "④优化了部分BUFF倒计时的准确性",
+    "⑤以及其他一些bug修复和优化"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9/r7/V1.9-visual-r7.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9a/r1/V1.9a-visual-r1.zip"
     }
   ]
 }
