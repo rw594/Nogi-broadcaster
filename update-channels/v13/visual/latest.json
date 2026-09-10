@@ -1,23 +1,21 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.9b-visual.2",
+  "version": "1.9b-visual.3",
   "baseVersion": "1.9b",
-  "visualRevision": 2,
-  "versionCode": 1090202,
-  "releaseName": "洛奇播报小助手 V1.9b 热腾腾的新披萨 回炉版",
+  "visualRevision": 3,
+  "versionCode": 1090203,
+  "releaseName": "洛奇播报小助手 V1.9b 热腾腾的新披萨 回炉版2",
   "publishedAt": "2026-09-10",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r2/V1.9b-visual-r2.zip",
-  "sha256": "1bc731ac3525517d19d59bd1c05a72f87e87b33077c4ea2dab9d88f18f6f2730",
-  "size": 87889584,
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r3/V1.9b-visual-r3.zip",
+  "sha256": "119cb5e6d2ae8a8245f7b5940ae01949bc46f73b39b566ba2090b31aa5f19426",
+  "size": 87895668,
   "mandatory": false,
-  "notes": [
-    "①刚披萨不小心莓烤熟就出炉了qwq现已烤制完成，布1新披萨图可以正常运作了"
-  ],
+  "notes": [],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r2/V1.9b-visual-r2.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r3/V1.9b-visual-r3.zip"
     }
   ]
 }
