@@ -6,16 +6,16 @@
   "visualRevision": 3,
   "versionCode": 1090203,
   "releaseName": "洛奇播报小助手 V1.9b 热腾腾的新披萨 回炉版2",
-  "publishedAt": "2026-09-10",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r3/V1.9b-visual-r3.zip",
-  "sha256": "119cb5e6d2ae8a8245f7b5940ae01949bc46f73b39b566ba2090b31aa5f19426",
-  "size": 87895668,
+  "publishedAt": "2026-09-11",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r3/startup-fix-20260911/V1.9b-visual-r3.zip",
+  "sha256": "56014cc810b10c11060683647449bcd31c4329860ecdfe21382dd2ff18223ea1",
+  "size": 87203240,
   "mandatory": false,
   "notes": [],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r3/V1.9b-visual-r3.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r3/startup-fix-20260911/V1.9b-visual-r3.zip"
     }
   ]
 }
