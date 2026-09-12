@@ -1,21 +1,26 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.9b-visual.3",
-  "baseVersion": "1.9b",
-  "visualRevision": 3,
-  "versionCode": 1090203,
-  "releaseName": "洛奇播报小助手 V1.9b 热腾腾的新披萨 回炉版2",
-  "publishedAt": "2026-09-11",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r3/startup-fix-20260911/V1.9b-visual-r3.zip",
-  "sha256": "56014cc810b10c11060683647449bcd31c4329860ecdfe21382dd2ff18223ea1",
-  "size": 87203240,
+  "version": "1.9c-visual.1",
+  "baseVersion": "1.9c",
+  "visualRevision": 1,
+  "versionCode": 1090301,
+  "releaseName": "洛奇播报小助手 V1.9C 十倍猫猫版",
+  "publishedAt": "2026-09-13",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9c/r1/V1.9C-visual-r1.zip",
+  "sha256": "c151f62c91620585594e55083bfa739e1f7e0328100e33bef20c834dfc464b5f",
+  "size": 87635865,
   "mandatory": false,
-  "notes": [],
+  "notes": [
+    "①更新了千猫相关辅助功能（三方敲钟时机提醒/尔格幻影爆发倒计时/龙卷风警报等）",
+    "②破防追踪在佩隆战斗中可用；并且追加了圣歌的音波洗礼debuff",
+    "③修复了一些已知问题",
+    "④增加了对多屏用户的DPI适配（说的就是你，豆！Σ( ￣□￣||)"
+  ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9b/r3/startup-fix-20260911/V1.9b-visual-r3.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9c/r1/V1.9C-visual-r1.zip"
     }
   ]
 }
