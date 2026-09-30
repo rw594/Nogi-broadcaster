@@ -1,25 +1,29 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "1.9d-visual.1",
-  "baseVersion": "1.9d",
+  "version": "2.0-visual.1",
+  "baseVersion": "2.0",
   "visualRevision": 1,
-  "versionCode": 1090401,
-  "releaseName": "洛奇播报小助手 V1.9D 圣盾大人版",
-  "publishedAt": "2026-09-15",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9d/r1/V1.9D-visual-r1.zip",
-  "sha256": "6a3a8437a921408aea5e5908c100567114e0e723cf66fc56e03997562faa7b06",
-  "size": 87748457,
+  "versionCode": 2000001,
+  "releaseName": "洛奇播报小助手 V2.0 自动防御版",
+  "publishedAt": "2026-10-01",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0/r1/V2.0-visual-r1.zip",
+  "sha256": "c565c80e2e171db012ad2484f0198aeb970a39f5a870cf854ea9651aeb66c6bc",
+  "size": 97413412,
   "mandatory": false,
   "notes": [
-    "①增加黄金羊毛相关提醒（语音/HUD）",
-    "②增加圣盾骑士【审判一击】与【牺牲之惩戒】的冷却追踪",
-    "③修复了主界面上那个看起来很吓人的黄色提示qwq"
+    "①增加对UU加速器-进程模式的支持",
+    "②新功能：【科隆巴斯深渊-蚀之翼自动防御】。在角色处于半神化状态下，并且蚀之翼可用时，如果检测到攻击目标为自己的尔格龙卷风或十字激光，将会在伤害判定发生前，自动发送蚀之翼指令，以抵御本次攻击。该功能默认关闭，需要手动开启，并需要用户先申报自己的蚀之翼快捷键。（注意：如果蚀之翼指令发送时，玩家正处在技能后摇中，蚀之翼的开启可能失败；所以并非100%可靠，只能作为兜底，不能完全替代人工走位躲避）",
+    "③优化了安乐碎片的血量追踪 HUD，现在会显示【哪些玩家攻击过该碎片】以及【已追踪到的 DEBUFF 状态】。",
+    "④修复了一些影响播报稳定性的BUG（比如windows系统突然调时导致的播报失准）",
+    "⑤优化了一些HUD的外观",
+    "⑥优化了自动更新流程",
+    "申请管理员权限是为了发送蚀之翼按键；授权后小助手整体以管理员身份运行，取消授权则退出。"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v1.9d/r1/V1.9D-visual-r1.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0/r1/V2.0-visual-r1.zip"
     }
   ]
 }
