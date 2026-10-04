@@ -1,29 +1,29 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0a-visual.1",
-  "baseVersion": "2.0a",
+  "version": "2.0-visual.1",
+  "baseVersion": "2.0",
   "visualRevision": 1,
-  "versionCode": 2000101,
-  "releaseName": "洛奇播报小助手 V2.0a 千猫自动防御+",
-  "publishedAt": "2026-10-05",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0a/r1/V2.0a-visual-r1.zip",
-  "sha256": "542f3865998730e7b87235b890b66a235629898ecd92c08a08cbebf429f9b4e4",
-  "size": 118187118,
+  "versionCode": 2000001,
+  "releaseName": "洛奇播报小助手 V2.0 自动防御版",
+  "publishedAt": "2026-10-01",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0/r1/V2.0-visual-r1.zip",
+  "sha256": "c565c80e2e171db012ad2484f0198aeb970a39f5a870cf854ea9651aeb66c6bc",
+  "size": 97413412,
   "mandatory": false,
   "notes": [
-    "①优化千猫自动防御，显著提高成功开盾的几率",
-    "②尔格龙卷风现在可以只为自己角色报警（可开关）",
-    "③千猫第三房指示卡片优化",
-    "④布四35%机制，现在可以在第二轮激光出现前，提供倒计时警告",
-    "⑤安乐碎片/安全屋血条不再默认显示debuff详情（如需要可手动打开）",
-    "⑥其他小修复",
-    "⑦修复了UU进程模式支持失效的问题"
+    "①增加对UU加速器-进程模式的支持",
+    "②新功能：【科隆巴斯深渊-蚀之翼自动防御】。在角色处于半神化状态下，并且蚀之翼可用时，如果检测到攻击目标为自己的尔格龙卷风或十字激光，将会在伤害判定发生前，自动发送蚀之翼指令，以抵御本次攻击。该功能默认关闭，需要手动开启，并需要用户先申报自己的蚀之翼快捷键。（注意：如果蚀之翼指令发送时，玩家正处在技能后摇中，蚀之翼的开启可能失败；所以并非100%可靠，只能作为兜底，不能完全替代人工走位躲避）",
+    "③优化了安乐碎片的血量追踪 HUD，现在会显示【哪些玩家攻击过该碎片】以及【已追踪到的 DEBUFF 状态】。",
+    "④修复了一些影响播报稳定性的BUG（比如windows系统突然调时导致的播报失准）",
+    "⑤优化了一些HUD的外观",
+    "⑥优化了自动更新流程",
+    "申请管理员权限是为了发送蚀之翼按键；授权后小助手整体以管理员身份运行，取消授权则退出。"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0a/r1/V2.0a-visual-r1.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0/r1/V2.0-visual-r1.zip"
     }
   ]
 }
