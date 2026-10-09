@@ -1,29 +1,25 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0a-visual.1",
-  "baseVersion": "2.0a",
+  "version": "2.0b-visual.1",
+  "baseVersion": "2.0b",
   "visualRevision": 1,
-  "versionCode": 2000101,
-  "releaseName": "洛奇播报小助手 V2.0a 千猫自动防御+",
-  "publishedAt": "2026-10-05",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0a/r1/V2.0a-visual-r1.zip",
-  "sha256": "542f3865998730e7b87235b890b66a235629898ecd92c08a08cbebf429f9b4e4",
-  "size": 118187118,
+  "versionCode": 2000201,
+  "releaseName": "洛奇播报小助手 V2.0b 连接稳定性修复qwq",
+  "publishedAt": "2026-10-10",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0b/r1/V2.0b-visual-r1.zip",
+  "sha256": "7e19b7efa014c18d72b3483c36da91d7d1d166c625694ea6002218b9dd2ab8ac",
+  "size": 117498231,
   "mandatory": false,
   "notes": [
-    "①优化千猫自动防御，显著提高成功开盾的几率",
-    "②尔格龙卷风现在可以只为自己角色报警（可开关）",
-    "③千猫第三房指示卡片优化",
-    "④布四35%机制，现在可以在第二轮激光出现前，提供倒计时警告",
-    "⑤安乐碎片/安全屋血条不再默认显示debuff详情（如需要可手动打开）",
-    "⑥其他小修复",
-    "⑦修复了UU进程模式支持失效的问题"
+    "①修复部分用户魔法盾识别失败的问题",
+    "②增加了手动选择识别角色的选项（sb队友怎么老和我抢魔法盾( `д´)",
+    "③其他一些稳定性修复"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0a/r1/V2.0a-visual-r1.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0b/r1/V2.0b-visual-r1.zip"
     }
   ]
 }
