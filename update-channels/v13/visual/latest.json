@@ -1,25 +1,23 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0b-visual.1",
-  "baseVersion": "2.0b",
+  "version": "2.0c-visual.1",
+  "baseVersion": "2.0c",
   "visualRevision": 1,
-  "versionCode": 2000201,
-  "releaseName": "洛奇播报小助手 V2.0b 连接稳定性修复qwq",
-  "publishedAt": "2026-10-10",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0b/r1/V2.0b-visual-r1.zip",
-  "sha256": "7e19b7efa014c18d72b3483c36da91d7d1d166c625694ea6002218b9dd2ab8ac",
-  "size": 117498231,
+  "versionCode": 2000301,
+  "releaseName": "洛奇播报小助手 V2.0c 黑魔大人一个大招秒了球版",
+  "publishedAt": "2026-10-11",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r1/V2.0c-visual-r1.zip",
+  "sha256": "2f39534222753969031f0eecef38701e921e338a2e0a444bc9d09c3d42621876",
+  "size": 128026819,
   "mandatory": false,
   "notes": [
-    "①修复部分用户魔法盾识别失败的问题",
-    "②增加了手动选择识别角色的选项（sb队友怎么老和我抢魔法盾( `д´)",
-    "③其他一些稳定性修复"
+    "①增加了烬火引燃专用的HUD；对黑魔玩家默认开启（仅在猫雪布和木头人房间内时起效）"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0b/r1/V2.0b-visual-r1.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r1/V2.0c-visual-r1.zip"
     }
   ]
 }
