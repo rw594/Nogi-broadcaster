@@ -1,23 +1,23 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0c-visual.1",
+  "version": "2.0c-visual.2",
   "baseVersion": "2.0c",
-  "visualRevision": 1,
-  "versionCode": 2000301,
-  "releaseName": "洛奇播报小助手 V2.0c 黑魔大人一个大招秒了球版",
-  "publishedAt": "2026-10-11",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r1/V2.0c-visual-r1.zip",
-  "sha256": "2f39534222753969031f0eecef38701e921e338a2e0a444bc9d09c3d42621876",
-  "size": 128026819,
+  "visualRevision": 2,
+  "versionCode": 2000302,
+  "releaseName": "洛奇播报小助手 V2.0c fix",
+  "publishedAt": "2026-10-13",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r2/V2.0c-visual-r2.zip",
+  "sha256": "84ac12634bf773c9618cc6cca65199a7bc1ac5dbfae483c65c29f967bcdec803",
+  "size": 128026676,
   "mandatory": false,
   "notes": [
-    "①增加了烬火引燃专用的HUD；对黑魔玩家默认开启（仅在猫雪布和木头人房间内时起效）"
+    "①修复了余烬引燃冷却图标有时会异常重置的问题"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r1/V2.0c-visual-r1.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r2/V2.0c-visual-r2.zip"
     }
   ]
 }
