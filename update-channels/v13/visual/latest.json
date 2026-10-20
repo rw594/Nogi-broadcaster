@@ -1,28 +1,29 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0c-visual.3",
+  "version": "2.0c-visual.4",
   "baseVersion": "2.0c",
-  "visualRevision": 3,
-  "versionCode": 2000303,
-  "releaseName": "洛奇播报小助手 V2.0C fix2",
-  "publishedAt": "2026-10-20",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r3/V2.0C-visual-r3.zip",
-  "sha256": "8e9c7d51cc3cb6446e3ce96b635b62594340431519e3cf6f42f2f457aa83d038",
-  "size": 128063708,
+  "visualRevision": 4,
+  "versionCode": 2000304,
+  "releaseName": "洛奇播报小助手 V2.0C fix3",
+  "publishedAt": "2026-10-21",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r4/V2.0C-visual-r4.zip",
+  "sha256": "849cdb7d0bc52bd754be61d83e11eef30968cd9e175eac8d49bf83f57bb376e0",
+  "size": 128066923,
   "mandatory": false,
   "notes": [
-    "主要是一些bug修复：",
-    "①千猫自动防御可靠性优化",
-    "②之前伯雷纳克魔保和物保图标弄反了（诶嘿☆",
-    "③圣歌对队友音乐buff到期的监控，有时会失效 - 已修复",
-    "④修复了雪本投矛语音和hud偶尔会不同步的问题",
-    "⑤修复了半神化冷却计时，人物死亡后会失效的问题"
+    "修复升级时“新旧日志存在同名冲突”导致更新失败的问题。",
+    "遇到冲突时分别保留当前日志与旧路径日志，完整归档旧日志；保留个人配置、预设和自定义资源。",
+    "其他功能和默认设置保持 V2.0C fix2 不变。",
+    "已经卡在旧版的用户：本次升级仍由旧版更新器执行，请先关闭小助手及更新报错窗口，解压修复工具，双击“修复更新日志冲突.cmd”，选择出错的安装文件夹，完成后重新检查更新。",
+    "旧版修复工具：https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r4/repair-log-conflict.zip",
+    "使用说明：https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r4/repair-log-conflict-readme.txt",
+    "也可以全新安装到独立文件夹并迁移个人数据；迁移清单：https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r4/clean-install-migration.txt"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r3/V2.0C-visual-r3.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r4/V2.0C-visual-r4.zip"
     }
   ]
 }
