@@ -1,23 +1,28 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0c-visual.2",
+  "version": "2.0c-visual.3",
   "baseVersion": "2.0c",
-  "visualRevision": 2,
-  "versionCode": 2000302,
-  "releaseName": "洛奇播报小助手 V2.0c fix",
-  "publishedAt": "2026-10-13",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r2/V2.0c-visual-r2.zip",
-  "sha256": "84ac12634bf773c9618cc6cca65199a7bc1ac5dbfae483c65c29f967bcdec803",
-  "size": 128026676,
+  "visualRevision": 3,
+  "versionCode": 2000303,
+  "releaseName": "洛奇播报小助手 V2.0C fix2",
+  "publishedAt": "2026-10-20",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r3/V2.0C-visual-r3.zip",
+  "sha256": "8e9c7d51cc3cb6446e3ce96b635b62594340431519e3cf6f42f2f457aa83d038",
+  "size": 128063708,
   "mandatory": false,
   "notes": [
-    "①修复了余烬引燃冷却图标有时会异常重置的问题"
+    "主要是一些bug修复：",
+    "①千猫自动防御可靠性优化",
+    "②之前伯雷纳克魔保和物保图标弄反了（诶嘿☆",
+    "③圣歌对队友音乐buff到期的监控，有时会失效 - 已修复",
+    "④修复了雪本投矛语音和hud偶尔会不同步的问题",
+    "⑤修复了半神化冷却计时，人物死亡后会失效的问题"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r2/V2.0c-visual-r2.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0c/r3/V2.0C-visual-r3.zip"
     }
   ]
 }
