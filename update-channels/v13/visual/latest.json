@@ -4,12 +4,12 @@
   "version": "2.0d-visual.1",
   "baseVersion": "2.0d",
   "visualRevision": 1,
-  "versionCode": 2000401,
+  "versionCode": 2000402,
   "releaseName": "洛奇播报小助手 V2.0D 千年的自动药水助手Plus版",
   "publishedAt": "2026-10-25",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r1/V2.0D-visual-r1.zip",
-  "sha256": "8b309ab161ec2f4dc063c70f162d5e47d3184037f63b7566bc90e50bba3c0172",
-  "size": 129157889,
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r2/V2.0D-visual-r2.zip",
+  "sha256": "2532b91643c11fcfe027044860eedc9db2a13f1682d83c0026683db40fcb3f89",
+  "size": 129164599,
   "mandatory": false,
   "notes": [
     "①增加【D血自动救援】功能（默认关闭）：开启后，在玩家进入D血时，会马上自动替你喝完水，并重新打开蓝盾。使用前，需要先申报自己的完水和蓝盾快捷键。救援速度远超千年人偶 - 千年人偶每1秒仅查询1次，而该功能响应为毫秒级0w0",
@@ -21,7 +21,7 @@
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r1/V2.0D-visual-r1.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r2/V2.0D-visual-r2.zip"
     }
   ]
 }
