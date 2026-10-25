@@ -1,27 +1,23 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0d-visual.1",
+  "version": "2.0d-visual.2",
   "baseVersion": "2.0d",
-  "visualRevision": 1,
-  "versionCode": 2000402,
-  "releaseName": "洛奇播报小助手 V2.0D 千年的自动药水助手Plus版",
+  "visualRevision": 2,
+  "versionCode": 2000403,
+  "releaseName": "洛奇播报小助手 V2.0D fix1 千年的自动药水助手Plus版",
   "publishedAt": "2026-10-25",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r2/V2.0D-visual-r2.zip",
-  "sha256": "2532b91643c11fcfe027044860eedc9db2a13f1682d83c0026683db40fcb3f89",
-  "size": 129164599,
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r3/V2.0D-visual-r3.zip",
+  "sha256": "cc604f0fe6ffde04a86051534f6f765f83ba438eb577dc0d6b61b07b3473d79b",
+  "size": 129285811,
   "mandatory": false,
   "notes": [
-    "①增加【D血自动救援】功能（默认关闭）：开启后，在玩家进入D血时，会马上自动替你喝完水，并重新打开蓝盾。使用前，需要先申报自己的完水和蓝盾快捷键。救援速度远超千年人偶 - 千年人偶每1秒仅查询1次，而该功能响应为毫秒级0w0",
-    "②增加了完全恢复水的冷却倒计时HUD - 该功能默认开启",
-    "③技能冷却追踪，现支持【魔法封锁】",
-    "④增强了【多尔卡不足】报警功能。以前是仅仅在进本时检查 - 现在会持续检查。低于设定的阈值即弹卡片报警。（阈值可自定义）",
-    "⑤修复了布三30%和布四35%，锁定冲锋进入第二轮时，锁定倒计时有时会失效的情况"
+    "①修复了占星追踪页，有时就算配置申报完整了，也会被视作未填完而无法启用cd追踪的问题。"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r2/V2.0D-visual-r2.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r3/V2.0D-visual-r3.zip"
     }
   ]
 }
