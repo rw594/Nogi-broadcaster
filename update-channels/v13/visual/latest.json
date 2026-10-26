@@ -1,23 +1,24 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0d-visual.2",
+  "version": "2.0d-visual.3",
   "baseVersion": "2.0d",
-  "visualRevision": 2,
-  "versionCode": 2000403,
-  "releaseName": "洛奇播报小助手 V2.0D fix1 千年的自动药水助手Plus版",
-  "publishedAt": "2026-10-25",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r3/V2.0D-visual-r3.zip",
-  "sha256": "cc604f0fe6ffde04a86051534f6f765f83ba438eb577dc0d6b61b07b3473d79b",
-  "size": 129285811,
+  "visualRevision": 3,
+  "versionCode": 2000404,
+  "releaseName": "洛奇播报小助手 V2.0D fix2 千年的自动药水助手Plus版",
+  "publishedAt": "2026-10-26",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r4/V2.0D-visual-r4.zip",
+  "sha256": "e437d1089aa8e9c5d615c98e7c37837c8d2046368aee1cffe84fc751aed239d4",
+  "size": 129286458,
   "mandatory": false,
   "notes": [
-    "①修复了占星追踪页，有时就算配置申报完整了，也会被视作未填完而无法启用cd追踪的问题。"
+    "修复了部分用户更新之后，反馈看不到【危险自动救援】功能的问题=-=",
+    "这次更新之后，应该能看到了。这个功能在【进阶辅助功能】标签页里！申报一下魔法盾和完水的快捷键就能打开哦。"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r3/V2.0D-visual-r3.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r4/V2.0D-visual-r4.zip"
     }
   ]
 }
