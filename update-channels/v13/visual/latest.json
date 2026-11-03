@@ -1,25 +1,26 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0d-visual.4",
-  "baseVersion": "2.0d",
-  "visualRevision": 4,
-  "versionCode": 2000405,
-  "releaseName": "洛奇播报小助手 V2.0D fix 3",
-  "publishedAt": "2026-10-30",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r5/V2.0D-visual-r5.zip",
-  "sha256": "0f817368dfedcebc4d19b544100f7fb0ea1480c0f4e4bade3c177e83f3ba3970",
-  "size": 130056536,
+  "version": "2.0f-visual.1",
+  "baseVersion": "2.0f",
+  "visualRevision": 1,
+  "versionCode": 2000601,
+  "releaseName": "洛奇播报小助手 V2.0F 千年药水助手加强版",
+  "publishedAt": "2026-11-03",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r1/V2.0F-visual-r1.zip",
+  "sha256": "e621d3cde9e8ef4f3e925fe243c7eef7c6984f6f0f34ee8de708f486e6c715ff",
+  "size": 130494707,
   "mandatory": false,
   "notes": [
-    "①新增：魔法阵低耐久时，语音通知。该功能默认开启。",
-    "②新增：布四65%阶段，语音播报分裂的能量层数。该功能默认开启。",
-    "③修复了一些其他的稳定性问题，以及倒计时准确度问题"
+    "① 增强了自动喝药与魔法盾重开的运作逻辑。现在应该会覆盖更多危险场景，更稳定，且反应速度更快。（另外，增加了【血量跌破2500】这个喝药触发条件。如果你之前已经开启了千年药水助手，该条件会默认追加开启）",
+    "② 增加了对魔法阵耐久和主武器耐久的提醒",
+    "③ 修复了用户在先获得演奏，后打开小助手时，会无法正确追溯到身上已有的演奏并播报倒计时的问题",
+    "④ 修复半神化相关提醒有时会失效的情况"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0d/r5/V2.0D-visual-r5.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r1/V2.0F-visual-r1.zip"
     }
   ]
 }
