@@ -1,23 +1,23 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0f-visual.2",
+  "version": "2.0f-visual.3",
   "baseVersion": "2.0f",
-  "visualRevision": 2,
-  "versionCode": 2000602,
-  "releaseName": "洛奇播报小助手 V2.0F 千年药水助手 Fix1",
-  "publishedAt": "2026-11-04",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r2/V2.0F-visual-r2.zip",
-  "sha256": "b1988bc858aaa3a75cbc9af94f7a3a7ab14fb2c3b7ef7255279afa06b64c9a2f",
-  "size": 130505133,
+  "visualRevision": 3,
+  "versionCode": 2000603,
+  "releaseName": "洛奇播报小助手 V2.0F 千年药水助手 Fix2",
+  "publishedAt": "2026-11-08",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r3/V2.0F-visual-r3.zip",
+  "sha256": "816c13c1f83fd8edf1a12aae4f745c2a0daf2dd1a773ea5a43a04a82ae4871d5",
+  "size": 130559057,
   "mandatory": false,
   "notes": [
-    "①进一步优化自动药水救援的稳定性"
+    "①修复了一些偶发性BUG（比如部分播报偶尔会轻度延迟）"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r2/V2.0F-visual-r2.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r3/V2.0F-visual-r3.zip"
     }
   ]
 }
