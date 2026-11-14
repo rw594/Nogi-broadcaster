@@ -1,23 +1,24 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0f-visual.3",
+  "version": "2.0f-visual.4",
   "baseVersion": "2.0f",
-  "visualRevision": 3,
-  "versionCode": 2000603,
-  "releaseName": "洛奇播报小助手 V2.0F 千年药水助手 Fix2",
-  "publishedAt": "2026-11-08",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r3/V2.0F-visual-r3.zip",
-  "sha256": "816c13c1f83fd8edf1a12aae4f745c2a0daf2dd1a773ea5a43a04a82ae4871d5",
-  "size": 130559057,
+  "visualRevision": 4,
+  "versionCode": 2000604,
+  "releaseName": "洛奇播报小助手 V2.0F Fix3",
+  "publishedAt": "2026-11-15",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r4/V2.0F-visual-r4.zip",
+  "sha256": "5afdf37d0edc561b6bd110329b9b04a515272d79819688d90a61791ce9545ca2",
+  "size": 131599841,
   "mandatory": false,
   "notes": [
-    "①修复了一些偶发性BUG（比如部分播报偶尔会轻度延迟）"
+    "①之前版本的黑魔武器修复提醒，阈值设置得过高，导致不必要的频繁播报 - 现下调为60%（法杖达到60%以下耐久才会提醒修复）",
+    "②修复了一些乱七八糟的零散bug - 这些bug有时会导致播报延迟，红球倒计时未正确取消等偶发性问题"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r3/V2.0F-visual-r3.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r4/V2.0F-visual-r4.zip"
     }
   ]
 }
