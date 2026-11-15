@@ -1,24 +1,23 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0f-visual.4",
+  "version": "2.0f-visual.5",
   "baseVersion": "2.0f",
-  "visualRevision": 4,
-  "versionCode": 2000604,
-  "releaseName": "洛奇播报小助手 V2.0F Fix3",
+  "visualRevision": 5,
+  "versionCode": 2000605,
+  "releaseName": "洛奇播报小助手 V2.0F Fix4",
   "publishedAt": "2026-11-15",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r4/V2.0F-visual-r4.zip",
-  "sha256": "5afdf37d0edc561b6bd110329b9b04a515272d79819688d90a61791ce9545ca2",
-  "size": 131599841,
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r5/V2.0F-visual-r5.zip",
+  "sha256": "4c78926b2c423eabab6b3d69e1ee4a10a2f4a4d630a50329157987fbaf072fd7",
+  "size": 131862574,
   "mandatory": false,
   "notes": [
-    "①之前版本的黑魔武器修复提醒，阈值设置得过高，导致不必要的频繁播报 - 现下调为60%（法杖达到60%以下耐久才会提醒修复）",
-    "②修复了一些乱七八糟的零散bug - 这些bug有时会导致播报延迟，红球倒计时未正确取消等偶发性问题"
+    "①又做了一些稳定性修复，修的还是红球播报相关的稳定性 - 解决了一些多个语音播报同时进行时，会互相抢占通道，导致播报乱序的情况 "
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r4/V2.0F-visual-r4.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r5/V2.0F-visual-r5.zip"
     }
   ]
 }
