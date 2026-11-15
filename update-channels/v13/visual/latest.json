@@ -1,23 +1,24 @@
 {
   "app": "洛奇播报小助手",
   "channel": "nogi-v13-visual",
-  "version": "2.0f-visual.5",
+  "version": "2.0f-visual.6",
   "baseVersion": "2.0f",
-  "visualRevision": 5,
-  "versionCode": 2000605,
-  "releaseName": "洛奇播报小助手 V2.0F Fix4",
-  "publishedAt": "2026-11-15",
-  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r5/V2.0F-visual-r5.zip",
-  "sha256": "4c78926b2c423eabab6b3d69e1ee4a10a2f4a4d630a50329157987fbaf072fd7",
-  "size": 131862574,
+  "visualRevision": 6,
+  "versionCode": 2000606,
+  "releaseName": "洛奇播报小助手 V2.0F Fix5",
+  "publishedAt": "2026-11-16",
+  "downloadUrl": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r6/V2.0F-visual-r6.zip",
+  "sha256": "dca6fb0bb809d56845135e0dcc53ffc6675b00cf48f18535b0ed42e1164ef5e0",
+  "size": 131899518,
   "mandatory": false,
   "notes": [
-    "①又做了一些稳定性修复，修的还是红球播报相关的稳定性 - 解决了一些多个语音播报同时进行时，会互相抢占通道，导致播报乱序的情况 "
+    "①紧急修复一个可能会导致播报失效的bug（千猫中会触发）",
+    "②修复了音波洗礼HUD有时会错误显示为灰色的BUG"
   ],
   "downloadUrls": [
     {
       "name": "阿里云镜像",
-      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r5/V2.0F-visual-r5.zip"
+      "url": "https://nogi-broadcaster-updates.oss-cn-hangzhou.aliyuncs.com/channels/v13/visual/releases/v2.0f/r6/V2.0F-visual-r6.zip"
     }
   ]
 }
